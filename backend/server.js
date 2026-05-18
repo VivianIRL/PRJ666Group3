@@ -16,9 +16,9 @@ app.get("/", (req, res) => {
   res.send("StatsCan API Server running 🚀🚀🚀🚀🚀");
 });
 
-app.get("/api/test-db", async (req, res) => {
+app.get("/api/profiles", async (req, res) => {
   const { data, error } = await supabase
-    .from("test_table")
+    .from("profiles")
     .select("*");
 
   if (error) {
