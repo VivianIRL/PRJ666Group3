@@ -2,13 +2,21 @@ import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import { Button } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 
 export default function TopNavbar() {
+  const navigate = useNavigate()
+
+  function handleLogin(e) {
+    e.preventDefault();
+    navigate('/login');
+  }
+
   return (
       <Navbar className="bg-body-tertiary" sticky="top">
       <Container>
-        <Navbar.Brand href="#home" >settle</Navbar.Brand>
-        <Navbar.Brand href="#home" style={{ "margin-left": "-15px", "color": "#8F0004" }} >CAN</Navbar.Brand>
+        <Navbar.Brand href="/" >settle</Navbar.Brand>
+        <Navbar.Brand href="/" style={{ "margin-left": "-15px", "color": "#8F0004" }} >CAN</Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav" style={{ "margin-left": "37px" }} >
           <Nav className="me-auto">
@@ -23,7 +31,7 @@ export default function TopNavbar() {
             <Button as="a" variant="primary"  style={{ "margin-right": "17px" }}>
                 Sign-up
             </Button>
-            <Button as="a" variant="light">
+            <Button as="a" variant="light" onClick={handleLogin}>
                 Log-in
             </Button>
         </Navbar.Collapse>
