@@ -12,6 +12,11 @@ export default function TopNavbar() {
     navigate('/login');
   }
 
+  function handleRegister(e) {
+    e.preventDefault();
+    navigate('/register');
+  }
+
   return (
       <Navbar className="bg-body-tertiary" sticky="top">
       <Container>
@@ -28,7 +33,7 @@ export default function TopNavbar() {
           </Nav>
         </Navbar.Collapse>
         <Navbar.Collapse id="basic-navbar-nav-2" class="nav navbar-right">
-            <Button as="a" variant="primary"  style={{ "margin-right": "17px" }}>
+            <Button as="a" variant="primary"  style={{ "margin-right": "17px" }} onClick={handleRegister}>
                 Sign-up
             </Button>
             <Button as="a" variant="light" onClick={handleLogin}>
