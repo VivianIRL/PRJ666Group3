@@ -2,8 +2,16 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
-function Register() {
+function ImmigrationDetails() {
+    const navigate = useNavigate()
+
+    function handleImmigrationDetails(e) {
+        e.preventDefault();
+        navigate('/immigration');
+    }
+    
     return (
         <>
             <h2 style={{ 'margin-top': "67px" }}><b>Create account with settle<span style={{ "color": "#8F0004" }}>CAN</span></b></h2>
@@ -45,14 +53,14 @@ function Register() {
                 <br/>
                 <br/>
                 <section id="center">
-                    <Button variant="danger" type="submit" style={{"--bs-btn-bg": "#830C10", "display": "block", "width": "67%"}}>
+                    <Button variant="danger" type="submit" style={{"--bs-btn-bg": "#830C10", "display": "block", "width": "67%"}} onClick={handleImmigrationDetails}>
                         Immigration Details
                     </Button>
-                    <div>Have an account? <Link to="/">Log in</Link></div>
+                    <div>Have an account? <Link to="/login">Log in</Link></div>
                 </section>
             </Form>
         </>
     )
 }
 
-export default Register
+export default ImmigrationDetails
