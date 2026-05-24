@@ -1,0 +1,54 @@
+// src/scss/AboutPage.scss
+@use "./variables" as *;
+
+.about-page {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3rem;
+  padding: 5rem 2rem;
+  max-width: $max-width;
+  margin: 0 auto;
+
+  .about-content {
+    flex: 1;
+
+    h1 {
+      font-size: 2.6rem;
+      font-weight: 700;
+      color: $primary;
+      margin-bottom: 1.5rem;
+    }
+
+    p {
+      font-size: 1.15rem;
+      line-height: 1.7;
+      margin-bottom: 1.2rem;
+      color: $text-dark;
+    }
+  }
+
+  .about-image {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+
+    img {
+      width: 100%;
+      max-width: 480px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .about-page {
+    flex-direction: column;
+    text-align: center;
+
+    .about-image img {
+      max-width: 360px;
+    }
+  }
+}
