@@ -1,18 +1,18 @@
+// App.jsx
+import Hero from "./components/Hero";
+import About from "./components/About";
+import Features from "./components/Features";
+import News from "./components/News";
+import Footer from "./navigation/Footer";
 
-import './App.css'
-import 'bootstrap/dist/css/bootstrap.min.css';
-
-function App() {
+export default function App() {
   return (
     <>
-      <section id="center">
-        <div class="container py-4 px-3 mx-auto">
-          <h1>Hello world!</h1>
-          <button class="btn btn-primary">Primary button</button>
-        </div>
-      </section>
+      <Hero />
+      <About />
+      <Features />
+      <News />
+      <Footer />
     </>
-  )
+  );
 }
-
-export default App
