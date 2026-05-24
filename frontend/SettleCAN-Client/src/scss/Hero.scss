@@ -1,0 +1,56 @@
+@use "./variables" as *;
+
+.hero {
+  background-color: $primary;
+  background-size: cover;
+  background-position: center;
+  color: white;
+  text-align: center;
+  padding: 6rem 2rem;
+  position: relative;
+
+  .hero-overlay {
+    background-color: rgba(139, 46, 46, 0.85);
+    padding: 4rem 2rem;
+    border-radius: 8px;
+    display: inline-block;
+  }
+
+  h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+
+  .hero-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+
+    .btn-primary {
+      background-color: white;
+      color: $primary;
+      border: none;
+      padding: 0.7rem 1.4rem;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid white;
+      color: white;
+      padding: 0.7rem 1.4rem;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  }
+}
