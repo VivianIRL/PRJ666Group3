@@ -1,0 +1,399 @@
+.cl-page {
+  background: #F4F6FA;
+  min-height: calc(100vh - 60px);
+  padding: 36px 0;
+}
+
+.cl-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+// Header
+.cl-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.cl-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1A1A1A;
+  letter-spacing: -0.4px;
+  margin-bottom: 4px;
+}
+
+.cl-subtitle {
+  font-size: 14px;
+  color: #8491A8;
+  margin: 0;
+}
+
+.btn-add-cl {
+  background: #8E0002 !important;
+  border-color: #8E0002 !important;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 22px;
+  border-radius: 10px;
+
+  &:hover {
+    background: #6e0002 !important;
+    border-color: #6e0002 !important;
+  }
+}
+
+// Progress card
+.cl-progress-card {
+  background: #fff;
+  border: 1px solid #E8EAF0;
+  border-radius: 14px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.cl-progress-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.cl-progress-heading {
+  font-size: 13px;
+  font-weight: 600;
+  color: #8491A8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.cl-progress-label {
+  font-size: 15px;
+  color: #1A1A1A;
+
+  strong {
+    color: #1A3557;
+    font-weight: 600;
+  }
+}
+
+.cl-progress-pct {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1D9E75;
+  line-height: 1;
+}
+
+.cl-progress-bar {
+  height: 10px;
+  border-radius: 999px;
+  background-color: #E2E6EF;
+
+  .progress-bar {
+    background-color: #1D9E75;
+    border-radius: 999px;
+    transition: width 0.4s ease;
+  }
+}
+
+.cl-complete-msg {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #0F6E56;
+  font-weight: 500;
+  text-align: center;
+}
+
+// Filters
+.cl-filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.cl-filter-btn {
+  padding: 6px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1.5px solid #E2E6EF;
+  background: #fff;
+  color: #5A6478;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: #8E0002;
+    color: #8E0002;
+  }
+
+  &.active {
+    background: #8E0002;
+    color: #fff;
+    border-color: #8E0002;
+  }
+}
+
+// Category block
+.cl-category {
+  background: #fff;
+  border: 1px solid #E8EAF0;
+  border-radius: 14px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.cl-cat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #F0F2F7;
+  background: #FAFBFD;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cl-cat-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cl-cat-icon {
+  font-size: 20px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F0F2F7;
+  border-radius: 8px;
+}
+
+.cl-cat-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin-bottom: 2px;
+}
+
+.cl-cat-count {
+  font-size: 12px;
+  color: #9AA3B5;
+}
+
+.cl-cat-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.cl-cat-btn {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1.5px solid #D0D5E2;
+  background: #fff;
+  color: #5A6478;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: #8E0002;
+    color: #8E0002;
+  }
+
+  &.primary {
+    background: #8E0002;
+    border-color: #8E0002;
+    color: #fff;
+
+    &:hover {
+      background: #6e0002;
+      border-color: #6e0002;
+      color: #fff;
+    }
+  }
+}
+
+// Items
+.cl-items {
+  padding: 8px 0;
+}
+
+.cl-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid #F8F9FC;
+  transition: background 0.12s;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: #FAFBFD;
+
+    .cl-delete-btn {
+      opacity: 1;
+    }
+  }
+
+  &.done {
+    .cl-item-text {
+      text-decoration: line-through;
+      color: #B0B8C8;
+    }
+  }
+}
+
+.cl-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+// Checkbox
+.cl-checkbox {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid #D0D5E2;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  padding: 0;
+
+  &:hover {
+    border-color: #8E0002;
+  }
+
+  &.checked {
+    background: #1D9E75;
+    border-color: #1D9E75;
+
+    svg {
+      display: block;
+      width: 12px;
+      height: 12px;
+    }
+  }
+
+  svg {
+    display: none;
+  }
+}
+
+.cl-item-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cl-item-text {
+  font-size: 14px;
+  color: #1A1A1A;
+  line-height: 1.5;
+}
+
+.cl-required-tag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #FEF3E5;
+  color: #9A5308;
+  white-space: nowrap;
+}
+
+.cl-delete-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: #FDEAEA;
+  color: #B02A2A;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+  flex-shrink: 0;
+  font-family: inherit;
+  padding: 0;
+
+  &:hover {
+    background: #D94040;
+    color: #fff;
+  }
+}
+
+// Modal form
+.cl-field-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8491A8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cl-required-check {
+  font-size: 13px;
+  color: #1A1A1A;
+}
+
+.btn-save-cl {
+  background: #8E0002 !important;
+  border-color: #8E0002 !important;
+  font-weight: 500;
+
+  &:hover {
+    background: #6e0002 !important;
+    border-color: #6e0002 !important;
+  }
+}
+
+// Toast
+.cl-toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1A3557;
+  color: #fff;
+  padding: 11px 24px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 9999;
+  animation: clFadeUp 0.3s ease;
+  white-space: nowrap;
+}
+
+@keyframes clFadeUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
