@@ -1,6 +1,10 @@
+import { useContext } from "react";
 import "../scss/Hero.scss";
+import { UserContext } from "../UserContext";
 
 export default function Hero() {
+    // eslint-disable-next-line no-unused-vars
+    const { user, setUser } = useContext(UserContext)
   return (
     <section className="hero">
       <div className="hero-content">

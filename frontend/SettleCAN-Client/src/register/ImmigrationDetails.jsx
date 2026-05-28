@@ -2,12 +2,17 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import { useNavigate } from 'react-router-dom';
+import { UserContext } from '../UserContext';
+import { useContext } from 'react';
 
 function ImmigrationDetails() {
     const navigate = useNavigate()
+    // eslint-disable-next-line no-unused-vars
+    const { user, setUser } = useContext(UserContext)
 
     function handleRegister(e) {
         e.preventDefault();
+        setUser("Holy gleeeb!!!")
         navigate('/');
     }
 
@@ -225,7 +230,7 @@ function ImmigrationDetails() {
 
     return (
         <>
-            <h2 style={{ 'marginTop': "67px", 'display': "flex", 'paddingLeft': "50px", }}><b>Immigration Details</b></h2>
+            <h2 style={{ 'marginTop': "67px", 'display': "flex", 'paddingLeft': "50px", }}><b>Immigration Details for {user}</b></h2>
             
             <Form>
                 <div className="row" style={{'marginTop': "67px", 'paddingLeft': "50px",  'paddingRight': "50px", "gap": "20%" }}>
