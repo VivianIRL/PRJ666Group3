@@ -9,6 +9,7 @@ function ImmigrationDetails() {
 
     async function handleFormSubmit(formData) {
         await formData
+        console.log(formData)
         if (!formData.get('firstName')) {
             alert('ERROR: First name is empty.')
             return;
@@ -17,19 +18,36 @@ function ImmigrationDetails() {
             alert('ERROR: Last name is empty.')
             return;
         }
-        if (!formData.get('emailphone')) {
+        var emailphone = formData.get('emailphone')
+        if (!emailphone) {
             alert('ERROR: Email or phone number is empty.')
             return;
         }
-        if (!formData.get('dateofbirth')) {
+        if (!formData.get('dateOfBirth')) {
             alert('ERROR: Date of birth is empty.')
             return;
         }
-        if (!formData.get('password')) {
+        var password = formData.get('password')
+        if (!password) {
             alert('ERROR: Password is empty.')
             return;
         }
-        console.log(formData)
+        var emailRegex = /^((?!\.)[\w\-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])$/gm
+        var phoneRegex = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/g
+        if (!(emailRegex.test(emailphone) || phoneRegex.test(emailphone))) {
+            alert('ERROR: No valid email or phone number was given.')
+            return;
+        }
+        var date = new Date(formData.get('dateOfBirth'))
+        var now = new Date()
+        if (date > now) {
+            alert('ERROR: Date of birth is not in the past.')
+            return;
+        }
+        if (password != formData.get('confirmPassword')) {
+            alert('ERROR: Passwords do not match')
+            return;
+        }
     }
 
     // eslint-disable-next-line no-unused-vars
