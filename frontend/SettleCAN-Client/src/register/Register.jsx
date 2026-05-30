@@ -60,12 +60,6 @@ function ImmigrationDetails() {
         
         navigate('/immigration', { state: { "registeringUser": registeringUser }});
     }
-
-    // eslint-disable-next-line no-unused-vars
-    function handleImmigrationDetails(e) {
-        e.preventDefault();
-        navigate('/immigration');
-    }
     
     return (
         <>
