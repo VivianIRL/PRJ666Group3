@@ -5,9 +5,12 @@ import { Button } from "react-bootstrap";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 
 import "../scss/TopNavbar.scss";
+import { useContext } from "react";
+import { UserContext } from "../UserContext";
 
 export default function TopNavbar() {
   const navigate = useNavigate();
+  const { user, setUser } = useContext(UserContext)
 
   function handleLogin(e) {
     e.preventDefault();
@@ -17,6 +20,12 @@ export default function TopNavbar() {
   function handleRegister(e) {
     e.preventDefault();
     navigate("/register");
+  }
+
+  function handleSignout(e) {
+    e.preventDefault();
+    setUser(null)
+    navigate("/");
   }
 
   return (
@@ -37,12 +46,22 @@ export default function TopNavbar() {
         </Nav>
 
         <div className="auth-buttons">
-          <Button className="signup-btn" onClick={handleRegister}>
-            Sign up
-          </Button>
-          <Button className="signin-btn" onClick={handleLogin}>
-            Sign in
-          </Button>
+          {user ?
+          <>
+              Hello, {user.firstName}
+            <Button className="signup-btn" onClick={handleSignout}>
+              Sign out
+            </Button>
+          </> :
+          <>
+            <Button className="signup-btn" onClick={handleRegister}>
+              Sign up
+            </Button>
+            <Button className="signin-btn" onClick={handleLogin}>
+              Sign in
+            </Button>
+          </>}
+          
         </div>
       </Container>
     </Navbar>
