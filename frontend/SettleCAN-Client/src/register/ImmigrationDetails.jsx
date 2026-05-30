@@ -1,10 +1,31 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useEffect } from 'react';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 function ImmigrationDetails() {
     const navigate = useNavigate()
+    const { state } = useLocation()
+    
+    function noUserFailCase() {
+        alert("ERROR: Registering user details not submitted before. Returning to home.")
+        navigate('/');
+    }
+
+    useEffect(() => {
+        if (state) {
+            var { registeringUser } = state;
+            if (registeringUser) {
+                console.log(registeringUser)
+            } else {
+                noUserFailCase()
+            }
+        } else {
+            noUserFailCase()
+        }
+    })
+    
 
     function handleRegister(e) {
         e.preventDefault();

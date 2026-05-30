@@ -10,11 +10,13 @@ function ImmigrationDetails() {
     async function handleFormSubmit(formData) {
         await formData
         console.log(formData)
-        if (!formData.get('firstName')) {
+        var firstName = formData.get('firstName')
+        if (!firstName) {
             alert('ERROR: First name is empty.')
             return;
         }
-        if (!formData.get('lastName')) {
+        var lastName = formData.get('lastName')
+        if (!lastName) {
             alert('ERROR: Last name is empty.')
             return;
         }
@@ -23,6 +25,7 @@ function ImmigrationDetails() {
             alert('ERROR: Email or phone number is empty.')
             return;
         }
+        var dateOB = new Date(formData.get('dateOfBirth'))
         if (!formData.get('dateOfBirth')) {
             alert('ERROR: Date of birth is empty.')
             return;
@@ -38,9 +41,8 @@ function ImmigrationDetails() {
             alert('ERROR: No valid email or phone number was given.')
             return;
         }
-        var date = new Date(formData.get('dateOfBirth'))
         var now = new Date()
-        if (date > now) {
+        if (dateOB > now) {
             alert('ERROR: Date of birth is not in the past.')
             return;
         }
@@ -48,6 +50,15 @@ function ImmigrationDetails() {
             alert('ERROR: Passwords do not match')
             return;
         }
+        var registeringUser = {
+            "firstName": firstName,
+            "lastName": lastName,
+            "dateOfBirth": dateOB,
+            "emailphone": emailphone,
+            "password": password
+        }
+        
+        navigate('/immigration', { state: { "registeringUser": registeringUser }});
     }
 
     // eslint-disable-next-line no-unused-vars
