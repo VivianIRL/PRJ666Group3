@@ -9,7 +9,6 @@ function ImmigrationDetails() {
 
     async function handleFormSubmit(formData) {
         await formData
-        console.log(formData)
         var firstName = formData.get('firstName')
         if (!firstName) {
             alert('ERROR: First name is empty.')

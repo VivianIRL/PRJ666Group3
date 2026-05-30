@@ -22,7 +22,6 @@ function ImmigrationDetails() {
         if (state) {
             const { registeringUser } = state;
             if (registeringUser) {
-                console.log(registeringUser)
                 // eslint-disable-next-line react-hooks/set-state-in-effect
                 setRegisteredUser(registeringUser)
             } else {
@@ -247,7 +246,6 @@ function ImmigrationDetails() {
 
     async function handleFormSubmit(formData) { 
         await formData
-        console.log(formData)
         if (!formData.get('agreed')) {
             alert('ERROR: Terms and conditions not agreed for.')
             return;
@@ -296,7 +294,6 @@ function ImmigrationDetails() {
             "expectedArrival": expectedArrival,
             "languageTestsTaken": languageTestsTaken
         }
-        console.log(`Newest user: ${JSON.stringify(newUser)}`)
         setUser(newUser)
         navigate('/');
     }
