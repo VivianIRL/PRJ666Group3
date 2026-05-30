@@ -10,7 +10,7 @@ import { UserContext } from "../UserContext";
 
 export default function TopNavbar() {
   const navigate = useNavigate();
-  const { user } = useContext(UserContext)
+  const { user, setUser } = useContext(UserContext)
 
   function handleLogin(e) {
     e.preventDefault();
@@ -20,6 +20,12 @@ export default function TopNavbar() {
   function handleRegister(e) {
     e.preventDefault();
     navigate("/register");
+  }
+
+  function handleSignout(e) {
+    e.preventDefault();
+    setUser(null)
+    navigate("/");
   }
 
   return (
@@ -41,7 +47,12 @@ export default function TopNavbar() {
 
         <div className="auth-buttons">
           {user ?
-          <>Hello, {user.firstName}</> :
+          <>
+              Hello, {user.firstName}
+            <Button className="signup-btn" onClick={handleSignout}>
+              Sign out
+            </Button>
+          </> :
           <>
             <Button className="signup-btn" onClick={handleRegister}>
               Sign up

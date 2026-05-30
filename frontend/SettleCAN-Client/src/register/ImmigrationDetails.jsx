@@ -11,7 +11,7 @@ function ImmigrationDetails() {
     
     const [ registeredUser, setRegisteredUser ] = useState();
     
-    const { user, setUser } = useContext(UserContext)
+    const { setUser } = useContext(UserContext)
     
     function noUserFailCase() {
         alert("ERROR: Registering user details not submitted before. Returning to home.")

@@ -16,7 +16,7 @@ import "./scss/App.scss";
 import { UserContext } from "./UserContext.jsx";
 
 export default function Center() {
-  const [user, setUser] = useState("Test")
+  const [user, setUser] = useState(null)
 
   return (
     <StrictMode>
