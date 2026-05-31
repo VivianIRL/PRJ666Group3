@@ -6,12 +6,6 @@ require("dotenv").config({
 
 const { createClient } = require("@supabase/supabase-js");
 
-console.log("ENV CHECK:", {
-  cwd: process.cwd(),
-  file: __dirname,
-  url: process.env.SUPABASE_URL,
-  keyExists: !!process.env.SUPABASE_ANON_KEY,
-});
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
