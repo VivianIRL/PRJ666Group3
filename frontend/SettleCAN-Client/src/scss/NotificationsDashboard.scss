@@ -1,0 +1,446 @@
+@use "./variables" as *;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Notifications Dashboard — matches the prototype design
+// ─────────────────────────────────────────────────────────────────────────────
+
+.nd2 {
+  padding: 1.75rem 2rem;
+  min-height: 100vh;
+  background: #f5f5f5;
+  font-family: system-ui, -apple-system, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  @media (max-width: 768px) { padding: 1.25rem 1rem; }
+
+  // ── Top bar ───────────────────────────────────────────────────────────────
+  &__topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__action {
+    border: 1.5px solid #ddd;
+    background: #fff;
+    border-radius: 999px;
+    padding: 0.42rem 1.1rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #3a2a30;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: background 0.15s, border-color 0.15s;
+
+    &:hover { border-color: $primary; color: $primary; }
+
+    &--active {
+      background: $primary;
+      border-color: $primary;
+      color: #fff;
+
+      &:hover { opacity: 0.88; }
+    }
+  }
+
+  &__badge {
+    background: #fff;
+    color: $primary;
+    font-size: 0.65rem;
+    font-weight: 800;
+    border-radius: 999px;
+    padding: 0.1rem 0.45rem;
+    min-width: 18px;
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  &__welcome {
+    font-size: 0.85rem;
+    color: #5a4a50;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__logout {
+    background: none;
+    border: 1.5px solid #ccc;
+    border-radius: 6px;
+    padding: 0.25rem 0.7rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #3a2a30;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+
+    &:hover { border-color: $primary; color: $primary; }
+  }
+
+  // ── Empty state ──────────────────────────────────────────────────────────
+  &__empty {
+    background: #fff;
+    border-radius: 0.9rem;
+    padding: 2rem;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #7a6a70;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+
+  &__link {
+    background: none;
+    border: none;
+    color: $primary;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0;
+    font-size: inherit;
+    text-decoration: underline;
+  }
+
+  // ── Notification cards ───────────────────────────────────────────────────
+  &__cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+
+  &__card {
+    border-radius: 0.85rem;
+    padding: 1.2rem 1.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+
+    // All cards use red gradient — urgency shifts the shade
+    &--urgent {
+      background: linear-gradient(145deg, #b3203b 0%, #7b0f20 100%);
+    }
+    &--warning {
+      background: linear-gradient(145deg, #c0392b 0%, #8E0002 100%);
+    }
+    &--normal {
+      background: linear-gradient(145deg, #a33040 0%, #6b1020 100%);
+    }
+  }
+
+  &__card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  &__card-desc {
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.88);
+    margin: 0;
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  &__card-btn {
+    display: block;
+    align-self: stretch;
+    border: none;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.55rem 1rem;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.15s;
+
+    &:hover { background: rgba(255,255,255,0.25); color: #fff; }
+  }
+
+  // ── Calendar + Quick Links row ────────────────────────────────────────────
+  &__bottom {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 1.25rem;
+    align-items: flex-start;
+
+    @media (max-width: 900px) { grid-template-columns: 1fr; }
+  }
+
+  // ── Quick Links ──────────────────────────────────────────────────────────
+  &__links {
+    background: #fff;
+    border-radius: 0.9rem;
+    padding: 1.2rem 1.3rem;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+  }
+
+  &__links-title {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #1a0d10;
+    margin: 0 0 0.85rem;
+  }
+
+  &__links-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  &__link-item {
+    display: block;
+    background: #f5f3f4;
+    border-radius: 6px;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #3a2a30;
+    text-decoration: none;
+    transition: background 0.12s, color 0.12s;
+
+    &:hover { background: #fdeaed; color: $primary; }
+  }
+
+  // ── Sync modal ────────────────────────────────────────────────────────────
+  &__overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+  }
+
+  &__modal {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 1.75rem;
+    width: 360px;
+    max-width: 90vw;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+
+    h3 { font-size: 1.1rem; font-weight: 800; color: #1a0d10; margin: 0; }
+
+    label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #2b1a1f;
+    }
+
+    input[type="email"] {
+      border: 1.5px solid #e0d8da;
+      border-radius: 0.6rem;
+      padding: 0.55rem 0.8rem;
+      font-size: 0.88rem;
+      outline: none;
+      width: 100%;
+      box-sizing: border-box;
+      background: #faf8f9;
+
+      &:focus { border-color: $primary; }
+    }
+  }
+
+  &__modal-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+
+    input { width: 16px; height: 16px; accent-color: $primary; }
+  }
+
+  &__modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+  }
+
+  &__modal-save {
+    background: $primary;
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 0.45rem 1.1rem;
+    font-size: 0.83rem;
+    font-weight: 700;
+    cursor: pointer;
+    &:hover { opacity: 0.88; }
+  }
+
+  &__modal-cancel {
+    background: #f3f0f1;
+    color: #4a3a40;
+    border: none;
+    border-radius: 999px;
+    padding: 0.45rem 1.1rem;
+    font-size: 0.83rem;
+    font-weight: 600;
+    cursor: pointer;
+    &:hover { background: #e8e4e5; }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Big Calendar
+// ─────────────────────────────────────────────────────────────────────────────
+
+.nd-big-cal {
+  background: #fff;
+  border-radius: 0.9rem;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+
+  // ── Header ────────────────────────────────────────────────────────────────
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+
+    button {
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      color: #7a6a70;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 0.3rem;
+
+      &:hover { color: $primary; }
+    }
+  }
+
+  &__month {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1a0d10;
+  }
+
+  &__legend {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: $primary;
+    letter-spacing: 0.02em;
+  }
+
+  // ── Grid ──────────────────────────────────────────────────────────────────
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+  }
+
+  &__dh {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-align: center;
+    color: #9a8a90;
+    text-transform: uppercase;
+    padding: 0.25rem 0;
+    letter-spacing: 0.04em;
+  }
+
+  &__cell {
+    border: 1px solid #f0eaec;
+    border-radius: 4px;
+    padding: 0.4rem 0.45rem 0.35rem;
+    min-height: 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    position: relative;
+    background: #fff;
+
+    &--empty {
+      border-color: transparent;
+      background: transparent;
+    }
+
+    &--today {
+      background: #fff0f0;
+
+      .nd-big-cal__day-num {
+        background: $primary;
+        color: #fff;
+        border-radius: 50%;
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+      }
+    }
+
+    // Cells with events get a red border like the prototype
+    &--event {
+      border-color: $primary;
+      background: #fff8f8;
+    }
+  }
+
+  &__day-num {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: #3a2a30;
+    line-height: 1.3;
+    align-self: flex-start;
+  }
+
+  &__event-pill {
+    display: block;
+    background: $primary;
+    color: #fff;
+    font-size: 0.58rem;
+    font-weight: 700;
+    border-radius: 3px;
+    padding: 2px 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    line-height: 1.4;
+  }
+
+  @media (max-width: 600px) {
+    padding: 1rem;
+
+    &__cell { min-height: 48px; }
+    &__event-pill { display: none; }
+    &__cell--event &__day-num { color: $primary; font-weight: 800; }
+  }
+}

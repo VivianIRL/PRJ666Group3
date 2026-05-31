@@ -1,191 +1,91 @@
-import "bootstrap/dist/css/bootstrap.min.css";
-import Button from "react-bootstrap/Button";
-import Form from "react-bootstrap/Form";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
-import { registerUser } from "../service/authService";
+// Register.jsx — Step 1: basic account info
+// Passes firstName, lastName, email to ImmigrationDetails via router state
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import "../scss/Auth.scss";
 
-function ImmigrationDetails() {
+function Register() {
   const navigate = useNavigate();
 
-  async function handleFormSubmit(formData) {
-    await formData;
-    var firstName = formData.get("firstName");
-    if (!firstName) {
-      alert("ERROR: First name is empty.");
-      return;
-    }
-    var lastName = formData.get("lastName");
-    if (!lastName) {
-      alert("ERROR: Last name is empty.");
-      return;
-    }
-    var email = formData.get("email");
-    if (!email) {
-      alert("ERROR: Email is required");
-      return;
-    }
-    var dateOB = new Date(formData.get("dateOfBirth"));
-    if (!formData.get("dateOfBirth")) {
-      alert("ERROR: Date of birth is empty.");
-      return;
-    }
-    var password = formData.get("password");
-    if (!password) {
-      alert("ERROR: Password is empty.");
-      return;
-    }
-    var emailRegex = /^((?!\.)[\w\-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])$/gm;
-    var phoneRegex = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/g;
-    if (!(emailRegex.test(email) || phoneRegex.test(email))) {
-      alert("ERROR: No valid email was given.");
-      return;
-    }
-    var now = new Date();
-    if (dateOB > now) {
-      alert("ERROR: Date of birth is not in the past.");
-      return;
-    }
-    if (password != formData.get("confirmPassword")) {
-      alert("ERROR: Passwords do not match");
-      return;
-    }
-    var registeringUser = {
-      firstName: firstName,
-      lastName: lastName,
-      dateOfBirth: dateOB,
-      email: email,
-      password: password,
-    };
-    await registerUser(registeringUser);
-    
-    navigate("/login");
+  const [form, setForm] = useState({
+    firstName: "", lastName: "", dob: "", email: "", password: "", confirm: "",
+  });
+  const [error, setError] = useState("");
+
+  function set(field) { return e => setForm(f => ({ ...f, [field]: e.target.value })); }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.firstName.trim()) { setError("First name is required."); return; }
+    if (!form.email.trim())     { setError("Email is required."); return; }
+    if (form.password.length < 8) { setError("Password must be at least 8 characters."); return; }
+    if (form.password !== form.confirm) { setError("Passwords do not match."); return; }
+    setError("");
+    // Pass collected data to step 2
+    navigate("/immigration", { state: { firstName: form.firstName, lastName: form.lastName, email: form.email, dob: form.dob } });
   }
 
   return (
-    <>
-      <h2 style={{ "margin-top": "67px" }}>
-        <b>
-          Create account with settle
-          <span style={{ color: "#8F0004" }}>CAN</span>
-        </b>
-      </h2>
-      <div style={{ "font-size": "12.5px" }}>
-        Your Journey to Canada, Simplified
-      </div>
-      <Form action={handleFormSubmit}>
-        <div
-          className="row"
-          style={{
-            marginTop: "67px",
-            paddingLeft: "50px",
-            paddingRight: "50px",
-            gap: "10%",
-          }}
-        >
-          {/* Left Column */}
-          <div
-            className="column"
-            style={{
-              textAlign: "left",
-              inlineSize: "45%",
-            }}
-          >
-            <Form.Group className="mb-3" controlId="formFirstName">
-              <Form.Label>First Name</Form.Label>
-              <Form.Control
-                type="text"
-                name="firstName"
-                defaultValue="Suganya"
-                style={{ background: "#F8FBFF" }}
-              />
-            </Form.Group>
+    <div className="auth-page">
+      <div className="auth-card auth-card--wide">
 
-            <Form.Group className="mb-3" controlId="formEmail">
-              <Form.Label>Email</Form.Label>
-              <Form.Control
-                type="email"
-                name="email"
-                defaultValue={`test${Date.now()}@gmail.com`}
-                style={{ background: "#F8FBFF" }}
-              />
-            </Form.Group>
+        <div className="auth-brand">settle<em>CAN</em></div>
 
-            <Form.Group className="mb-3" controlId="formPassword">
-              <Form.Label>Password</Form.Label>
-              <Form.Control
-                type="password"
-                name="password"
-                defaultValue="OMGfml123!"
-                style={{ background: "#F8FBFF" }}
-              />
-            </Form.Group>
-          </div>
+        <h2 className="auth-title">Create your account</h2>
+        <p className="auth-sub">Your journey to Canada, simplified.</p>
 
-          {/* Right Column */}
-          <div
-            className="column"
-            style={{
-              textAlign: "left",
-              inlineSize: "45%",
-            }}
-          >
-            <Form.Group className="mb-3" controlId="formLastName">
-              <Form.Label>Last Name</Form.Label>
-              <Form.Control
-                type="text"
-                name="lastName"
-                defaultValue="Maheswaran"
-                style={{ background: "#F8FBFF" }}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3" controlId="formDateOfBirth">
-              <Form.Label>Date of Birth</Form.Label>
-              <Form.Control
-                type="date"
-                name="dateOfBirth"
-                defaultValue="1990-09-27"
-                style={{ background: "#F8FBFF" }}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3" controlId="formPasswordConfirm">
-              <Form.Label>Confirm Password</Form.Label>
-              <Form.Control
-                type="password"
-                name="confirmPassword"
-                defaultValue="OMGfml123!"
-                style={{ background: "#F8FBFF" }}
-              />
-            </Form.Group>
-          </div>
+        {/* Step indicator */}
+        <div className="auth-steps">
+          <span className="auth-step auth-step--active">1 Account</span>
+          <span className="auth-step-divider">→</span>
+          <span className="auth-step">2 Immigration Details</span>
         </div>
 
-        <br />
-        <br />
-        <br />
+        {error && <div className="auth-error">{error}</div>}
 
-        <section id="center">
-          <Button
-            variant="danger"
-            type="submit"
-            style={{
-              "--bs-btn-bg": "#830C10",
-              display: "block",
-              width: "67%",
-            }}
-          >
-            Immigration Details
-          </Button>
-
-          <div>
-            Have an account? <Link to="/login">Log in</Link>
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="auth-row">
+            <div className="auth-field">
+              <label>First Name <span className="req">*</span></label>
+              <input type="text" placeholder="Maria" value={form.firstName} onChange={set("firstName")} />
+            </div>
+            <div className="auth-field">
+              <label>Last Name</label>
+              <input type="text" placeholder="Smith" value={form.lastName} onChange={set("lastName")} />
+            </div>
           </div>
-        </section>
-      </Form>
-    </>
+
+          <div className="auth-row">
+            <div className="auth-field">
+              <label>Email address <span className="req">*</span></label>
+              <input type="email" placeholder="you@example.com" value={form.email} onChange={set("email")} />
+            </div>
+            <div className="auth-field">
+              <label>Date of Birth</label>
+              <input type="date" value={form.dob} onChange={set("dob")} />
+            </div>
+          </div>
+
+          <div className="auth-row">
+            <div className="auth-field">
+              <label>Password <span className="req">*</span></label>
+              <input type="password" placeholder="At least 8 characters" value={form.password} onChange={set("password")} />
+            </div>
+            <div className="auth-field">
+              <label>Confirm Password <span className="req">*</span></label>
+              <input type="password" placeholder="Repeat password" value={form.confirm} onChange={set("confirm")} />
+            </div>
+          </div>
+
+          <button type="submit" className="auth-btn">
+            Next: Immigration Details →
+          </button>
+        </form>
+
+        <p className="auth-footer">Already have an account? <Link to="/login">Sign in</Link></p>
+      </div>
+    </div>
   );
 }
 
-export default ImmigrationDetails;
+export default Register;
