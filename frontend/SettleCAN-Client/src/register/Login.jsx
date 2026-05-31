@@ -1,37 +1,67 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import { Link } from 'react-router-dom';
+import { useState, useContext } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { AuthContext } from '../state/AuthContext';
+import '../scss/Auth.scss';
 
 function Login() {
-    return (
-    <div style={{ "text-align": "center" }} >
-        <div style={{"display": "inline-block", "text-align": "left", 'margin-top': "120px", "inline-size": "40%"}}>
-            <h2><b>Welcome back</b></h2>
-            <div style={{"font-size": "12.5px"}}>
-                Get back to your task list!
-                <br />
-                <br />
-                <Form>
-                    <Form.Group className="mb-3" controlId="formBasicEmail">
-                        <Form.Label><b>Email address</b></Form.Label>
-                            <Form.Control type="email" placeholder="Example@email.com" style={{"background": "#F8FBFF"}}/>
-                    </Form.Group>
-                    <Form.Group className="mb-3" controlId="formBasicPassword">
-                        <Form.Label><b>Password</b></Form.Label>
-                        <Form.Control type="password" placeholder="At least 8 characters" style={{"background": "#F8FBFF"}}/>
-                        <Form.Text style={{"text-align": "right"}}>
-                            <Link to="/">Forgot password?</Link>
-                        </Form.Text>
-                    </Form.Group>
-                    <Button variant="danger" type="submit" style={{"--bs-btn-bg": "#830C10", "display": "block", "width": "100%"}}>
-                        Log in
-                    </Button>
-                </Form>
-            </div>
-        </div>
+  const { login }  = useContext(AuthContext);
+  const navigate   = useNavigate();
+
+  const [email,    setEmail]    = useState('');
+  const [password, setPassword] = useState('');
+  const [error,    setError]    = useState('');
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!email || !password) { setError('Please enter your email and password.'); return; }
+    const ok = login(email, password);
+    if (ok) navigate('/dashboard');
+    else setError('Invalid credentials. Please try again.');
+  }
+
+  return (
+    <div className="auth-page">
+      <div className="auth-card">
+
+        <div className="auth-brand">settle<em>CAN</em></div>
+
+        <h2 className="auth-title">Welcome back</h2>
+        <p className="auth-sub">Get back to your settlement task list.</p>
+
+        {error && <div className="auth-error">{error}</div>}
+
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="auth-field">
+            <label>Email address</label>
+            <input
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+            />
+          </div>
+
+          <div className="auth-field">
+            <label>Password</label>
+            <input
+              type="password"
+              placeholder="At least 8 characters"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+            />
+          </div>
+
+          <div className="auth-forgot"><Link to="/">Forgot password?</Link></div>
+
+          <button type="submit" className="auth-btn">Log in</button>
+        </form>
+
+        <p className="auth-footer">
+          Don't have an account? <Link to="/register">Sign up</Link>
+        </p>
+      </div>
     </div>
-  )
+  );
 }
 
-export default Login
+export default Login;

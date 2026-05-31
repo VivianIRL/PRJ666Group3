@@ -1,0 +1,85 @@
+@use "./variables" as *;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared styles for information pages (SIN, Work Permit, Health, Language)
+// ─────────────────────────────────────────────────────────────────────────────
+
+.info-page {
+  max-width: 960px;
+}
+
+// ── Hero banner ───────────────────────────────────────────────────────────────
+.info-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  border-radius: 1.1rem;
+  padding: 1.75rem 2rem;
+  margin-bottom: 1.75rem;
+  color: #fff;
+
+  &--red   { background: linear-gradient(135deg, $primary 0%, #6b0f1a 100%); }
+  &--green { background: linear-gradient(135deg, #15803d 0%, #065f46 100%); }
+  &--blue  { background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%); }
+
+  &__icon {
+    font-size: 3rem;
+    line-height: 1;
+    flex-shrink: 0;
+
+    @media (max-width: 600px) { font-size: 2rem; }
+  }
+
+  &__eyebrow {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.7;
+    margin-bottom: 0.35rem;
+  }
+
+  &__title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0 0 0.4rem;
+    line-height: 1.2;
+
+    @media (max-width: 600px) { font-size: 1.25rem; }
+  }
+
+  &__sub {
+    font-size: 0.88rem;
+    opacity: 0.9;
+    margin: 0 0 0.85rem;
+    line-height: 1.5;
+    max-width: 540px;
+  }
+
+  &__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+    border-radius: 999px;
+    padding: 0.4rem 1rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.15s;
+
+    &:hover { background: rgba(255,255,255,0.3); color: #fff; }
+  }
+}
+
+// ── Bottom link row ────────────────────────────────────────────────────────────
+.info-links-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  > .fp-card { flex: 1; min-width: 240px; }
+
+  @media (max-width: 600px) { flex-direction: column; }
+}

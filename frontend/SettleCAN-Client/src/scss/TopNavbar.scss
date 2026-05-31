@@ -45,6 +45,41 @@
     }
   }
 
+  // Notification bell icon
+  .notif-bell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    color: $text-dark;
+    text-decoration: none;
+    padding: 0.3rem;
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+
+    &:hover {
+      color: $primary;
+      background: rgba(142, 0, 2, 0.06);
+    }
+
+    &__badge {
+      position: absolute;
+      top: -2px;
+      right: -4px;
+      background: $primary;
+      color: #fff;
+      font-size: 0.6rem;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 0 4px;
+      min-width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+  }
+
   .auth-buttons {
     display: flex;
     align-items: center;

@@ -1,0 +1,298 @@
+@use "./variables" as *;
+
+$sb-w:  240px;
+$sb-wc: 64px;   // collapsed
+
+.app-sidebar {
+  width: $sb-w;
+  min-height: 100vh;
+  background: #fff;
+  border-right: 1px solid #ede5e7;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: width 0.2s ease;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  &--collapsed { width: $sb-wc; }
+
+  // ── Brand ──────────────────────────────────────────────────────────────────
+  .asb-brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.1rem 1rem 0.75rem;
+    border-bottom: 1px solid #f5eff2;
+  }
+
+  .asb-logo {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #1a0d10;
+    white-space: nowrap;
+    overflow: hidden;
+
+    em {
+      font-style: normal;
+      color: $primary;
+    }
+  }
+
+  .asb-toggle {
+    background: none;
+    border: none;
+    font-size: 0.7rem;
+    color: #9a8a90;
+    cursor: pointer;
+    padding: 0.25rem 0.4rem;
+    border-radius: 4px;
+    flex-shrink: 0;
+
+    &:hover { background: #f5eff2; color: $primary; }
+  }
+
+  // ── User ───────────────────────────────────────────────────────────────────
+  .asb-user {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #f5eff2;
+  }
+
+  .asb-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: $primary;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .asb-user__name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #1a0d10;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .asb-user__status {
+    font-size: 0.68rem;
+    color: #9a8a90;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // ── Navigation ─────────────────────────────────────────────────────────────
+  .asb-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0.6rem 0.5rem;
+    flex: 1;
+
+    &__item {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.6rem 0.65rem;
+      border-radius: 0.6rem;
+      text-decoration: none;
+      color: #4a3a40;
+      font-size: 0.83rem;
+      font-weight: 500;
+      transition: background 0.12s, color 0.12s;
+      white-space: nowrap;
+      position: relative;
+
+      &:hover { background: #f5eff2; color: #1a0d10; }
+
+      &--active {
+        background: #fdeaed;
+        color: $primary;
+        font-weight: 700;
+
+        &::before {
+          content: "";
+          position: absolute;
+          left: -0.5rem;
+          top: 20%;
+          bottom: 20%;
+          width: 3px;
+          background: $primary;
+          border-radius: 0 3px 3px 0;
+        }
+      }
+    }
+
+    &__icon {
+      font-size: 1rem;
+      flex-shrink: 0;
+      width: 20px;
+      text-align: center;
+    }
+
+    &__label { flex: 1; }
+  }
+
+  .asb-badge {
+    background: $primary;
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 0.1rem 0.4rem;
+    min-width: 16px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  // ── Calendar section ───────────────────────────────────────────────────────
+  .asb-calendar-wrap {
+    padding: 0.75rem 0.75rem 0;
+    border-top: 1px solid #f5eff2;
+  }
+
+  .asb-section-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #9a8a90;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  // ── Bottom ─────────────────────────────────────────────────────────────────
+  .asb-bottom {
+    padding: 0.75rem 0.75rem;
+    border-top: 1px solid #f5eff2;
+  }
+
+  .asb-logout {
+    background: none;
+    border: none;
+    color: #9a8a90;
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 0.4rem 0.5rem;
+    border-radius: 0.5rem;
+    width: 100%;
+    text-align: left;
+    transition: color 0.12s, background 0.12s;
+
+    &:hover { color: $primary; background: #fdeaed; }
+
+    &--icon { text-align: center; font-size: 1rem; }
+  }
+}
+
+// ── Mini Calendar ─────────────────────────────────────────────────────────────
+.mc-wrap {
+  cursor: pointer;
+  border-radius: 0.65rem;
+  padding: 0.5rem;
+  transition: background 0.15s;
+
+  &:hover { background: #f9f5f6; }
+}
+
+.mc-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+
+  span {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #2b1a1f;
+  }
+
+  button {
+    background: none;
+    border: none;
+    font-size: 0.9rem;
+    color: #9a8a90;
+    cursor: pointer;
+    padding: 0 0.2rem;
+    line-height: 1;
+
+    &:hover { color: $primary; }
+  }
+}
+
+.mc-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+
+.mc-dh {
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-align: center;
+  color: #bbb;
+  text-transform: uppercase;
+  padding-bottom: 0.2rem;
+}
+
+.mc-cell {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  color: #4a3a40;
+  border-radius: 4px;
+
+  &--empty { background: transparent; }
+
+  &--today {
+    background: $primary;
+    color: #fff;
+    font-weight: 800;
+    border-radius: 50%;
+  }
+
+  &--event:not(.mc-cell--today) {
+    background: #fdeaed;
+    color: $primary;
+    font-weight: 700;
+  }
+}
+
+.mc-dot {
+  position: absolute;
+  bottom: 1px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: $primary;
+}
+
+// ── Collapsed sidebar adjustments ─────────────────────────────────────────────
+.app-sidebar--collapsed {
+  .asb-nav__item {
+    justify-content: center;
+    padding: 0.65rem 0;
+  }
+
+  .asb-nav__item--active::before {
+    left: -0.25rem;
+  }
+}

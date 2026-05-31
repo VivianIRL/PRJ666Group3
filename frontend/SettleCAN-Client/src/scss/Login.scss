@@ -1,0 +1,122 @@
+@use "./variables" as *;
+
+.login-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fdf0f0 0%, #f7f5f6 60%, #fdeaed 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.login-card {
+  background: #fff;
+  border-radius: 1.25rem;
+  padding: 2.5rem 2.75rem;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 10px 40px rgba(142, 0, 2, 0.1);
+}
+
+.login-brand {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1a0d10;
+  margin-bottom: 1.5rem;
+
+  span { color: $primary; }
+}
+
+.login-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1a0d10;
+  margin: 0 0 0.3rem;
+}
+
+.login-sub {
+  font-size: 0.9rem;
+  color: #7a6a70;
+  margin: 0 0 1.5rem;
+}
+
+.login-error {
+  background: #fdeaed;
+  color: $primary;
+  border-radius: 0.6rem;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+
+  label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #2b1a1f;
+    margin-top: 0.75rem;
+    margin-bottom: 0.3rem;
+    display: block;
+  }
+
+  input {
+    width: 100%;
+    border: 1.5px solid #e0d8da;
+    border-radius: 0.65rem;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.9rem;
+    outline: none;
+    background: #faf8f9;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+
+    &:focus {
+      border-color: $primary;
+      background: #fff;
+    }
+  }
+}
+
+.login-forgot {
+  text-align: right;
+  margin-top: 0.25rem;
+
+  a {
+    font-size: 0.78rem;
+    color: $primary;
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; }
+  }
+}
+
+.login-btn {
+  margin-top: 1.25rem;
+  background: $primary;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  transition: opacity 0.15s;
+
+  &:hover { opacity: 0.88; }
+}
+
+.login-register {
+  text-align: center;
+  font-size: 0.83rem;
+  color: #7a6a70;
+  margin: 1.25rem 0 0;
+
+  a { color: $primary; font-weight: 600; text-decoration: none; &:hover { text-decoration: underline; } }
+}

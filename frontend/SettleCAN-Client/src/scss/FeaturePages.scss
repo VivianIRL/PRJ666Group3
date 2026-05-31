@@ -1,0 +1,407 @@
+@use "./variables" as *;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared styles for all SettleCAN feature pages
+// ─────────────────────────────────────────────────────────────────────────────
+
+.fp-page {
+  min-height: 100vh;
+  background: #f7f5f6;
+  padding: 2rem 2.5rem;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  @media (max-width: 768px) { padding: 1.25rem 1rem; }
+}
+
+// ── Page header ───────────────────────────────────────────────────────────────
+.fp-header {
+  margin-bottom: 2rem;
+
+  &__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: $primary;
+    background: #fdeaed;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    margin-bottom: 0.6rem;
+  }
+
+  &__title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #1a0d10;
+    margin: 0 0 0.4rem;
+
+    @media (max-width: 768px) { font-size: 1.35rem; }
+  }
+
+  &__subtitle {
+    font-size: 0.95rem;
+    color: #6b5a61;
+    margin: 0;
+    max-width: 640px;
+    line-height: 1.55;
+  }
+}
+
+// ── Card grid ────────────────────────────────────────────────────────────────
+.fp-grid {
+  display: grid;
+  gap: 1rem;
+
+  &--2 { grid-template-columns: repeat(2, 1fr); }
+  &--3 { grid-template-columns: repeat(3, 1fr); }
+  &--auto { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+
+  @media (max-width: 900px) {
+    &--3, &--2 { grid-template-columns: 1fr; }
+  }
+}
+
+// ── Info card ────────────────────────────────────────────────────────────────
+.fp-card {
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1.25rem 1.4rem;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+
+  &--accent {
+    border-left: 4px solid $primary;
+  }
+
+  &--warning {
+    border-left: 4px solid #e67e22;
+    background: #fffbf5;
+  }
+
+  &--danger {
+    border-left: 4px solid #c0392b;
+    background: #fff8f8;
+  }
+
+  &--success {
+    border-left: 4px solid #27ae60;
+    background: #f6fff9;
+  }
+
+  &--info {
+    border-left: 4px solid #2563eb;
+    background: #f5f8ff;
+  }
+
+  &__icon { font-size: 1.6rem; line-height: 1; }
+  &__eyebrow {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: $primary;
+    opacity: 0.8;
+  }
+  &__title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a0d10;
+    margin: 0;
+  }
+  &__body {
+    font-size: 0.875rem;
+    color: #5a4a50;
+    line-height: 1.55;
+    margin: 0;
+  }
+  &__link {
+    align-self: flex-start;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: $primary;
+    text-decoration: none;
+    margin-top: auto;
+    padding-top: 0.25rem;
+    &:hover { text-decoration: underline; }
+  }
+}
+
+// ── Section heading ──────────────────────────────────────────────────────────
+.fp-section {
+  margin-bottom: 1.75rem;
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #1a0d10;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin: 0 0 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: #ede5e7;
+    }
+  }
+}
+
+// ── Tag / badge ──────────────────────────────────────────────────────────────
+.fp-tag {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.18rem 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+
+  &--red    { background: #fdeaed; color: #b3203b; }
+  &--blue   { background: #e8f0fe; color: #1d4ed8; }
+  &--green  { background: #e6f9ef; color: #15803d; }
+  &--orange { background: #fff3e0; color: #c2410c; }
+  &--gray   { background: #f3f0f1; color: #6b5a61; }
+}
+
+// ── Stat row ─────────────────────────────────────────────────────────────────
+.fp-stats {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.fp-stat {
+  background: #fff;
+  border-radius: 0.85rem;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+  min-width: 130px;
+
+  &__num {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: $primary;
+    line-height: 1;
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #9a8a90;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+}
+
+// ── Timeline / step list ─────────────────────────────────────────────────────
+.fp-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  padding-left: 2rem;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0.6rem;
+    top: 0.8rem;
+    bottom: 0.8rem;
+    width: 2px;
+    background: linear-gradient(to bottom, $primary 0%, #e5d8d8 100%);
+    border-radius: 2px;
+  }
+}
+
+.fp-step {
+  position: relative;
+  padding: 0 0 1.25rem 0.75rem;
+
+  &:last-child { padding-bottom: 0; }
+
+  &__dot {
+    position: absolute;
+    left: -1.45rem;
+    top: 0.3rem;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: $primary;
+    border: 2.5px solid #fff;
+    box-shadow: 0 0 0 2px $primary;
+  }
+
+  &__num {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: $primary;
+    opacity: 0.7;
+    margin-bottom: 0.1rem;
+  }
+
+  &__title {
+    font-size: 0.93rem;
+    font-weight: 700;
+    color: #1a0d10;
+    margin-bottom: 0.2rem;
+  }
+
+  &__body {
+    font-size: 0.85rem;
+    color: #5a4a50;
+    line-height: 1.5;
+  }
+}
+
+// ── Table ────────────────────────────────────────────────────────────────────
+.fp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  background: #fff;
+  border-radius: 0.85rem;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+
+  th {
+    background: #fdeaed;
+    color: $primary;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.72rem;
+    padding: 0.65rem 0.9rem;
+    text-align: left;
+  }
+
+  td {
+    padding: 0.65rem 0.9rem;
+    color: #3a2a30;
+    border-bottom: 1px solid #f5eff2;
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td      { background: #fdf7f8; }
+}
+
+// ── Accordion ────────────────────────────────────────────────────────────────
+.fp-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  &__item {
+    background: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    overflow: hidden;
+  }
+
+  &__trigger {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0.85rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1a0d10;
+    text-align: left;
+    gap: 0.5rem;
+
+    &:hover { background: #fdf7f8; }
+  }
+
+  &__chevron {
+    font-size: 0.65rem;
+    color: #9a8a90;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+
+    &--open { transform: rotate(180deg); }
+  }
+
+  &__body {
+    padding: 0 1rem 0.9rem;
+    font-size: 0.86rem;
+    color: #5a4a50;
+    line-height: 1.6;
+    border-top: 1px solid #f5eff2;
+    padding-top: 0.6rem;
+  }
+}
+
+// ── Alert bar ────────────────────────────────────────────────────────────────
+.fp-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+
+  &__icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 0.05rem; }
+  &__text { color: #2b1a1f; }
+  &__title { font-weight: 700; display: block; margin-bottom: 0.1rem; }
+
+  &--warning { background: #fff3e0; }
+  &--danger  { background: #fdeaed; }
+  &--info    { background: #e8f0fe; }
+  &--success { background: #e6f9ef; }
+}
+
+// ── Progress bar ─────────────────────────────────────────────────────────────
+.fp-progress {
+  background: #ede5e7;
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+
+  &__bar {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(to right, $primary, #d94a4c);
+    transition: width 0.4s ease;
+  }
+}
+
+// ── Link button ──────────────────────────────────────────────────────────────
+.fp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.45rem 1.1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+  transition: opacity 0.15s;
+
+  &:hover { opacity: 0.85; }
+
+  &--primary { background: $primary; color: #fff; }
+  &--outline { background: #fff; border: 1.5px solid $primary; color: $primary; }
+  &--ghost   { background: #f5eff2; color: #3a2a30; }
+}

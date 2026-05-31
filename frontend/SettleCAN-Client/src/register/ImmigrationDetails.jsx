@@ -1,294 +1,172 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import { useNavigate } from 'react-router-dom';
+// ImmigrationDetails.jsx — Step 2: immigration profile
+// Reads firstName/lastName/email from router state (passed by Register.jsx)
+// Calls register() on AuthContext then navigates to /dashboard
+import { useState, useContext } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { AuthContext } from "../state/AuthContext";
+import "../scss/Auth.scss";
+
+const PROVINCES = [
+  "Ontario","Quebec","Nova Scotia","New Brunswick","Manitoba",
+  "British Columbia","Prince Edward Island","Saskatchewan",
+  "Alberta","Newfoundland and Labrador",
+];
+
+const STATUSES = [
+  "International Student",
+  "Work Permit Holder",
+  "Permanent Resident",
+  "Refugee / Protected Person",
+  "Visitor",
+  "Canadian Citizen",
+];
+
+const COUNTRIES = [
+  "Afghanistan","Albania","Algeria","Argentina","Armenia","Australia","Austria",
+  "Azerbaijan","Bangladesh","Belgium","Bolivia","Brazil","Bulgaria","Cambodia",
+  "Cameroon","Canada","Chile","China","Colombia","Croatia","Cuba","Cyprus",
+  "Czechia","Denmark","Ecuador","Egypt","Ethiopia","Finland","France","Georgia",
+  "Germany","Ghana","Greece","Guatemala","Hungary","Iceland","India","Indonesia",
+  "Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan",
+  "Kazakhstan","Kenya","Lebanon","Libya","Malaysia","Mexico","Morocco",
+  "Myanmar (Burma)","Nepal","Netherlands","New Zealand","Nigeria","Norway",
+  "Pakistan","Peru","Philippines","Poland","Portugal","Romania","Russia",
+  "Saudi Arabia","Senegal","Serbia","Singapore","South Africa","South Korea",
+  "Spain","Sri Lanka","Sudan","Sweden","Switzerland","Syria","Tanzania",
+  "Thailand","Turkey","Uganda","Ukraine","United Arab Emirates",
+  "United Kingdom","United States","Venezuela","Vietnam","Zambia","Zimbabwe",
+];
+
+const LANG_TESTS = ["None","IELTS","CELPIP","TEF Canada","TCF Canada","TOEFL"];
 
 function ImmigrationDetails() {
-    const navigate = useNavigate()
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const { register } = useContext(AuthContext);
 
-    function handleRegister(e) {
-        e.preventDefault();
-        navigate('/');
-    }
+  // Data passed from step 1
+  const step1 = location.state ?? {};
 
-    const acceptedCountries = [
-        'Afghanistan',
-        'Albania',
-        'Algeria',
-        'Andorra',
-        'Angola',
-        'Antigua and Barbuda',
-        'Argentina',
-        'Armenia',
-        'Australia',
-        'Austria',
-        'Azerbaijan',
-        'Bahrain',
-        'Bangladesh',
-        'Barbados',
-        'Belarus',
-        'Belgium',
-        'Belize',
-        'Benin',
-        'Bhutan',
-        'Bolivia',
-        'Bosnia and Herzegovina',
-        'Botswana',
-        'Brazil',
-        'Brunei',
-        'Bulgaria',
-        'Burkina Faso',
-        'Burundi',
-        'Cambodia',
-        'Cameroon',
-        'Canada',
-        'Cape Verde',
-        'Central African Republic',
-        'Chad',
-        'Chile',
-        'China',
-        'Colombia',
-        'Comoros',
-        'Congo',
-        'Congo (Democratic Republic)',
-        'Costa Rica',
-        'Croatia',
-        'Cuba',
-        'Cyprus',
-        'Czechia',
-        'Denmark',
-        'Djibouti',
-        'Dominica',
-        'Dominican Republic',
-        'East Timor',
-        'Ecuador',
-        'Egypt',
-        'El Salvador',
-        'Equatorial Guinea',
-        'Eritrea',
-        'Estonia',
-        'Eswatini',
-        'Ethiopia',
-        'Fiji',
-        'Finland',
-        'France',
-        'Gabon',
-        'Georgia',
-        'Germany',
-        'Ghana',
-        'Greece',
-        'Grenada',
-        'Guatemala',
-        'Guinea',
-        'Guinea-Bissau',
-        'Guyana',
-        'Haiti',
-        'Honduras',
-        'Hungary',
-        'Iceland',
-        'India',
-        'Indonesia',
-        'Iran',
-        'Iraq',
-        'Ireland',
-        'Israel',
-        'Italy',
-        'Ivory Coast',
-        'Jamaica',
-        'Japan',
-        'Jordan',
-        'Kazakhstan',
-        'Kenya',
-        'Kiribati',
-        'Kosovo',
-        'Kuwait',
-        'Kyrgyzstan',
-        'Laos',
-        'Latvia',
-        'Lebanon',
-        'Lesotho',
-        'Liberia',
-        'Libya',
-        'Liechtenstein',
-        'Lithuania',
-        'Luxembourg',
-        'Madagascar',
-        'Malawi',
-        'Malaysia',
-        'Maldives',
-        'Mali',
-        'Malta',
-        'Marshall Islands',
-        'Mauritania',
-        'Mauritius',
-        'Mexico',
-        'Federated States of Micronesia',
-        'Moldova',
-        'Monaco',
-        'Mongolia',
-        'Montenegro',
-        'Morocco',
-        'Mozambique',
-        'Myanmar (Burma)',
-        'Namibia',
-        'Nauru',
-        'Nepal',
-        'Netherlands',
-        'New Zealand',
-        'Nicaragua',
-        'Niger',
-        'Nigeria',
-        'North Korea',
-        'North Macedonia',
-        'Norway',
-        'Oman',
-        'Pakistan',
-        'Palau',
-        'Palestine',
-        'Panama',
-        'Papua New Guinea',
-        'Paraguay',
-        'Peru',
-        'Philippines',
-        'Poland',
-        'Portugal',
-        'Qatar',
-        'Romania',
-        'Russia',
-        'Rwanda',
-        'St Kitts and Nevis',
-        'St Lucia',
-        'St Vincent',
-        'Samoa',
-        'San Marino',
-        'Sao Tome and Principe',
-        'Saudi Arabia',
-        'Senegal',
-        'Serbia',
-        'Seychelles',
-        'Sierra Leone',
-        'Singapore',
-        'Slovakia',
-        'Slovenia',
-        'Solomon Islands',
-        'Somalia',
-        'South Africa',
-        'South Korea',
-        'South Sudan',
-        'Spain',
-        'Sri Lanka',
-        'Sudan',
-        'Suriname',
-        'Sweden',
-        'Switzerland',
-        'Syria',
-        'Tajikistan',
-        'Tanzania',
-        'Thailand',
-        'The Bahamas',
-        'The Gambia',
-        'Togo',
-        'Tonga',
-        'Trinidad and Tobago',
-        'Tunisia',
-        'Turkey',
-        'Turkmenistan',
-        'Tuvalu',
-        'Uganda',
-        'Ukraine',
-        'United Arab Emirates',
-        'United Kingdom',
-        'United States',
-        'Uruguay',
-        'Uzbekistan',
-        'Vanuatu',
-        'Vatican City',
-        'Venezuela',
-        'Vietnam',
-        'Yemen',
-        'Zambia',
-        'Zimbabwe',
-    ]
+  const [form, setForm] = useState({
+    immigrationStatus: "International Student",
+    province: "Ontario",
+    country: "India",
+    permitExpiry: "",
+    arrivalDate: "",
+    languageTest: "IELTS",
+    rememberMe: false,
+    agreeTerms: false,
+  });
+  const [error, setError] = useState("");
 
-    const acceptedProvinces = [
-        'Ontario',
-        'Quebec',
-        'Nova Scotia',
-        'New Brunswick',
-        'Manitoba',
-        'British Columbia',
-        'Prince Edward Island',
-        'Saskatchewan',
-        'Alberta',
-        'Newfoundland and Labrador'
-    ]
+  function set(field) { return e => setForm(f => ({ ...f, [field]: e.target.type === "checkbox" ? e.target.checked : e.target.value })); }
 
-    return (
-        <>
-            <h2 style={{ 'marginTop': "67px", 'display': "flex", 'paddingLeft': "50px", }}><b>Immigration Details</b></h2>
-            
-            <Form>
-                <div className="row" style={{'marginTop': "67px", 'paddingLeft': "50px",  'paddingRight': "50px", "gap": "20%" }}>
-                    <div className="column" style={{"textAlign": "left", "inlineSize": "40%"}}>
-                                <Form.Group className="mb-3" controlId="formCanadianStatus">
-                                    <Form.Label>Select current Canadian Status</Form.Label>
-                                    <Form.Select aria-label="Please select your immigration status in Canada." style={{ "backgroundColor": "#F8FBFF" }}>
-                                        <option value="canadianborn">Born in Canada</option>
-                                        <option value="nonimmigrant">Non-immigrant</option>
-                                        <option value="recentimmigrant">Recent immigrant</option>
-                                        <option value="establishedimmigrant">Established immigrant</option>
-                                        <option value="nonpermanentresident">Non-permanent resident</option>
-                                    </Form.Select>
-                                </Form.Group>
-                                <Form.Group className="mb-3" controlId="formProvince">
-                                    <Form.Label>Intended Province in Canada</Form.Label>
-                                    <Form.Select style={{ "backgroundColor": "#F8FBFF" }}>
-                                        {acceptedProvinces.map((object) =>
-                                            <option value={object.replace(/\s/g, '').toLowerCase()}>{object}</option>
-                                        )}
-                                    </Form.Select>
-                                </Form.Group>
-                                <Form.Group className="mb-3" controlId="formPermitExpiry">
-                                    <Form.Label>Permit Expiry Date</Form.Label>
-                                    <Form.Control type="date" style={{ "backgroundColor": "#F8FBFF" }}/>
-                                </Form.Group>
-                    </div>
-                    <div className="column" style={{ "textAlign": "left", "inlineSize": "40%" }}>
-                                <Form.Group className="mb-3" controlId="formLastName">
-                                    <Form.Label>Country of Origin</Form.Label>
-                                    <Form.Select style={{ "backgroundColor": "#F8FBFF" }}>
-                                    {acceptedCountries.map((object) =>
-                                        <option value={object.replace(/\s/g, '').toLowerCase()}>{object}</option>
-                                    )}
-                                    </Form.Select>
-                                </Form.Group>
-                                <Form.Group className="mb-3" controlId="formPermitExpiry">
-                                    <Form.Label>Expected Arrival (leave empty if in Canada.)</Form.Label>
-                                    <Form.Control type="date" style={{ "backgroundColor": "#F8FBFF" }}/>
-                                </Form.Group>
-                                <Form.Group className="mb-3" controlId="formLanguageTest">
-                                    <Form.Label>Language Tests Taken</Form.Label>
-                                    <Form.Select style={{ "backgroundColor": "#F8FBFF" }}>
-                                        <option value="0">0</option>
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                        <option value="3plus">3+</option>
-                                    </Form.Select>
-                                </Form.Group>
-                        </div>
-                    </div>
-                <br/>
-                <br />
-                <Form.Check type='checkbox' label="Remember me?" style={{"display": "flex",  'paddingLeft': "80px"}} />
-                <Form.Check type='checkbox' label="I agree the terms and conditions" style={{"display": "flex",  'paddingLeft': "80px"}} />
-                <section style={{'paddingLeft': "50px",}}>
-                    <Button variant="danger" type="submit" style={{"--bs-btn-bg": "#830C10", "display": "block", "width": "42%"}} onClick={handleRegister}>
-                        Create account
-                    </Button>
-                </section>
-            </Form>
-        </>
-    )
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.agreeTerms) { setError("Please agree to the terms and conditions."); return; }
+    if (!step1.firstName)  { setError("Missing account info — please go back to step 1."); return; }
+
+    register({
+      firstName:        step1.firstName,
+      lastName:         step1.lastName  ?? "",
+      email:            step1.email     ?? "",
+      dob:              step1.dob       ?? "",
+      immigrationStatus: form.immigrationStatus,
+      province:         form.province,
+      country:          form.country,
+      permitExpiry:     form.permitExpiry,
+      arrivalDate:      form.arrivalDate,
+      languageTest:     form.languageTest,
+    });
+
+    navigate("/getting-started");
+  }
+
+  return (
+    <div className="auth-page">
+      <div className="auth-card auth-card--wide">
+
+        <div className="auth-brand">settle<em>CAN</em></div>
+
+        <h2 className="auth-title">Immigration Details</h2>
+        <p className="auth-sub">
+          {step1.firstName ? `Welcome, ${step1.firstName}! ` : ""}
+          Help us personalise your settlement journey.
+        </p>
+
+        {/* Step indicator */}
+        <div className="auth-steps">
+          <span className="auth-step auth-step--done">✓ Account</span>
+          <span className="auth-step-divider">→</span>
+          <span className="auth-step auth-step--active">2 Immigration Details</span>
+        </div>
+
+        {error && <div className="auth-error">{error}</div>}
+
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="auth-row">
+            <div className="auth-field">
+              <label>Canadian Immigration Status</label>
+              <select value={form.immigrationStatus} onChange={set("immigrationStatus")}>
+                {STATUSES.map(s => <option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div className="auth-field">
+              <label>Intended Province</label>
+              <select value={form.province} onChange={set("province")}>
+                {PROVINCES.map(p => <option key={p}>{p}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="auth-row">
+            <div className="auth-field">
+              <label>Country of Origin</label>
+              <select value={form.country} onChange={set("country")}>
+                {COUNTRIES.map(c => <option key={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="auth-field">
+              <label>Language Test Taken</label>
+              <select value={form.languageTest} onChange={set("languageTest")}>
+                {LANG_TESTS.map(t => <option key={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="auth-row">
+            <div className="auth-field">
+              <label>Permit Expiry Date</label>
+              <input type="date" value={form.permitExpiry} onChange={set("permitExpiry")} />
+            </div>
+            <div className="auth-field">
+              <label>Expected / Actual Arrival in Canada</label>
+              <input type="date" value={form.arrivalDate} onChange={set("arrivalDate")} />
+            </div>
+          </div>
+
+          <div className="auth-checks">
+            <label className="auth-check">
+              <input type="checkbox" checked={form.rememberMe} onChange={set("rememberMe")} />
+              Remember me
+            </label>
+            <label className="auth-check">
+              <input type="checkbox" checked={form.agreeTerms} onChange={set("agreeTerms")} />
+              I agree to the <Link to="/about">terms and conditions</Link>
+            </label>
+          </div>
+
+          <button type="submit" className="auth-btn">
+            Create my account
+          </button>
+        </form>
+
+        <p className="auth-footer">
+          <Link to="/register">← Back to step 1</Link>
+        </p>
+      </div>
+    </div>
+  );
 }
 
-export default ImmigrationDetails
+export default ImmigrationDetails;

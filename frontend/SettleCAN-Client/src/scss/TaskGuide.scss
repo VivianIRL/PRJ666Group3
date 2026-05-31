@@ -1,0 +1,301 @@
+@use "./variables" as *;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Step-by-step Task Guide pages
+// ─────────────────────────────────────────────────────────────────────────────
+
+.tg-page {
+  padding: 2rem 2.5rem;
+  max-width: 860px;
+  font-family: system-ui, -apple-system, sans-serif;
+
+  @media (max-width: 768px) { padding: 1.25rem 1rem; }
+}
+
+// ── Hero header ──────────────────────────────────────────────────────────────
+.tg-hero {
+  background: linear-gradient(135deg, $primary 0%, #6b0f1a 100%);
+  border-radius: 1.1rem;
+  padding: 1.75rem 2rem;
+  color: #fff;
+  margin-bottom: 1.75rem;
+
+  &__eyebrow {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.7;
+    margin-bottom: 0.4rem;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0 0 1rem;
+    line-height: 1.3;
+
+    @media (max-width: 600px) { font-size: 1.2rem; }
+  }
+
+  &__meta {
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  &__chip {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    background: rgba(255,255,255,0.15);
+    border-radius: 999px;
+    padding: 0.3rem 0.85rem;
+  }
+}
+
+// ── Steps ─────────────────────────────────────────────────────────────────────
+.tg-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 1.75rem;
+  position: relative;
+  padding-left: 3rem;
+
+  // vertical connector line
+  &::before {
+    content: "";
+    position: absolute;
+    left: 1rem;
+    top: 1.5rem;
+    bottom: 1.5rem;
+    width: 2px;
+    background: linear-gradient(to bottom, $primary 0%, #f0eaec 100%);
+    border-radius: 2px;
+  }
+}
+
+.tg-step {
+  position: relative;
+  padding-bottom: 1.5rem;
+
+  &:last-child { padding-bottom: 0; }
+
+  // numbered circle
+  &__num {
+    position: absolute;
+    left: -2.5rem;
+    top: 0.1rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: $primary;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(142,0,2,0.2);
+  }
+
+  &--done &__num {
+    background: #27ae60;
+    box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(39,174,96,0.2);
+  }
+
+  &__card {
+    background: #fff;
+    border-radius: 0.85rem;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+  }
+
+  &__title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1a0d10;
+    margin: 0 0 0.35rem;
+  }
+
+  &__body {
+    font-size: 0.86rem;
+    color: #5a4a50;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  &__docs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.6rem;
+  }
+
+  &__doc-chip {
+    background: #fdeaed;
+    color: $primary;
+    font-size: 0.72rem;
+    font-weight: 700;
+    border-radius: 4px;
+    padding: 0.2rem 0.55rem;
+  }
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.6rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: $primary;
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; }
+  }
+}
+
+// ── Document checklist ────────────────────────────────────────────────────────
+.tg-docs {
+  background: #fff;
+  border-radius: 0.9rem;
+  padding: 1.25rem 1.4rem;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+  margin-bottom: 1.5rem;
+
+  &__title {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #1a0d10;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin: 0 0 0.85rem;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+
+    input[type="checkbox"] {
+      width: 17px;
+      height: 17px;
+      accent-color: $primary;
+      flex-shrink: 0;
+      margin-top: 1px;
+      cursor: pointer;
+    }
+
+    label {
+      font-size: 0.875rem;
+      color: #2b1a1f;
+      cursor: pointer;
+      line-height: 1.45;
+
+      span {
+        font-size: 0.72rem;
+        color: #9a8a90;
+        margin-left: 0.35rem;
+      }
+    }
+  }
+}
+
+// ── Warning / note box ────────────────────────────────────────────────────────
+.tg-note {
+  border-radius: 0.75rem;
+  padding: 0.9rem 1.1rem;
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+
+  &__icon { font-size: 1.15rem; flex-shrink: 0; margin-top: 0.05rem; }
+  &__text { color: #2b1a1f; }
+  &__title { font-weight: 700; display: block; margin-bottom: 0.15rem; }
+
+  &--warning { background: #fff8e1; }
+  &--danger  { background: #fdeaed; }
+  &--info    { background: #e8f0fe; }
+  &--success { background: #e6f9ef; }
+}
+
+// ── Official links ────────────────────────────────────────────────────────────
+.tg-links {
+  background: #fff;
+  border-radius: 0.9rem;
+  padding: 1.1rem 1.4rem;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+
+  &__title {
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #1a0d10;
+    margin: 0 0 0.65rem;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    a {
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: $primary;
+      text-decoration: none;
+
+      &:hover { text-decoration: underline; }
+    }
+  }
+}
+
+// ── Section heading ───────────────────────────────────────────────────────────
+.tg-section-title {
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #1a0d10;
+  margin: 0 0 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #ede5e7;
+  }
+}
+
+// ── Back link ────────────────────────────────────────────────────────────────
+.tg-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: $primary;
+  text-decoration: none;
+  margin-bottom: 1.25rem;
+
+  &:hover { text-decoration: underline; }
+}
