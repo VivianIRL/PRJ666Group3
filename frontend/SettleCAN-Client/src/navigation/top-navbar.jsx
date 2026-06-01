@@ -2,6 +2,7 @@ import { useContext } from "react";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
+import "../scss/TopNavbar.scss";
 import { Button } from "react-bootstrap";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 
@@ -18,6 +19,24 @@ export default function TopNavbar() {
   function handleLogin(e)    { e.preventDefault(); navigate("/login"); }
   function handleRegister(e) { e.preventDefault(); navigate("/register"); }
   function handleSignOut(e)  { e.preventDefault(); navigate("/logout"); }
+
+ async function handleSignout(e) {
+    e.preventDefault();
+
+    try {
+        const token = getAccessToken();
+
+        await logoutUser(token);
+
+        removeAccessToken();
+
+        setUser(null);
+
+        navigate("/login");
+    } catch (error) {
+        alert(error.message);
+    }
+}
 
   return (
     <Navbar sticky="top" className="top-navbar" style={{ zIndex: 100 }}>

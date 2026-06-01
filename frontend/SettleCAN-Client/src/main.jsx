@@ -1,4 +1,3 @@
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
@@ -49,7 +48,8 @@ import HealthCardGuide    from "./pages/guides/HealthCardGuide.jsx";
 import PermitRenewalGuide from "./pages/guides/PermitRenewalGuide.jsx";
 import TaxReturnGuide     from "./pages/guides/TaxReturnGuide.jsx";
 
-import "./scss/App.scss";
+
+import Center from "./Center.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
