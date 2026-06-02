@@ -1,4 +1,3 @@
-// skeleton server just to get it running
 require("dotenv").config();
 
 const express = require("express");
@@ -7,6 +6,8 @@ const supabase = require("./db/supabase");
 
 const authRoutes = require("./src/routes/authRoutes");
 const infoRoutes = require("./src/routes/infoRoutes");
+const contentRoutes = require("./src/routes/contentRoutes");
+const communityRoutes = require("./src/routes/communityRoutes");
 
 const app = express();
 
@@ -16,21 +17,19 @@ app.use(express.json());
 
 // health check
 app.get("/", (req, res) => {
-  res.send("StatsCan API Server running...");
+  res.send("SettleCAN API Server running...");
 });
 
-// auth routes
+// routes
 app.use("/api/auth", authRoutes);
 app.use("/api/info", infoRoutes);
+app.use("/api/content", contentRoutes);
+app.use("/api/community", communityRoutes);
 
 // profiles route
 app.get("/api/profiles", async (req, res) => {
   const { data, error } = await supabase.from("profiles").select("*");
-
-  if (error) {
-    return res.status(500).json({ error: error.message });
-  }
-
+  if (error) return res.status(500).json({ error: error.message });
   res.json(data);
 });
 
