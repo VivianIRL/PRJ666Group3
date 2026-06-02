@@ -6,7 +6,7 @@ async function getWorkPermitInfo(req, res) {
       .from("content_db")
       .select("*")
       .eq("page_name", "work-permit")
-      .single();
+      .limit(1);
 
     if (contentError) throw contentError;
 
@@ -17,7 +17,7 @@ async function getWorkPermitInfo(req, res) {
 
     if (resourceError) throw resourceError;
 
-    res.json({ success: true, content, resources });
+    res.json({ success: true, content: content[0] || null, resources });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -29,7 +29,7 @@ async function getHealthInfo(req, res) {
       .from("content_db")
       .select("*")
       .eq("page_name", "health")
-      .single();
+      .limit(1);
 
     if (contentError) throw contentError;
 
@@ -40,7 +40,7 @@ async function getHealthInfo(req, res) {
 
     if (resourceError) throw resourceError;
 
-    res.json({ success: true, content, resources });
+    res.json({ success: true, content: content[0] || null, resources });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
