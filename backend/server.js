@@ -6,6 +6,7 @@ const cors = require("cors");
 const supabase = require("./db/supabase");
 
 const authRoutes = require("./src/routes/authRoutes");
+const infoRoutes = require("./src/routes/infoRoutes");
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.get("/", (req, res) => {
 
 // auth routes
 app.use("/api/auth", authRoutes);
+app.use("/api/info", infoRoutes);
 
 // profiles route
 app.get("/api/profiles", async (req, res) => {
