@@ -46,4 +46,27 @@ async function getHealthInfo(req, res) {
   }
 }
 
-module.exports = { getWorkPermitInfo, getHealthInfo };
+async function getLanguageInfo(req, res) {
+  try {
+    const { data: content, error: contentError } = await supabase
+      .from("content_db")
+      .select("*")
+      .eq("page_name", "language")
+      .limit(1);
+
+    if (contentError) throw contentError;
+
+    const { data: resources, error: resourceError } = await supabase
+      .from("resource_library")
+      .select("*")
+      .eq("category", "language");
+
+    if (resourceError) throw resourceError;
+
+    res.json({ success: true, content: content[0] || null, resources });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+
+module.exports = { getWorkPermitInfo, getHealthInfo, getLanguageInfo };

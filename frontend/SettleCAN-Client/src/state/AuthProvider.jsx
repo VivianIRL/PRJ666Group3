@@ -50,14 +50,22 @@ export function AuthProvider({ children }) {
       applyUser(toUiUser(apiUser));
       return true;
     } catch (err) {
-      // If the backend is unreachable, fall back to a local session using
-      // whatever profile was saved during registration.
-      const saved = loadUser();
-      if (saved && saved.email?.toLowerCase() === email.toLowerCase()) {
-        applyUser(saved);
-        return true;
+      const isNetworkError = err.message === "Backend unavailable";
+
+      // True network error (backend not running) → try local session fallback
+      if (isNetworkError) {
+        const saved = loadUser();
+        if (saved && saved.email?.toLowerCase() === email.toLowerCase()) {
+          applyUser(saved);
+          return true;
+        }
+        setAuthError("Could not reach the server. Please make sure the backend is running.");
+        return false;
       }
-      setAuthError("Could not reach the server. Please check the backend is running.");
+
+      // Backend IS reachable but returned an error (wrong password, email not confirmed, etc.)
+      // Show the real Supabase message so the user knows what to fix.
+      setAuthError(err.message || "Login failed. Please try again.");
       return false;
     } finally {
       setLoading(false);
@@ -120,12 +128,15 @@ export function AuthProvider({ children }) {
     saveUser(null);
   }, []);
 
+  const clearAuthError = useCallback(() => setAuthError(null), []);
+
   return (
     <AuthContext.Provider value={{
       user,
       isAuthenticated: !!user,
       loading,
       authError,
+      clearAuthError,
       login,
       register,
       logout,

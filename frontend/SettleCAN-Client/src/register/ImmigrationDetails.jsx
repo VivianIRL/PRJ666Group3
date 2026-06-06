@@ -1,7 +1,7 @@
 // ImmigrationDetails.jsx — Step 2: immigration profile
 // Reads firstName/lastName/email from router state (passed by Register.jsx)
 // Calls register() on AuthContext then navigates to /dashboard
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../state/AuthContext";
 import "../scss/Auth.scss";
@@ -42,7 +42,10 @@ const LANG_TESTS = ["None","IELTS","CELPIP","TEF Canada","TCF Canada","TOEFL"];
 function ImmigrationDetails() {
   const navigate  = useNavigate();
   const location  = useLocation();
-  const { register, loading, authError } = useContext(AuthContext);
+  const { register, loading, authError, clearAuthError } = useContext(AuthContext);
+
+  // Clear any stale auth error from a previous login attempt
+  useEffect(() => { clearAuthError(); }, []);
 
   // Data passed from step 1
   const step1 = location.state ?? {};

@@ -1,7 +1,9 @@
 // LanguageInfo.jsx — language tests and learning resources for newcomers in Canada
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../../scss/FeaturePages.scss";
 import "../../scss/InfoPage.scss";
+
+const API_BASE = import.meta.env.VITE_API_URL ?? "/api";
 
 const TESTS = [
   {
@@ -86,7 +88,18 @@ const IMMIGRATION_IMPACT = [
 
 export default function LanguageInfo() {
   const [activeTest, setActiveTest] = useState(0);
-  const [openFaq, setOpenFaq] = useState(null);
+  const [openFaq, setOpenFaq]       = useState(null);
+  const [apiResources, setApiResources] = useState([]);
+
+  // Fetch supplementary resources from the backend (resource_library table)
+  useEffect(() => {
+    fetch(`${API_BASE}/info/language`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.resources?.length) setApiResources(data.resources);
+      })
+      .catch(() => {}); // fall back to static content silently
+  }, []);
 
   const test = TESTS[activeTest];
 
@@ -211,6 +224,26 @@ export default function LanguageInfo() {
           ))}
         </div>
       </div>
+
+      {/* ── Additional resources from the database ── */}
+      {apiResources.length > 0 && (
+        <div className="fp-section">
+          <h2 className="fp-section__title">🔗 Additional Resources</h2>
+          <div className="fp-grid fp-grid--2">
+            {apiResources.map(r => (
+              <div key={r.resource_id} className="fp-card">
+                <h3 className="fp-card__title">{r.title}</h3>
+                {r.description && <p className="fp-card__body">{r.description}</p>}
+                {r.url && (
+                  <a href={r.url} target="_blank" rel="noreferrer" className="fp-btn fp-btn--outline" style={{ alignSelf: "flex-start", marginTop: "auto" }}>
+                    Visit resource →
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
