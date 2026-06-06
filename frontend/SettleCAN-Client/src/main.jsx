@@ -1,5 +1,9 @@
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+// Bootstrap CSS — required for Modals, Badges, Tables, ProgressBar, etc.
+import "bootstrap/dist/css/bootstrap.min.css";
 
 // Providers
 import { AuthProvider }          from "./state/AuthProvider.jsx";
@@ -18,6 +22,7 @@ import Logout             from "./pages/Logout.jsx";
 import AboutPage         from "./pages/Aboutpage.jsx";
 
 // Authenticated pages
+import Community            from "./pages/Community.jsx";
 import GettingStarted       from "./pages/GettingStarted.jsx";
 import Dashboard            from "./pages/Dashboard.jsx";
 import TasksDashboard       from "./pages/TasksDashboard.jsx";
@@ -34,6 +39,9 @@ import WorkEligibility      from "./pages/WorkEligibility.jsx";
 import PRPathway            from "./pages/PRPathway.jsx";
 import PolicyUpdates        from "./pages/PolicyUpdates.jsx";
 import PersonalizedChecklists from "./pages/PersonalizedChecklists.jsx";
+import Checklist             from "./pages/Checklist.jsx";
+import TaskManager           from "./pages/TaskManager.jsx";
+import ContentManagement     from "./pages/ContentManagement.jsx";
 
 // Information pages
 import SINInfo         from "./pages/info/SINInfo.jsx";
@@ -47,9 +55,6 @@ import BankAccountGuide   from "./pages/guides/BankAccountGuide.jsx";
 import HealthCardGuide    from "./pages/guides/HealthCardGuide.jsx";
 import PermitRenewalGuide from "./pages/guides/PermitRenewalGuide.jsx";
 import TaxReturnGuide     from "./pages/guides/TaxReturnGuide.jsx";
-
-
-import Center from "./Center.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -89,6 +94,10 @@ createRoot(document.getElementById("root")).render(
               <Route path="/pr-pathway"             element={<PRPathway />} />
               <Route path="/policy-updates"         element={<PolicyUpdates />} />
               <Route path="/checklists"             element={<PersonalizedChecklists />} />
+              <Route path="/checklist"              element={<Checklist />} />
+              <Route path="/task-manager"           element={<TaskManager />} />
+              <Route path="/content-management"     element={<ContentManagement />} />
+              <Route path="/community"              element={<Community />} />
 
               {/* Information pages */}
               <Route path="/info/sin"          element={<SINInfo />} />

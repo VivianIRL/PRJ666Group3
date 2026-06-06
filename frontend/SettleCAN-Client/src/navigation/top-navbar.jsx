@@ -8,7 +8,6 @@ import { NavLink, Link, useNavigate } from "react-router-dom";
 
 import { AuthContext } from "../state/AuthContext";
 import { NotificationsContext } from "../state/NotificationsContext";
-import "../scss/TopNavbar.scss";
 
 export default function TopNavbar() {
   const navigate   = useNavigate();
@@ -19,25 +18,6 @@ export default function TopNavbar() {
   function handleLogin(e)    { e.preventDefault(); navigate("/login"); }
   function handleRegister(e) { e.preventDefault(); navigate("/register"); }
   function handleSignOut(e)  { e.preventDefault(); navigate("/logout"); }
-
- async function handleSignout(e) {
-    e.preventDefault();
-
-    try {
-        const token = getAccessToken();
-
-        await logoutUser(token);
-
-        removeAccessToken();
-
-        setUser(null);
-
-        navigate("/login");
-    } catch (error) {
-        alert(error.message);
-    }
-}
-
   return (
     <Navbar sticky="top" className="top-navbar" style={{ zIndex: 100 }}>
       <Container fluid className="navbar-container">

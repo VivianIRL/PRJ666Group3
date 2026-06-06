@@ -89,14 +89,15 @@ function BigCalendar({ events = [] }) {
 export default function NotificationsDashboard() {
   const navigate     = useNavigate();
   const { user }     = useContext(AuthContext);
-  const { notifications, quickLinks, calendarEvents } =
+  const { notifications, quickLinks, calendarEvents, apiNotifs, markRead, markAllRead } =
     useContext(NotificationsContext);
 
   const [showSync,  setShowSync]  = useState(false);
   const [syncEmail, setSyncEmail] = useState("");
   const [syncEnabled, setSyncEnabled] = useState(false);
 
-  const unread = notifications.length;
+  // Total unread = user reminder tasks + unread DB notifications
+  const unread = notifications.length + (apiNotifs?.filter(n => !n.is_read).length ?? 0);
 
   return (
     <div className="nd2">
@@ -140,6 +141,29 @@ export default function NotificationsDashboard() {
               <Link to={n.guideUrl} className="nd2__card-btn">{n.cta}</Link>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ── System / admin notifications from backend ── */}
+      {apiNotifs?.length > 0 && (
+        <div className="nd2__section">
+          <div className="nd2__section-header">
+            <h4 className="nd2__section-title">System Notifications</h4>
+            {apiNotifs.some(n => !n.is_read) && (
+              <button className="nd2__mark-all" onClick={markAllRead}>Mark all read</button>
+            )}
+          </div>
+          <div className="nd2__cards">
+            {apiNotifs.map(n => (
+              <div key={n.notification_id} className={`nd2__card nd2__card--normal ${n.is_read ? "nd2__card--read" : ""}`}>
+                <h3 className="nd2__card-title">{n.message}</h3>
+                <p className="nd2__card-desc">{new Date(n.created_at).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}</p>
+                {!n.is_read && (
+                  <button className="nd2__card-btn" onClick={() => markRead(n.notification_id)}>Mark as read</button>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

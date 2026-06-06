@@ -22,7 +22,7 @@ function Register() {
     if (form.password !== form.confirm) { setError("Passwords do not match."); return; }
     setError("");
     // Pass collected data to step 2
-    navigate("/immigration", { state: { firstName: form.firstName, lastName: form.lastName, email: form.email, dob: form.dob } });
+    navigate("/immigration", { state: { firstName: form.firstName, lastName: form.lastName, email: form.email, dob: form.dob, password: form.password } });
   }
 
   return (

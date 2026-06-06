@@ -1,6 +1,7 @@
-import { useState, useMemo, useContext } from "react";
+import { useState, useEffect, useMemo, useContext } from "react";
 import { NotificationsContext } from "./NotificationsContext";
 import { AuthContext } from "./AuthContext";
+import { fetchNotifications, markNotifRead, markAllNotifsRead } from "../service/taskService";
 
 // Map a task title to a step-by-step guide URL (keyword matching).
 // Falls back to the features hub if no specific guide exists.
@@ -27,10 +28,31 @@ function computeUrgency(daysLeft) {
 export function NotificationsProvider({ children }) {
   const authCtx  = useContext(AuthContext);
   const userName = authCtx?.user?.name;
+  const isAuth   = authCtx?.isAuthenticated;
 
-  // Tasks are set entirely by the user through NotificationSettings.
-  // Start empty — nothing is hardcoded.
+  // Tasks are set by the user through NotificationSettings.
   const [tasks, setTasks] = useState([]);
+
+  // ── Backend notifications ──────────────────────────────────────────────────
+  // These come from the DB (admin-created or system reminders).
+  const [apiNotifs, setApiNotifs] = useState([]);
+
+  useEffect(() => {
+    if (!isAuth) return;
+    fetchNotifications()
+      .then(data => { if (Array.isArray(data)) setApiNotifs(data); })
+      .catch(() => { /* offline — apiNotifs stays empty */ });
+  }, [isAuth]);
+
+  async function markRead(id) {
+    setApiNotifs(prev => prev.map(n => n.notification_id === id ? { ...n, is_read: true } : n));
+    await markNotifRead(id).catch(() => {});
+  }
+
+  async function markAllRead() {
+    setApiNotifs(prev => prev.map(n => ({ ...n, is_read: true })));
+    await markAllNotifsRead().catch(() => {});
+  }
 
   // Derived notifications — recomputed whenever tasks change
   const notifications = useMemo(() => {
@@ -74,9 +96,24 @@ export function NotificationsProvider({ children }) {
     { label: "Open a Bank Account",               url: "/guides/bank-account"   },
   ];
 
+  // Unread count = user-defined reminder tasks + unread DB notifications
+  const unreadApiCount = apiNotifs.filter(n => !n.is_read).length;
+
   return (
     <NotificationsContext.Provider
-      value={{ userName, tasks, setTasks, notifications, calendarEvents, quickLinks }}
+      value={{
+        userName,
+        tasks,
+        setTasks,
+        notifications,
+        calendarEvents,
+        quickLinks,
+        // Backend notifications
+        apiNotifs,
+        unreadApiCount,
+        markRead,
+        markAllRead,
+      }}
     >
       {children}
     </NotificationsContext.Provider>

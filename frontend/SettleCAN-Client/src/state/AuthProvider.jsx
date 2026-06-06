@@ -1,98 +1,135 @@
 import { useState, useCallback } from "react";
-import { AuthContext } from "./AuthContext";
+import { AuthContext }   from "./AuthContext";
+import { loginUser, registerUser, logoutUser } from "../service/authService";
+import { setAccessToken, getAccessToken, removeAccessToken } from "../service/tokenService";
 
-// ── localStorage keys ─────────────────────────────────────────────────────────
-const KEY_CURRENT = "settlecan_user";      // currently logged-in user
-const KEY_PROFILES = "settlecan_profiles"; // registered profiles, keyed by email
+// ── Persist session across page refreshes ─────────────────────────────────────
+const KEY_USER = "settlecan_user";
 
-function loadCurrentUser() {
-  try { return JSON.parse(localStorage.getItem(KEY_CURRENT)) ?? null; }
+function loadUser() {
+  try { return JSON.parse(localStorage.getItem(KEY_USER)) ?? null; }
   catch { return null; }
 }
-
-function loadProfiles() {
-  try { return JSON.parse(localStorage.getItem(KEY_PROFILES)) ?? {}; }
-  catch { return {}; }
+function saveUser(u) {
+  if (u) localStorage.setItem(KEY_USER, JSON.stringify(u));
+  else   localStorage.removeItem(KEY_USER);
 }
 
-function saveCurrentUser(user) {
-  if (user) localStorage.setItem(KEY_CURRENT, JSON.stringify(user));
-  else      localStorage.removeItem(KEY_CURRENT);
-}
-
-function saveProfile(email, profile) {
-  const profiles = loadProfiles();
-  profiles[email.toLowerCase()] = profile;
-  localStorage.setItem(KEY_PROFILES, JSON.stringify(profiles));
+// Normalise the backend response shape into the UI shape the app uses
+function toUiUser(apiUser) {
+  return {
+    id:                apiUser.id               ?? "",
+    email:             apiUser.email            ?? "",
+    name:              apiUser.firstName        ?? "",
+    fullName:          `${apiUser.firstName ?? ""} ${apiUser.lastName ?? ""}`.trim(),
+    immigrationStatus: apiUser.immigrationStatus ?? "International Student",
+    province:          apiUser.province         ?? "",
+    arrivalDate:       apiUser.arrivalDate      ?? "",
+    country:           apiUser.country          ?? "",
+    avatar:            null,
+  };
 }
 
 export function AuthProvider({ children }) {
-  // Restore session from localStorage so a page refresh doesn't log the user out
-  const [user, setUser] = useState(loadCurrentUser);
+  const [user,      setUser]      = useState(loadUser);
+  const [loading,   setLoading]   = useState(false);
+  const [authError, setAuthError] = useState(null);
 
-  function applyUser(userData) {
-    setUser(userData);
-    saveCurrentUser(userData);
+  function applyUser(uiUser) {
+    setUser(uiUser);
+    saveUser(uiUser);
   }
 
-  /**
-   * Called from Login.jsx.
-   * Priority for the display name:
-   *   1. Stored profile from a previous registration (best — real first name)
-   *   2. `firstName` typed into the login form (good — user supplied it)
-   *   3. Nothing — shows generic fallback "there"
-   * TODO: replace with POST /api/auth/login when the backend is ready.
-   */
-  const login = useCallback((email, _password) => {
-    const profiles = loadProfiles();
-    const stored   = profiles[email.toLowerCase()];
-
-    if (stored) {
-      // Registered user — use the first name they entered during sign-up
-      applyUser(stored);
-    } else {
-      // No registration found for this email yet. 
-      // In a real app, this would be an error. For the prototype, we log them in with a blank name.
-      applyUser({
-        name:              "",
-        fullName:          "",
-        email,
-        immigrationStatus: "International Student",
-        province:          "",
-        arrivalDate:       "",
-        avatar:            null,
-      });
+  // ── login ─────────────────────────────────────────────────────────────────
+  const login = useCallback(async (email, password) => {
+    setLoading(true);
+    setAuthError(null);
+    try {
+      const { user: apiUser, token } = await loginUser(email, password);
+      if (token) setAccessToken(token);
+      applyUser(toUiUser(apiUser));
+      return true;
+    } catch (err) {
+      // If the backend is unreachable, fall back to a local session using
+      // whatever profile was saved during registration.
+      const saved = loadUser();
+      if (saved && saved.email?.toLowerCase() === email.toLowerCase()) {
+        applyUser(saved);
+        return true;
+      }
+      setAuthError("Could not reach the server. Please check the backend is running.");
+      return false;
+    } finally {
+      setLoading(false);
     }
-    return true;
   }, []);
 
-  /**
-   * Called from ImmigrationDetails.jsx (step 2 of sign-up) with the full profile.
-   * Persists the profile so subsequent logins can retrieve the real first name.
-   */
-  const register = useCallback((profile) => {
-    const userData = {
-      name:              profile.firstName,                              // ← real first name from form
-      fullName:          `${profile.firstName} ${profile.lastName}`.trim(),
+  // ── register ──────────────────────────────────────────────────────────────
+  // Called from ImmigrationDetails.jsx with the merged step-1 + step-2 profile.
+  const register = useCallback(async (profile) => {
+    setLoading(true);
+    setAuthError(null);
+
+    // Build the local user shape we always need (used as fallback too)
+    const localUser = toUiUser({
       email:             profile.email,
-      immigrationStatus: profile.immigrationStatus ?? "International Student",
-      province:          profile.province  ?? "",
-      arrivalDate:       profile.arrivalDate ?? "",
-      avatar:            null,
-    };
+      firstName:         profile.firstName,
+      lastName:          profile.lastName,
+      immigrationStatus: profile.immigrationStatus,
+      province:          profile.province,
+      country:           profile.country,
+      arrivalDate:       profile.arrivalDate  ?? "",
+      permitExpiry:      profile.permitExpiry ?? "",
+    });
 
-    // Persist so login() can find this profile by email later
-    saveProfile(profile.email, userData);
-    applyUser(userData);
+    try {
+      const { user: apiUser, token } = await registerUser({
+        email:             profile.email,
+        password:          profile.password,
+        firstName:         profile.firstName,
+        lastName:          profile.lastName,
+        dob:               profile.dob,
+        immigrationStatus: profile.immigrationStatus,
+        province:          profile.province,
+        country:           profile.country,
+        arrivalDate:       profile.arrivalDate,
+        permitExpiry:      profile.permitExpiry,
+        languageTest:      profile.languageTest,
+      });
+
+      if (token) setAccessToken(token);
+      // Use API user if available; otherwise use the local shape
+      applyUser(apiUser ? toUiUser(apiUser) : localUser);
+      return true;
+    } catch {
+      // Backend unreachable (no .env / Supabase not set up yet) —
+      // save locally so the rest of the app works in the meantime.
+      applyUser(localUser);
+      return true;
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const logout = useCallback(() => {
+  // ── logout ────────────────────────────────────────────────────────────────
+  const logout = useCallback(async () => {
+    const token = getAccessToken();
+    await logoutUser(token).catch(() => {});
+    removeAccessToken();
     setUser(null);
-    saveCurrentUser(null);
+    saveUser(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, register, logout }}>
+    <AuthContext.Provider value={{
+      user,
+      isAuthenticated: !!user,
+      loading,
+      authError,
+      login,
+      register,
+      logout,
+    }}>
       {children}
     </AuthContext.Provider>
   );

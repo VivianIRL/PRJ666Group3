@@ -42,7 +42,7 @@ const LANG_TESTS = ["None","IELTS","CELPIP","TEF Canada","TCF Canada","TOEFL"];
 function ImmigrationDetails() {
   const navigate  = useNavigate();
   const location  = useLocation();
-  const { register } = useContext(AuthContext);
+  const { register, loading, authError } = useContext(AuthContext);
 
   // Data passed from step 1
   const step1 = location.state ?? {};
@@ -61,25 +61,27 @@ function ImmigrationDetails() {
 
   function set(field) { return e => setForm(f => ({ ...f, [field]: e.target.type === "checkbox" ? e.target.checked : e.target.value })); }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     if (!form.agreeTerms) { setError("Please agree to the terms and conditions."); return; }
     if (!step1.firstName)  { setError("Missing account info — please go back to step 1."); return; }
+    setError("");
 
-    register({
-      firstName:        step1.firstName,
-      lastName:         step1.lastName  ?? "",
-      email:            step1.email     ?? "",
-      dob:              step1.dob       ?? "",
+    const ok = await register({
+      firstName:         step1.firstName,
+      lastName:          step1.lastName   ?? "",
+      email:             step1.email      ?? "",
+      password:          step1.password   ?? "",
+      dob:               step1.dob        ?? "",
       immigrationStatus: form.immigrationStatus,
-      province:         form.province,
-      country:          form.country,
-      permitExpiry:     form.permitExpiry,
-      arrivalDate:      form.arrivalDate,
-      languageTest:     form.languageTest,
+      province:          form.province,
+      country:           form.country,
+      permitExpiry:      form.permitExpiry,
+      arrivalDate:       form.arrivalDate,
+      languageTest:      form.languageTest,
     });
 
-    navigate("/getting-started");
+    if (ok) navigate("/getting-started");
   }
 
   return (
@@ -101,7 +103,7 @@ function ImmigrationDetails() {
           <span className="auth-step auth-step--active">2 Immigration Details</span>
         </div>
 
-        {error && <div className="auth-error">{error}</div>}
+        {(error || authError) && <div className="auth-error">{error || authError}</div>}
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="auth-row">
@@ -156,8 +158,8 @@ function ImmigrationDetails() {
             </label>
           </div>
 
-          <button type="submit" className="auth-btn">
-            Create my account
+          <button type="submit" className="auth-btn" disabled={loading}>
+            {loading ? "Creating account…" : "Create my account"}
           </button>
         </form>
 

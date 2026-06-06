@@ -1,6 +1,20 @@
-import { useState } from 'react';
-import { Container, Row, Col, Button, Table, Badge, Form, Modal, InputGroup } from 'react-bootstrap';
+import { useState, useEffect, useCallback } from 'react';
+import { Row, Col, Button, Table, Badge, Form, Modal } from 'react-bootstrap';
+import { fetchContent, createContent, updateContent, deleteContent } from '../service/taskService';
 import '../scss/ContentManagement.scss';
+
+// Normalise a DB row → the shape the component expects
+function normalise(row) {
+  return {
+    id:       row.content_id ?? row.id ?? Date.now(),
+    title:    row.title      ?? '',
+    category: row.category   ?? 'General',
+    updated:  row.last_updated
+                ? new Date(row.last_updated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                : '',
+    status:   row.status     ?? 'Draft',
+  };
+}
 
 const INITIAL_ARTICLES = [
   { id: 1, title: 'How to Apply for a Study Permit Extension', category: 'Academic', updated: 'Jan 10, 2025', status: 'Published' },
@@ -18,18 +32,30 @@ function getStatusVariant(status) {
 }
 
 export default function ContentManagement() {
-  const [articles, setArticles] = useState(INITIAL_ARTICLES);
-  const [search, setSearch] = useState('');
+  const [articles, setArticles]           = useState(INITIAL_ARTICLES);
+  const [loading, setLoading]             = useState(true);
+  const [search, setSearch]               = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddModal, setShowAddModal]   = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [editingArticle, setEditingArticle] = useState(null);
+  const [editingArticle, setEditingArticle]   = useState(null);
   const [deletingArticle, setDeletingArticle] = useState(null);
-  const [toast, setToast] = useState('');
-  const [form, setForm] = useState({ title: '', category: '', status: '' });
+  const [toast, setToast]   = useState('');
+  const [form, setForm]     = useState({ title: '', category: '', status: '' });
   const [errors, setErrors] = useState({});
 
   const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  // ── Load from API ──────────────────────────────────────────────────────────
+  const loadArticles = useCallback(async () => {
+    try {
+      const data = await fetchContent();
+      if (Array.isArray(data) && data.length > 0) setArticles(data.map(normalise));
+    } catch { /* keep mock data */ }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { loadArticles(); }, [loadArticles]);
 
   const filtered = articles.filter(a => {
     const matchSearch = a.title.toLowerCase().includes(search.toLowerCase());
@@ -38,65 +64,55 @@ export default function ContentManagement() {
   });
 
   const stats = {
-    total: articles.length,
-    drafts: articles.filter(a => a.status === 'Draft').length,
+    total:     articles.length,
+    drafts:    articles.filter(a => a.status === 'Draft').length,
     published: articles.filter(a => a.status === 'Published').length,
-    archived: articles.filter(a => a.status === 'Archived').length,
+    archived:  articles.filter(a => a.status === 'Archived').length,
   };
 
-  function showToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(''), 2500);
-  }
-
-  function openAdd() {
-    setEditingArticle(null);
-    setForm({ title: '', category: '', status: '' });
-    setErrors({});
-    setShowAddModal(true);
-  }
-
-  function openEdit(article) {
-    setEditingArticle(article);
-    setForm({ title: article.title, category: article.category, status: article.status });
-    setErrors({});
-    setShowAddModal(true);
-  }
-
-  function openDelete(article) {
-    setDeletingArticle(article);
-    setShowDeleteModal(true);
-  }
+  function showToast(msg) { setToast(msg); setTimeout(() => setToast(''), 2500); }
+  function openAdd() { setEditingArticle(null); setForm({ title: '', category: '', status: '' }); setErrors({}); setShowAddModal(true); }
+  function openEdit(article) { setEditingArticle(article); setForm({ title: article.title, category: article.category, status: article.status }); setErrors({}); setShowAddModal(true); }
+  function openDelete(article) { setDeletingArticle(article); setShowDeleteModal(true); }
 
   function validateForm() {
     const e = {};
-    if (!form.title.trim()) e.title = 'Please enter a title.';
-    if (!form.category) e.category = 'Please select a category.';
-    if (!form.status) e.status = 'Please select a status.';
+    if (!form.title.trim()) e.title    = 'Please enter a title.';
+    if (!form.category)     e.category = 'Please select a category.';
+    if (!form.status)       e.status   = 'Please select a status.';
     setErrors(e);
     return Object.keys(e).length === 0;
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!validateForm()) return;
+
     if (editingArticle) {
+      // Optimistic update
       setArticles(prev => prev.map(a => a.id === editingArticle.id
         ? { ...a, title: form.title, category: form.category, status: form.status, updated: today }
-        : a
-      ));
+        : a));
+      setShowAddModal(false);
       showToast('Article updated successfully!');
+      await updateContent(editingArticle.id, { title: form.title, category: form.category, status: form.status }).catch(() => {});
     } else {
-      const newArticle = { id: Date.now(), title: form.title, category: form.category, status: form.status, updated: today };
-      setArticles(prev => [newArticle, ...prev]);
+      const optimistic = { id: Date.now(), title: form.title, category: form.category, status: form.status, updated: today };
+      setArticles(prev => [optimistic, ...prev]);
+      setShowAddModal(false);
       showToast(`"${form.title}" added!`);
+      try {
+        const saved = await createContent({ title: form.title, category: form.category, status: form.status });
+        setArticles(prev => prev.map(a => a.id === optimistic.id ? normalise(saved) : a));
+      } catch { /* keep optimistic */ }
     }
-    setShowAddModal(false);
   }
 
-  function handleDelete() {
-    setArticles(prev => prev.filter(a => a.id !== deletingArticle.id));
+  async function handleDelete() {
+    const id = deletingArticle.id;
+    setArticles(prev => prev.filter(a => a.id !== id));
     setShowDeleteModal(false);
     showToast('Article deleted.');
+    await deleteContent(id).catch(() => {});
   }
 
   return (

@@ -4,19 +4,20 @@ import { AuthContext } from '../state/AuthContext';
 import '../scss/Auth.scss';
 
 function Login() {
-  const { login }  = useContext(AuthContext);
-  const navigate   = useNavigate();
+  const { login, loading } = useContext(AuthContext);
+  const navigate           = useNavigate();
 
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
   const [error,    setError]    = useState('');
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     if (!email || !password) { setError('Please enter your email and password.'); return; }
-    const ok = login(email, password);
-    if (ok) navigate('/dashboard');
-    else setError('Invalid credentials. Please try again.');
+    setError('');
+    const ok = await login(email, password);
+    if (!ok) { setError('Invalid email or password. Please try again.'); return; }
+    navigate('/dashboard');
   }
 
   return (
@@ -53,7 +54,9 @@ function Login() {
 
           <div className="auth-forgot"><Link to="/">Forgot password?</Link></div>
 
-          <button type="submit" className="auth-btn">Log in</button>
+          <button type="submit" className="auth-btn" disabled={loading}>
+            {loading ? "Signing in…" : "Log in"}
+          </button>
         </form>
 
         <p className="auth-footer">

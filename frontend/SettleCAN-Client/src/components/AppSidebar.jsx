@@ -60,14 +60,16 @@ function MiniCalendar({ events = [] }) {
 
 // ── Nav items ────────────────────────────────────────────────────────────────
 const NAV = [
-  { to: "/dashboard",           icon: "🏠", label: "Dashboard"     },
-  { to: "/tasks",               icon: "✅", label: "My Tasks"      },
+  { to: "/getting-started",         icon: "🗺️", label: "Get Started"   },
+  { to: "/dashboard",               icon: "🏠", label: "Dashboard"     },
+  { to: "/pr-pathway",              icon: "🍁", label: "PR Pathway"    },
+  { to: "/tasks",                   icon: "✅", label: "My Tasks"      },
   { to: "/notifications-dashboard", icon: "🔔", label: "Notifications" },
-  { to: "/features",            icon: "🌐", label: "Resources"     },
-  { to: "/compliance",          icon: "📋", label: "Compliance"    },
-  { to: "/document-alerts",     icon: "⏰", label: "Doc Alerts"    },
-  { to: "/housing",             icon: "🏠", label: "Housing"       },
-  { to: "/pr-pathway",          icon: "🍁", label: "PR Pathway"    },
+  { to: "/features",                icon: "🌐", label: "Resources"     },
+  { to: "/community",               icon: "💬", label: "Community"     },
+  { to: "/compliance",              icon: "📋", label: "Compliance"    },
+  { to: "/document-alerts",         icon: "⏰", label: "Doc Alerts"    },
+  { to: "/housing",                 icon: "🏠", label: "Housing"       },
 ];
 
 export default function AppSidebar({ collapsed, onToggle }) {

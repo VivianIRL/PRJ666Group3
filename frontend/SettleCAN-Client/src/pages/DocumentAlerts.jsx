@@ -1,7 +1,20 @@
 // DocumentAlerts.jsx — expiry countdowns for permits, health card, passport, etc.
-import { useState } from "react";
+import { useState, useContext, useEffect } from "react";
+import { AuthContext } from "../state/AuthContext";
 import "../scss/FeaturePages.scss";
 import "../scss/DocumentAlerts.scss";
+
+// Persist document expiry dates in localStorage, keyed by user ID so each
+// user's dates are stored independently.
+const LS_KEY = (uid) => `settlecan_docs_${uid ?? "guest"}`;
+
+function loadSavedDates(uid) {
+  try { return JSON.parse(localStorage.getItem(LS_KEY(uid))) ?? {}; }
+  catch { return {}; }
+}
+function saveDates(uid, dates) {
+  localStorage.setItem(LS_KEY(uid), JSON.stringify(dates));
+}
 
 const DEFAULT_DOCS = [
   { id: 1, name: "Study Permit",       icon: "🎓", expiryDate: "", reminderDays: 90,  category: "Immigration", required: true,  note: "Apply to renew at least 90 days before expiry. Implied status applies while renewal is pending." },
@@ -35,12 +48,29 @@ const URGENCY_STYLES = {
 };
 
 export default function DocumentAlerts() {
-  const [docs, setDocs]       = useState(DEFAULT_DOCS);
+  const { user } = useContext(AuthContext);
+  const uid = user?.id;
+
+  // Initialise docs with any previously saved dates from localStorage
+  const [docs, setDocs] = useState(() => {
+    const saved = loadSavedDates(uid);
+    return DEFAULT_DOCS.map(d => ({ ...d, expiryDate: saved[d.id] ?? d.expiryDate }));
+  });
   const [editId, setEditId]   = useState(null);
   const [dateInput, setDateInput] = useState("");
 
+  // Re-load when the user changes (e.g. different account on same browser)
+  useEffect(() => {
+    const saved = loadSavedDates(uid);
+    setDocs(DEFAULT_DOCS.map(d => ({ ...d, expiryDate: saved[d.id] ?? d.expiryDate })));
+  }, [uid]);
+
   function saveDate(id) {
-    setDocs(prev => prev.map(d => d.id === id ? { ...d, expiryDate: dateInput } : d));
+    const updated = docs.map(d => d.id === id ? { ...d, expiryDate: dateInput } : d);
+    setDocs(updated);
+    // Persist to localStorage
+    const dates = Object.fromEntries(updated.map(d => [d.id, d.expiryDate]));
+    saveDates(uid, dates);
     setEditId(null);
     setDateInput("");
   }
