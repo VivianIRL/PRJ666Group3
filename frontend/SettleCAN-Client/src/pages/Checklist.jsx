@@ -76,6 +76,7 @@ export default function Checklist() {
 
   // Load saved state for this user, falling back to the default categories
   const [categories, setCategories] = useState(() => loadState(uid) ?? CATEGORIES);
+  const [trackedUid, setTrackedUid]  = useState(uid);
   const [activeFilter, setActiveFilter] = useState('All');
   const [showAddModal, setShowAddModal] = useState(false);
   const [addCatId, setAddCatId] = useState('');
@@ -84,10 +85,12 @@ export default function Checklist() {
   const [newItemError, setNewItemError] = useState('');
   const [toast, setToast] = useState('');
 
-  // When uid changes (different login) reload that user's state
-  useEffect(() => {
+  // React-recommended pattern: reset derived state during render (not in an effect)
+  // when the uid changes (i.e. a different user logs in on the same browser).
+  if (trackedUid !== uid) {
+    setTrackedUid(uid);
     setCategories(loadState(uid) ?? CATEGORIES);
-  }, [uid]);
+  }
 
   // Persist every time categories change
   useEffect(() => {
