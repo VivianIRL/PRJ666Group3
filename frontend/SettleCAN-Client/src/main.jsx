@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+
 // Bootstrap CSS — required for Modals, Badges, Tables, ProgressBar, etc.
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -12,7 +13,6 @@ import { NotificationsProvider } from "./state/NotificationsProvider.jsx";
 // Layouts / shell
 import AuthLayout from "./layouts/AuthLayout.jsx";
 import TopNavbar  from "./navigation/top-navbar.jsx";
-import Center     from "./Center.jsx";
 
 // Public pages
 import App               from "./App.jsx";
