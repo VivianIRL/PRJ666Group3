@@ -1,6 +1,17 @@
-import { useState } from 'react';
-import { Row, Col, Button, Form, Modal, ProgressBar } from 'react-bootstrap';
+import { useState, useContext, useEffect } from 'react';
+import { AuthContext } from '../state/AuthContext';
 import '../scss/Checklist.scss';
+
+// ── localStorage persistence (per user) ──────────────────────────────────────
+const LS_KEY = (uid) => `settlecan_checklist_${uid ?? 'guest'}`;
+
+function loadState(uid) {
+  try { return JSON.parse(localStorage.getItem(LS_KEY(uid))) ?? null; }
+  catch { return null; }
+}
+function saveState(uid, categories) {
+  localStorage.setItem(LS_KEY(uid), JSON.stringify(categories));
+}
 
 const CATEGORIES = [
   {
@@ -60,7 +71,12 @@ const CATEGORIES = [
 let nextId = 100;
 
 export default function Checklist() {
-  const [categories, setCategories] = useState(CATEGORIES);
+  const { user } = useContext(AuthContext);
+  const uid = user?.id;
+
+  // Load saved state for this user, falling back to the default categories
+  const [categories, setCategories] = useState(() => loadState(uid) ?? CATEGORIES);
+  const [trackedUid, setTrackedUid]  = useState(uid);
   const [activeFilter, setActiveFilter] = useState('All');
   const [showAddModal, setShowAddModal] = useState(false);
   const [addCatId, setAddCatId] = useState('');
@@ -68,6 +84,18 @@ export default function Checklist() {
   const [newItemRequired, setNewItemRequired] = useState(false);
   const [newItemError, setNewItemError] = useState('');
   const [toast, setToast] = useState('');
+
+  // React-recommended pattern: reset derived state during render (not in an effect)
+  // when the uid changes (i.e. a different user logs in on the same browser).
+  if (trackedUid !== uid) {
+    setTrackedUid(uid);
+    setCategories(loadState(uid) ?? CATEGORIES);
+  }
+
+  // Persist every time categories change
+  useEffect(() => {
+    saveState(uid, categories);
+  }, [categories, uid]);
 
   // flat list of all items
   const allItems = categories.flatMap(c => c.items.map(i => ({ ...i, catId: c.id, catLabel: c.label })));
@@ -134,7 +162,7 @@ export default function Checklist() {
             <h1 className="cl-title">Settlement Checklist</h1>
             <p className="cl-subtitle">Track every step of your Canadian settlement journey</p>
           </div>
-          <Button className="btn-add-cl" onClick={() => openAddModal('')}>+ Add Item</Button>
+          <button className="btn-add-cl" onClick={() => openAddModal('')}>+ Add Item</button>
         </div>
 
         {/* Progress card */}
@@ -148,7 +176,7 @@ export default function Checklist() {
             </div>
             <div className="cl-progress-pct">{progress}%</div>
           </div>
-          <ProgressBar now={progress} className="cl-progress-bar" />
+          <div className="cl-progress-bar"><div className="cl-progress-bar-fill" style={{ width: `${progress}%` }} /></div>
           {progress === 100 && (
             <div className="cl-complete-msg">🎉 Amazing! You've completed your settlement checklist!</div>
           )}
@@ -223,48 +251,56 @@ export default function Checklist() {
         })}
       </div>
 
-      {/* Add Item Modal */}
-      <Modal show={showAddModal} onHide={() => setShowAddModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Add Checklist Item</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form.Group className="mb-3">
-            <Form.Label className="cl-field-label">Category</Form.Label>
-            <Form.Select value={addCatId} onChange={e => setAddCatId(e.target.value)}>
-              {categories.map(c => (
-                <option key={c.id} value={c.id}>{c.icon} {c.label}</option>
-              ))}
-            </Form.Select>
-          </Form.Group>
+      {/* Add Item Modal — native, no Bootstrap dependency */}
+      {showAddModal && (
+        <div className="cl-modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="cl-modal" onClick={e => e.stopPropagation()}>
+            <div className="cl-modal-header">
+              <h3 className="cl-modal-title">Add Checklist Item</h3>
+              <button className="cl-modal-close" onClick={() => setShowAddModal(false)}>✕</button>
+            </div>
 
-          <Form.Group className="mb-3">
-            <Form.Label className="cl-field-label">Item Description</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="e.g. Book airport pickup"
-              value={newItemText}
-              onChange={e => { setNewItemText(e.target.value); if (newItemError) setNewItemError(''); }}
-              isInvalid={!!newItemError}
-              onKeyDown={e => e.key === 'Enter' && handleAddItem()}
-            />
-            <Form.Control.Feedback type="invalid">{newItemError}</Form.Control.Feedback>
-          </Form.Group>
+            <div className="cl-modal-body">
+              <div className="cl-modal-field">
+                <label className="cl-field-label">Category</label>
+                <select className="cl-select" value={addCatId} onChange={e => setAddCatId(e.target.value)}>
+                  {categories.map(c => (
+                    <option key={c.id} value={c.id}>{c.icon} {c.label}</option>
+                  ))}
+                </select>
+              </div>
 
-          <Form.Check
-            type="checkbox"
-            id="required-check"
-            label="Mark as Required"
-            checked={newItemRequired}
-            onChange={e => setNewItemRequired(e.target.checked)}
-            className="cl-required-check"
-          />
-        </Modal.Body>
-        <Modal.Footer>
-          <Button className="btn-save-cl" onClick={handleAddItem}>Add Item</Button>
-          <Button variant="outline-secondary" onClick={() => setShowAddModal(false)}>Cancel</Button>
-        </Modal.Footer>
-      </Modal>
+              <div className="cl-modal-field">
+                <label className="cl-field-label">Item Description</label>
+                <input
+                  className={`cl-input ${newItemError ? 'cl-input--error' : ''}`}
+                  type="text"
+                  placeholder="e.g. Book airport pickup"
+                  value={newItemText}
+                  onChange={e => { setNewItemText(e.target.value); if (newItemError) setNewItemError(''); }}
+                  onKeyDown={e => e.key === 'Enter' && handleAddItem()}
+                  autoFocus
+                />
+                {newItemError && <span className="cl-field-error">{newItemError}</span>}
+              </div>
+
+              <label className="cl-required-check">
+                <input
+                  type="checkbox"
+                  checked={newItemRequired}
+                  onChange={e => setNewItemRequired(e.target.checked)}
+                />
+                Mark as Required
+              </label>
+            </div>
+
+            <div className="cl-modal-footer">
+              <button className="btn-save-cl" onClick={handleAddItem}>Add Item</button>
+              <button className="cl-btn-cancel" onClick={() => setShowAddModal(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast && <div className="cl-toast">{toast}</div>}
     </div>

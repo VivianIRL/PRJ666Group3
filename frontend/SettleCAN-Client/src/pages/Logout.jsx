@@ -7,10 +7,9 @@ export default function Logout() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Clearing auth state in an effect to prevent race conditions with AuthLayout
-    logout();
-    navigate("/", { replace: true });
-  }, [logout, navigate]);
+    // logout() is async (calls backend) — navigate after it settles
+    logout().finally(() => navigate("/", { replace: true }));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
 }

@@ -69,3 +69,6 @@ $RECYCLE.BIN/
 
 # Built Visual Studio Code Extensions
 *.vsix
+
+# macOS specific files
+.DS_Store

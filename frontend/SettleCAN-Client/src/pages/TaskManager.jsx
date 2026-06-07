@@ -1,6 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Row, Col, Button, Form, Modal, ProgressBar } from 'react-bootstrap';
+import { fetchTasks, createTask, updateTask, deleteTask } from '../service/taskService';
 import '../scss/TaskManager.scss';
+
+// Convert an API user_task row → the shape this component expects
+function normalise(t) {
+  const tmpl = t.task_templates ?? {};
+  return {
+    id:       t.user_task_id,
+    title:    tmpl.title       ?? t.title    ?? 'Untitled',
+    category: tmpl.category    ?? t.category ?? 'General',
+    due:      t.due_date       ?? '',
+    priority: t.priority       ?? 'Upcoming',
+    status:   t.status         ?? 'In Progress',
+    notes:    t.custom_note    ?? '',
+  };
+}
 
 const INITIAL_TASKS = [
   { id: 1, title: 'Renew Study Permit', category: 'Immigration', due: '2026-04-30', priority: 'Urgent', status: 'In Progress', notes: 'Gather passport, enrollment letter, proof of funds. Submit via IRCC portal.' },
@@ -37,74 +52,84 @@ function getAccentClass(priority, status) {
 }
 
 export default function TaskManager() {
-  const [tasks, setTasks] = useState(INITIAL_TASKS);
-  const [activeTab, setActiveTab] = useState('All');
+  const [tasks, setTasks]               = useState(INITIAL_TASKS);
+  const [loading, setLoading]           = useState(true);
+  const [activeTab, setActiveTab]       = useState('All');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
-  const [form, setForm] = useState({ title: '', category: '', due: '', priority: 'Upcoming', notes: '' });
+  const [form, setForm]   = useState({ title: '', category: '', due: '', priority: 'Upcoming', notes: '' });
   const [errors, setErrors] = useState({});
-  const [toast, setToast] = useState('');
+  const [toast, setToast]   = useState('');
 
-  const completed = tasks.filter(t => t.status === 'Completed').length + TOTAL_OFFSET;
-  const total = tasks.length + TOTAL_OFFSET;
-  const progress = Math.round((completed / total) * 100);
+  // ── Load from API ────────────────────────────────────────────────────────
+  const loadTasks = useCallback(async () => {
+    try {
+      const data = await fetchTasks();
+      if (Array.isArray(data) && data.length > 0) setTasks(data.map(normalise));
+    } catch { /* keep mock data */ }
+    finally { setLoading(false); }
+  }, []);
 
-  function showToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(''), 2500);
-  }
+  useEffect(() => { loadTasks(); }, [loadTasks]);
+
+  const completed = tasks.filter(t => t.status === 'Completed').length;
+  const total     = tasks.length;
+  const progress  = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+  function showToast(msg) { setToast(msg); setTimeout(() => setToast(''), 2500); }
 
   function getFilteredTasks() {
     switch (activeTab) {
-      case 'Urgent': return tasks.filter(t => t.priority === 'Urgent' && t.status !== 'Completed');
-      case 'Upcoming': return tasks.filter(t => t.priority === 'Upcoming' && t.status !== 'Completed');
+      case 'Urgent':    return tasks.filter(t => t.priority === 'Urgent'   && t.status !== 'Completed');
+      case 'Upcoming':  return tasks.filter(t => t.priority === 'Upcoming' && t.status !== 'Completed');
       case 'Completed': return tasks.filter(t => t.status === 'Completed');
-      default: return tasks;
+      default:          return tasks;
     }
   }
 
-  function markComplete(id) {
+  async function markComplete(id) {
+    // Optimistic
     setTasks(prev => prev.map(t => t.id === id ? { ...t, status: 'Completed' } : t));
-    showToast('Task marked as complete! ✓');
-    if (showDetailModal && selectedTask?.id === id) {
+    if (showDetailModal && selectedTask?.id === id)
       setSelectedTask(prev => ({ ...prev, status: 'Completed' }));
-    }
+    showToast('Task marked as complete! ✓');
+    await updateTask(id, { status: 'Completed' }).catch(() => {});
   }
 
-  function openDetail(task) {
-    setSelectedTask(task);
-    setShowDetailModal(true);
-  }
-
-  function openAdd() {
-    setForm({ title: '', category: '', due: '', priority: 'Upcoming', notes: '' });
-    setErrors({});
-    setShowAddModal(true);
-  }
+  function openDetail(task) { setSelectedTask(task); setShowDetailModal(true); }
+  function openAdd() { setForm({ title: '', category: '', due: '', priority: 'Upcoming', notes: '' }); setErrors({}); setShowAddModal(true); }
 
   function validate() {
     const e = {};
-    if (!form.title.trim()) e.title = 'Please enter a task name.';
+    if (!form.title.trim())    e.title    = 'Please enter a task name.';
     if (!form.category.trim()) e.category = 'Please enter a category.';
-    if (!form.due) e.due = 'Please select a due date.';
+    if (!form.due)             e.due      = 'Please select a due date.';
     setErrors(e);
     return Object.keys(e).length === 0;
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!validate()) return;
-    const newTask = { id: Date.now(), title: form.title, category: form.category, due: form.due, priority: form.priority, status: 'In Progress', notes: form.notes };
-    setTasks(prev => [newTask, ...prev]);
+    const optimistic = { id: Date.now(), title: form.title, category: form.category, due: form.due, priority: form.priority, status: 'In Progress', notes: form.notes };
+    setTasks(prev => [optimistic, ...prev]);
     setShowAddModal(false);
     showToast(`"${form.title}" added!`);
+    try {
+      const saved = await createTask({ title: form.title, description: form.notes, category: form.category, dueDate: form.due, customNote: form.notes });
+      // Replace the optimistic entry with the real ID from the server
+      setTasks(prev => prev.map(t => t.id === optimistic.id ? normalise(saved) : t));
+    } catch { /* keep optimistic */ }
   }
 
-  function deleteTask(id) {
+  async function handleDelete(id) {
     setTasks(prev => prev.filter(t => t.id !== id));
     setShowDetailModal(false);
     showToast('Task deleted.');
+    await deleteTask(id).catch(() => {});
   }
+
+  if (loading) return <div className="tm-loading">Loading tasks…</div>;
 
   const filtered = getFilteredTasks();
 
@@ -220,7 +245,7 @@ export default function TaskManager() {
                   Mark as Complete
                 </Button>
               )}
-              <Button variant="outline-danger" size="sm" onClick={() => deleteTask(selectedTask.id)}>
+              <Button variant="outline-danger" size="sm" onClick={() => handleDelete(selectedTask.id)}>
                 Delete Task
               </Button>
               <Button variant="outline-secondary" onClick={() => setShowDetailModal(false)}>

@@ -1,11 +1,16 @@
 // Register.jsx — Step 1: basic account info
 // Passes firstName, lastName, email to ImmigrationDetails via router state
-import { useState } from "react";
+import { useState, useContext, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "../state/AuthContext";
 import "../scss/Auth.scss";
 
 function Register() {
   const navigate = useNavigate();
+  const { clearAuthError } = useContext(AuthContext);
+
+  // Clear any stale auth error from a previous login attempt
+  useEffect(() => { clearAuthError(); }, []);
 
   const [form, setForm] = useState({
     firstName: "", lastName: "", dob: "", email: "", password: "", confirm: "",
@@ -22,7 +27,7 @@ function Register() {
     if (form.password !== form.confirm) { setError("Passwords do not match."); return; }
     setError("");
     // Pass collected data to step 2
-    navigate("/immigration", { state: { firstName: form.firstName, lastName: form.lastName, email: form.email, dob: form.dob } });
+    navigate("/immigration", { state: { firstName: form.firstName, lastName: form.lastName, email: form.email, dob: form.dob, password: form.password } });
   }
 
   return (

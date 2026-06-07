@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { Container, Row, Col, Button, Form, Badge, Card } from 'react-bootstrap';
+import { useState, useEffect, useContext } from 'react';
+import { Container, Row, Col, Button, Form } from 'react-bootstrap';
+import { AuthContext } from '../state/AuthContext';
+import { fetchCommunityPosts, createCommunityPost } from '../service/taskService';
 import '../scss/Community.scss';
 
 const TAG_COLORS = {
@@ -64,7 +66,23 @@ const TRENDING = [
   'Part-time jobs',
 ];
 
+// Normalise a DB row (community_qa) → the UI post shape
+function normalisePost(row) {
+  return {
+    id:         row.qa_id ?? row.id ?? Date.now(),
+    title:      row.question ?? row.title ?? '',
+    author:     row.author   ?? 'Member',
+    time:       row.created_at ? new Date(row.created_at).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }) : 'Recently',
+    tags:       row.tags      ?? [],
+    body:       row.question  ?? row.body ?? '',
+    replies:    [],
+    replyCount: 0,
+    views:      1,
+  };
+}
+
 export default function Community() {
+  const { user } = useContext(AuthContext);
   const [posts, setPosts] = useState(INITIAL_POSTS);
   const [postText, setPostText] = useState('');
   const [postType, setPostType] = useState('Question');
@@ -75,6 +93,17 @@ export default function Community() {
   const [replyInputs, setReplyInputs] = useState({});
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState('');
+
+  // Load posts from API on mount; fall back to INITIAL_POSTS if unavailable
+  useEffect(() => {
+    fetchCommunityPosts()
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setPosts(data.map(normalisePost));
+        }
+      })
+      .catch(() => { /* keep mock posts */ });
+  }, []);
 
   function showToast(msg) {
     setToast(msg);
@@ -87,13 +116,14 @@ export default function Community() {
     );
   }
 
-  function handlePost() {
+  async function handlePost() {
     if (!postText.trim()) { setPostError('Please write something before posting.'); return; }
     setPostError('');
-    const newPost = {
+
+    const optimistic = {
       id: Date.now(),
       title: postText.length > 80 ? postText.slice(0, 80) + '…' : postText,
-      author: 'Rasa',
+      author: user?.name ?? 'You',
       time: 'Just now',
       tags: [postType, ...selectedTags],
       body: postText,
@@ -101,10 +131,19 @@ export default function Community() {
       replyCount: 0,
       views: 1,
     };
-    setPosts(prev => [newPost, ...prev]);
+
+    // Optimistic: show immediately
+    setPosts(prev => [optimistic, ...prev]);
     setPostText('');
     setSelectedTags([]);
     showToast('Post published!');
+
+    // Persist to backend in the background
+    try {
+      await createCommunityPost({ question: optimistic.body, tags: optimistic.tags });
+    } catch {
+      // Non-fatal — post stays visible locally
+    }
   }
 
   function toggleExpand(id) {
