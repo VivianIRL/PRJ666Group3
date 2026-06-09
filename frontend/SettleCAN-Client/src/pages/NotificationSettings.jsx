@@ -2,35 +2,70 @@ import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../scss/NotificationSettings.scss";
 import { NotificationsContext } from "../state/NotificationsContext";
+import { AuthContext } from "../state/AuthContext";
+
+const BASE = import.meta.env.VITE_API_URL ?? "/api";
 
 export default function NotificationSettings() {
   const navigate = useNavigate();
   const { tasks, setTasks } = useContext(NotificationsContext);
+  const { user } = useContext(AuthContext);
 
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
     date: "",
   });
+  const [emailEnabled, setEmailEnabled] = useState(false);
+  const [email, setEmail] = useState(user?.email ?? "");
+  const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState(null);
 
-  const addTask = () => {
-    if (!newTask.title || !newTask.date) return;
+  async function addTask() {
+    if (!newTask.title.trim() || !newTask.date) return;
 
-    setTasks([
-      ...tasks,
-      {
-        id: crypto.randomUUID(),
-        ...newTask,
-      },
-    ]);
-
+    const task = { id: crypto.randomUUID(), ...newTask };
+    setTasks([...tasks, task]);
     setNewTask({ title: "", description: "", date: "" });
-  };
+
+    if (!emailEnabled || !email) {
+      setFeedback({ ok: true, text: "Reminder saved." });
+      return;
+    }
+
+    setSaving(true);
+    setFeedback(null);
+    try {
+      const res = await fetch(`${BASE}/notifications/send-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(user?.accessToken
+            ? { Authorization: `Bearer ${user.accessToken}` }
+            : {}),
+        },
+        body: JSON.stringify({
+          email,
+          title: task.title,
+          date: task.date,
+          description: task.description,
+        }),
+      });
+      const data = await res.json();
+      setFeedback(
+        data.success
+          ? { ok: true, text: "Reminder saved and email sent!" }
+          : { ok: false, text: data.message ?? "Email failed." },
+      );
+    } catch {
+      setFeedback({ ok: false, text: "Saved locally — server unreachable." });
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <div className="notification-settings">
-
-      {/* BACK BUTTON */}
       <button
         className="back-btn"
         onClick={() => navigate("/notifications-dashboard")}
@@ -42,8 +77,7 @@ export default function NotificationSettings() {
       <p>Manage your reminders, deadlines, and notification preferences.</p>
 
       <div className="ns-grid">
-
-        {/* ADD NEW TASK */}
+        {/* ── Add New Reminder ── */}
         <section className="ns-card">
           <h3>Add New Reminder</h3>
 
@@ -51,13 +85,11 @@ export default function NotificationSettings() {
             type="text"
             placeholder="Task title"
             value={newTask.title}
-            onChange={(e) =>
-              setNewTask({ ...newTask, title: e.target.value })
-            }
+            onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
           />
 
           <textarea
-            placeholder="Description"
+            placeholder="Description (optional)"
             value={newTask.description}
             onChange={(e) =>
               setNewTask({ ...newTask, description: e.target.value })
@@ -67,17 +99,47 @@ export default function NotificationSettings() {
           <input
             type="date"
             value={newTask.date}
-            onChange={(e) =>
-              setNewTask({ ...newTask, date: e.target.value })
-            }
+            onChange={(e) => setNewTask({ ...newTask, date: e.target.value })}
           />
 
-          <button className="primary-btn" onClick={addTask}>
-            Add Reminder
+          {/* Email toggle */}
+          <label className="ns-email-toggle">
+            <input
+              type="checkbox"
+              checked={emailEnabled}
+              onChange={(e) => setEmailEnabled(e.target.checked)}
+            />{" "}
+            Send email reminder
+          </label>
+
+          {emailEnabled && (
+            <input
+              type="email"
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={{ marginTop: "0.4rem" }}
+            />
+          )}
+
+          {feedback && (
+            <p
+              style={{
+                fontSize: "0.84rem",
+                marginTop: "0.4rem",
+                color: feedback.ok ? "#15803d" : "#b91c1c",
+              }}
+            >
+              {feedback.text}
+            </p>
+          )}
+
+          <button className="primary-btn" onClick={addTask} disabled={saving}>
+            {saving ? "Saving…" : "Add Reminder"}
           </button>
         </section>
 
-        {/* EXISTING TASKS */}
+        {/* ── Existing Tasks ── */}
         <section className="ns-card">
           <h3>Existing Reminders</h3>
 
