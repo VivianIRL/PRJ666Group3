@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --testPathPattern=tests/ --forceExit",
+    "test:coverage": "jest --testPathPattern=tests/ --coverage --forceExit"
   },
   "keywords": [],
   "author": "",
@@ -17,8 +18,15 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "nodemailer": "^6.10.1",
     "nodemon": "^3.1.14",
     "pg": "^8.21.0",
     "ws": "^8.21.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node"
   }
 }
