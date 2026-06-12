@@ -2,8 +2,7 @@ import { useContext } from "react";
 import { AuthContext } from "../state/AuthContext";
 
 export default function Options() {
-  const { user, applyUser } = useContext(AuthContext);
-  const { options } = user
+  const { changeOptions } = useContext(AuthContext);
   
   return (
     <section className="about-page">
@@ -15,7 +14,9 @@ export default function Options() {
         </p>
         
         <input type="checkbox"
-            onChange={e => e}
+                  onChange={e => {
+                      changeOptions({ "darkMode": e })
+                  }}
         /> Dark Mode
       </div>
     </section>

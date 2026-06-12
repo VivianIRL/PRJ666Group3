@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { AuthContext }   from "./AuthContext";
 import { loginUser, registerUser, logoutUser } from "../service/authService";
 import { setAccessToken, getAccessToken, removeAccessToken } from "../service/tokenService";
+import { stringifySafe } from "../misc/stringifySafe";
 
 // ── Persist session across page refreshes ─────────────────────────────────────
 const KEY_USER = "settlecan_user";
@@ -127,11 +128,24 @@ export function AuthProvider({ children }) {
     const token = getAccessToken();
     await logoutUser(token).catch(() => {});
     removeAccessToken();
-    setUser(null);
-    saveUser(null);
+    applyUser(null)
   }, []);
 
   const clearAuthError = useCallback(() => setAuthError(null), []);
+
+  const changeOptions = useCallback((o) => {
+    console.log(`Called`)
+    var userCopy = { ...user }
+    console.log(`Called 2`)
+    if (o) {
+      userCopy.options = {...userCopy.options, o}
+    } else {
+      userCopy.options = {}
+    }
+    console.log(`Current user: ${stringifySafe(user)}`)
+    applyUser(userCopy)
+    console.log(`Test`)
+  }, [])
 
   return (
     <AuthContext.Provider value={{
@@ -143,7 +157,7 @@ export function AuthProvider({ children }) {
       login,
       register,
       logout,
-      applyUser
+      changeOptions
     }}>
       {children}
     </AuthContext.Provider>
