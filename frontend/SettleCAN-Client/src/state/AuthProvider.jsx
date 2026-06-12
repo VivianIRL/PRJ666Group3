@@ -134,17 +134,13 @@ export function AuthProvider({ children }) {
   const clearAuthError = useCallback(() => setAuthError(null), []);
 
   const changeOptions = useCallback((o) => {
-    console.log(`Called`)
     var userCopy = { ...user }
-    console.log(`Called 2`)
     if (o) {
       userCopy.options = {...userCopy.options, o}
     } else {
       userCopy.options = {}
     }
-    console.log(`Current user: ${stringifySafe(user)}`)
     applyUser(userCopy)
-    console.log(`Test`)
   }, [])
 
   return (
