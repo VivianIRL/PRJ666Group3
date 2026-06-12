@@ -26,6 +26,7 @@ function toUiUser(apiUser) {
     province:          apiUser.province         ?? "",
     arrivalDate:       apiUser.arrivalDate      ?? "",
     country:           apiUser.country          ?? "",
+    options:           apiUser.options          ?? "",
     avatar:            null,
   };
 }
@@ -88,6 +89,7 @@ export function AuthProvider({ children }) {
       country:           profile.country,
       arrivalDate:       profile.arrivalDate  ?? "",
       permitExpiry:      profile.permitExpiry ?? "",
+      options:           profile.options      ?? {},
     });
 
     try {
@@ -103,6 +105,7 @@ export function AuthProvider({ children }) {
         arrivalDate:       profile.arrivalDate,
         permitExpiry:      profile.permitExpiry,
         languageTest:      profile.languageTest,
+        options:           {},
       });
 
       if (token) setAccessToken(token);
@@ -140,6 +143,7 @@ export function AuthProvider({ children }) {
       login,
       register,
       logout,
+      applyUser
     }}>
       {children}
     </AuthContext.Provider>

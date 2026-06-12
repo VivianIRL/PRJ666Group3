@@ -103,6 +103,15 @@ const FEATURES = [
     tag: "Live Updates",
     tagColor: "orange",
   },
+  {
+    icon: "⚙️",
+    eyebrow: "Options",
+    title: "Change User Options",
+    desc: "Update current user configuration and website settings.",
+    path: "/options",
+    tag: "Personalized",
+    tagColor: "gray",
+  },
 ];
 
 export default function FeaturesHub() {

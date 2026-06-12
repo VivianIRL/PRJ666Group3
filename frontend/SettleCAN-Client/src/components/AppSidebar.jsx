@@ -70,6 +70,7 @@ const NAV = [
   { to: "/compliance",              icon: "📋", label: "Compliance"    },
   { to: "/document-alerts",         icon: "⏰", label: "Doc Alerts"    },
   { to: "/housing",                 icon: "🏠", label: "Housing"       },
+  { to: "/options",                 icon: "⚙️", label: "Settings"       },
 ];
 
 export default function AppSidebar({ collapsed, onToggle }) {
