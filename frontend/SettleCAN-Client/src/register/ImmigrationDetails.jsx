@@ -4,6 +4,7 @@
 import { useState, useContext, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../state/AuthContext";
+import SmartDateInput from "../components/SmartDateInput";
 import "../scss/Auth.scss";
 
 const PROVINCES = [
@@ -17,8 +18,7 @@ const STATUSES = [
   "Work Permit Holder",
   "Permanent Resident",
   "Refugee / Protected Person",
-  "Visitor",
-  "Canadian Citizen",
+  "Visitor / Tourist",
 ];
 
 const COUNTRIES = [
@@ -38,6 +38,10 @@ const COUNTRIES = [
 ];
 
 const LANG_TESTS = ["None","IELTS","CELPIP","TEF Canada","TCF Canada","TOEFL"];
+
+function getToday() {
+  return new Date().toISOString().split("T")[0];
+}
 
 function ImmigrationDetails() {
   const navigate  = useNavigate();
@@ -63,11 +67,28 @@ function ImmigrationDetails() {
   const [error, setError] = useState("");
 
   function set(field) { return e => setForm(f => ({ ...f, [field]: e.target.type === "checkbox" ? e.target.checked : e.target.value })); }
+  // For SmartDateInput which calls onChange(string) directly instead of passing an event
+  function setDate(field) { return val => setForm(f => ({ ...f, [field]: val })); }
+
+  // Auto-set permit expiry to 6 months from arrival for Visitor / Tourist
+  useEffect(() => {
+    if (form.immigrationStatus === "Visitor / Tourist" && form.arrivalDate?.length === 10) {
+      const arrival = new Date(form.arrivalDate + "T00:00:00");
+      if (!isNaN(arrival)) {
+        const expiry = new Date(arrival);
+        expiry.setMonth(expiry.getMonth() + 6);
+        setForm(f => ({ ...f, permitExpiry: expiry.toISOString().split("T")[0] }));
+      }
+    }
+  }, [form.arrivalDate, form.immigrationStatus]);
 
   async function handleSubmit(e) {
     e.preventDefault();
     if (!form.agreeTerms) { setError("Please agree to the terms and conditions."); return; }
     if (!step1.firstName)  { setError("Missing account info — please go back to step 1."); return; }
+    const today = getToday();
+    // arrivalDate: past dates are valid (user may have already arrived)
+    if (form.permitExpiry && form.permitExpiry <= today) { setError("Visa expiry date must be in the future."); return; }
     setError("");
 
     const ok = await register({
@@ -141,12 +162,19 @@ function ImmigrationDetails() {
 
           <div className="auth-row">
             <div className="auth-field">
-              <label>Permit Expiry Date</label>
-              <input type="date" value={form.permitExpiry} onChange={set("permitExpiry")} />
+              <label>
+                Permit / Stay Expiry Date
+                {form.immigrationStatus === "Visitor / Tourist" && form.permitExpiry && (
+                  <span style={{ fontWeight: 400, color: "#7a6a70", marginLeft: "0.4rem", fontSize: "0.75rem" }}>
+                    (auto-set · 6 months from arrival)
+                  </span>
+                )}
+              </label>
+              <SmartDateInput value={form.permitExpiry} onChange={setDate("permitExpiry")} />
             </div>
             <div className="auth-field">
               <label>Expected / Actual Arrival in Canada</label>
-              <input type="date" value={form.arrivalDate} onChange={set("arrivalDate")} />
+              <SmartDateInput value={form.arrivalDate} onChange={setDate("arrivalDate")} />
             </div>
           </div>
 

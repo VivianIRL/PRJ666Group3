@@ -11,8 +11,9 @@ import { AuthProvider }          from "./state/AuthProvider.jsx";
 import { NotificationsProvider } from "./state/NotificationsProvider.jsx";
 
 // Layouts / shell
-import AuthLayout from "./layouts/AuthLayout.jsx";
-import TopNavbar  from "./navigation/top-navbar.jsx";
+import AuthLayout   from "./layouts/AuthLayout.jsx";
+import PublicLayout from "./layouts/PublicLayout.jsx";
+import TopNavbar    from "./navigation/top-navbar.jsx";
 
 // Public pages
 import App               from "./App.jsx";
@@ -50,6 +51,15 @@ import WorkPermitInfo from "./pages/info/WorkPermitInfo.jsx";
 import HealthInfo     from "./pages/info/HealthInfo.jsx";
 import LanguageInfo   from "./pages/info/LanguageInfo.jsx";
 
+// Static / footer pages (public)
+import PrivacyPolicy    from "./pages/static/PrivacyPolicy.jsx";
+import TermsOfUse       from "./pages/static/TermsOfUse.jsx";
+import ContactUs        from "./pages/static/ContactUs.jsx";
+import FAQs             from "./pages/static/FAQs.jsx";
+import HelpCenter       from "./pages/static/HelpCenter.jsx";
+import ImmigrationGuide from "./pages/static/ImmigrationGuide.jsx";
+import SettlementTips   from "./pages/static/SettlementTips.jsx";
+
 // Step-by-step task guides
 import SINGuide           from "./pages/guides/SINGuide.jsx";
 import BankAccountGuide   from "./pages/guides/BankAccountGuide.jsx";
@@ -66,12 +76,23 @@ createRoot(document.getElementById("root")).render(
 
           <Routes>
             {/* ── Public pages (no sidebar) ─────────────────────────────── */}
-            <Route path="/"            element={<App />} />
-            <Route path="/about"       element={<AboutPage />} />
-            <Route path="/login"       element={<Login />} />
-            <Route path="/register"    element={<Register />} />
-            <Route path="/immigration" element={<ImmigrationDetails />} />
-            <Route path="/logout"      element={<Logout />} />
+            <Route path="/"                   element={<App />} />
+            <Route path="/about"              element={<AboutPage />} />
+            <Route path="/login"              element={<Login />} />
+            <Route path="/register"           element={<Register />} />
+            <Route path="/immigration"        element={<ImmigrationDetails />} />
+            <Route path="/logout"             element={<Logout />} />
+
+            {/* Footer / static pages — public, wrapped with PublicLayout (adds Footer) */}
+            <Route element={<PublicLayout />}>
+              <Route path="/privacy"            element={<PrivacyPolicy />} />
+              <Route path="/terms"              element={<TermsOfUse />} />
+              <Route path="/contact"            element={<ContactUs />} />
+              <Route path="/faqs"               element={<FAQs />} />
+              <Route path="/help"               element={<HelpCenter />} />
+              <Route path="/immigration-guide"  element={<ImmigrationGuide />} />
+              <Route path="/settlement-tips"    element={<SettlementTips />} />
+            </Route>
 
             {/* ── Authenticated routes (sidebar + protected) ────────────── */}
             <Route element={<AuthLayout />}>

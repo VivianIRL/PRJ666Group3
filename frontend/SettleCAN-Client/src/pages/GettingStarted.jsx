@@ -28,6 +28,20 @@ const PRIORITY_TASKS = {
     { label: "File your taxes as a Canadian resident", path: "/guides/tax-return" },
     { label: "Research citizenship eligibility timeline", path: "/pr-pathway" },
   ],
+  "Refugee / Protected Person": [
+    { label: "Confirm your Protected Person status with the IRB", path: "/checklist" },
+    { label: "Register for IFHP (Interim Federal Health Program)", path: "/info/health" },
+    { label: "Apply for your SIN", path: "/guides/sin" },
+    { label: "Apply for permanent residence — you're eligible immediately", path: "/pr-pathway" },
+    { label: "Connect with a local settlement or RAP agency", path: "/community" },
+  ],
+  "Visitor / Tourist": [
+    { label: "Confirm your authorized stay duration (entry stamp or eTA)", path: "/checklist" },
+    { label: "Purchase visitor health insurance", path: "/checklist" },
+    { label: "Download a transit app for your city", path: "/checklist" },
+    { label: "Save emergency contacts — 911 and health line 811", path: "/checklist" },
+    { label: "Check options if you plan to stay longer (permit pathways)", path: "/immigration-guide" },
+  ],
   default: [
     { label: "Get your Social Insurance Number (SIN)", path: "/guides/sin" },
     { label: "Register for provincial health coverage", path: "/guides/health-card" },

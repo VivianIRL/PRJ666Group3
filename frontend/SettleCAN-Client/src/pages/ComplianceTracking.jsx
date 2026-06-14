@@ -83,18 +83,41 @@ const SEVERITY_META = {
   medium:   { label: "Medium",   cls: "fp-tag--blue" },
 };
 
-const CATEGORIES = ["All", "Study Permit", "Work Permit", "General", "Co-op / Internship", "Visitor / No Status"];
+const CATEGORIES = [
+  { label: "All",                emoji: "📋" },
+  { label: "Study Permit",       emoji: "🎓" },
+  { label: "Work Permit",        emoji: "💼" },
+  { label: "General",            emoji: "🗂️"  },
+  { label: "Co-op / Internship", emoji: "🔬" },
+  { label: "Visitor / No Status",emoji: "🚫" },
+];
 
 export default function ComplianceTracking() {
-  const [items, setItems] = useState(COMPLIANCE_ITEMS);
-  const [filter, setFilter] = useState("All");
-  const [openId, setOpenId] = useState(null);
+  const [items, setItems]     = useState(COMPLIANCE_ITEMS);
+  // Set of active category labels; empty set = show all
+  const [activeFilters, setActiveFilters] = useState(new Set());
+  const [openId, setOpenId]   = useState(null);
 
-  const visible = filter === "All" ? items : items.filter(i => i.category === filter);
+  const visible = activeFilters.size === 0
+    ? items
+    : items.filter(i => activeFilters.has(i.category));
   const checked = items.filter(i => i.checked).length;
 
   function toggle(id) {
     setItems(prev => prev.map(i => i.id === id ? { ...i, checked: !i.checked } : i));
+  }
+
+  function toggleFilter(label) {
+    if (label === "All") { setActiveFilters(new Set()); return; }
+    setActiveFilters(prev => {
+      const next = new Set(prev);
+      next.has(label) ? next.delete(label) : next.add(label);
+      return next;
+    });
+  }
+
+  function isFilterActive(label) {
+    return label === "All" ? activeFilters.size === 0 : activeFilters.has(label);
   }
 
   return (
@@ -136,16 +159,16 @@ export default function ComplianceTracking() {
         <div className="fp-progress__bar" style={{ width: `${(checked / items.length) * 100}%` }} />
       </div>
 
-      {/* Category filter */}
+      {/* Category filters — multi-select; "All" clears selection */}
       <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginBottom: "1rem" }}>
-        {CATEGORIES.map(cat => (
+        {CATEGORIES.map(({ label, emoji }) => (
           <button
-            key={cat}
-            onClick={() => setFilter(cat)}
-            className={`fp-btn ${filter === cat ? "fp-btn--primary" : "fp-btn--ghost"}`}
+            key={label}
+            onClick={() => toggleFilter(label)}
+            className={`fp-btn ${isFilterActive(label) ? "fp-btn--primary" : "fp-btn--ghost"}`}
             style={{ fontSize: "0.78rem", padding: "0.3rem 0.75rem" }}
           >
-            {cat}
+            {emoji} {label}
           </button>
         ))}
       </div>

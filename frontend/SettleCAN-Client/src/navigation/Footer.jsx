@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import "../scss/Footer.scss";
 
 export default function Footer() {
@@ -12,25 +13,25 @@ export default function Footer() {
         <div>
           <h4>Resources</h4>
           <ul>
-            <li>Immigration Guide</li>
-            <li>Settlement Tips</li>
-            <li>FAQs</li>
+            <li><Link to="/immigration-guide">Immigration Guide</Link></li>
+            <li><Link to="/settlement-tips">Settlement Tips</Link></li>
+            <li><Link to="/faqs">FAQs</Link></li>
           </ul>
         </div>
 
         <div>
           <h4>Support</h4>
           <ul>
-            <li>Help Center</li>
-            <li>Contact Us</li>
+            <li><Link to="/help">Help Center</Link></li>
+            <li><Link to="/contact">Contact Us</Link></li>
           </ul>
         </div>
 
         <div>
           <h4>Legal</h4>
           <ul>
-            <li>Privacy Policy</li>
-            <li>Terms of Use</li>
+            <li><Link to="/privacy">Privacy Policy</Link></li>
+            <li><Link to="/terms">Terms of Use</Link></li>
           </ul>
         </div>
       </div>

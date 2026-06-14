@@ -21,18 +21,17 @@ export default function TopNavbar() {
   return (
     <Navbar sticky="top" className="top-navbar" style={{ zIndex: 100 }}>
       <Container fluid className="navbar-container">
-        <Navbar.Brand as={Link} to={isAuthenticated ? "/dashboard" : "/"} className="brand">
+        <Navbar.Brand as={Link} to="/" className="brand">
           <span className="brand-text">
             settle<span className="brand-highlight">CAN</span>
           </span>
         </Navbar.Brand>
 
-        {!isAuthenticated && (
-          <Nav className="nav-links">
-            <Nav.Link as={NavLink} to="/about">About</Nav.Link>
-            <Nav.Link href="#contact">Contact</Nav.Link>
-          </Nav>
-        )}
+        <Nav className="nav-links">
+          <Nav.Link as={NavLink} to="/about">About</Nav.Link>
+          <Nav.Link as={NavLink} to="/contact">Contact</Nav.Link>
+          {isAuthenticated && <Nav.Link as={NavLink} to="/dashboard">Dashboard</Nav.Link>}
+        </Nav>
 
         <div className="auth-buttons">
           {isAuthenticated ? (
