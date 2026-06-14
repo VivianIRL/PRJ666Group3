@@ -4,20 +4,35 @@ import { AuthContext } from '../state/AuthContext';
 import '../scss/Auth.scss';
 
 function Login() {
-  const { login, loading } = useContext(AuthContext);
-  const navigate           = useNavigate();
+  const { login } = useContext(AuthContext);
+  const navigate = useNavigate();
 
-  const [email,    setEmail]    = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error,    setError]    = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!email || !password) { setError('Please enter your email and password.'); return; }
+
+    if (!email.trim() || !password.trim()) {
+      setError('Please enter your email and password.');
+      return;
+    }
+
+    setLoading(true);
     setError('');
-    const ok = await login(email, password);
-    if (!ok) { setError('Invalid email or password. Please try again.'); return; }
-    navigate('/dashboard');
+
+    const result = await login(email, password);
+
+    if (result.success) {
+      navigate('/dashboard');
+    } else {
+      setError(result.error || 'Login failed. Please try again.');
+    }
+
+    setLoading(false);
   }
 
   return (
@@ -42,21 +57,24 @@ function Login() {
             />
           </div>
 
-          <div className="auth-field">
+          <div className="auth-field password-field">
             <label>Password</label>
-            <input
-              type="password"
-              placeholder="At least 8 characters"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-            />
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="At least 8 characters"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+              />
+              <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)} title={showPassword ? "Hide password" : "Show password"}>
+                {showPassword ? "👁️" : "👁️‍🗨️"}
+              </button>
+            </div>
           </div>
 
           <div className="auth-forgot"><Link to="/">Forgot password?</Link></div>
 
-          <button type="submit" className="auth-btn" disabled={loading}>
-            {loading ? "Signing in…" : "Log in"}
-          </button>
+          <button type="submit" className="auth-btn" disabled={loading}>{loading ? 'Logging in...' : 'Log in'}</button>
         </form>
 
         <p className="auth-footer">

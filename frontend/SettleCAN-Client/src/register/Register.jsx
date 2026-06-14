@@ -5,6 +5,18 @@ import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../state/AuthContext";
 import "../scss/Auth.scss";
 
+function calculateAge(dobString) {
+  if (!dobString) return null;
+  const dob = new Date(dobString);
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+  return age;
+}
+
 function Register() {
   const navigate = useNavigate();
   const { clearAuthError } = useContext(AuthContext);
@@ -16,15 +28,24 @@ function Register() {
     firstName: "", lastName: "", dob: "", email: "", password: "", confirm: "",
   });
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   function set(field) { return e => setForm(f => ({ ...f, [field]: e.target.value })); }
 
   function handleSubmit(e) {
     e.preventDefault();
     if (!form.firstName.trim()) { setError("First name is required."); return; }
+    if (!form.lastName.trim()) { setError("Last name is required."); return; }
     if (!form.email.trim())     { setError("Email is required."); return; }
+    if (!form.dob) { setError("Date of birth is required."); return; }
+
+    const age = calculateAge(form.dob);
+    if (age === null || age < 16) { setError("You must be at least 16 years old to register."); return; }
+
     if (form.password.length < 8) { setError("Password must be at least 8 characters."); return; }
     if (form.password !== form.confirm) { setError("Passwords do not match."); return; }
+
     setError("");
     // Pass collected data to step 2
     navigate("/immigration", { state: { firstName: form.firstName, lastName: form.lastName, email: form.email, dob: form.dob, password: form.password } });
@@ -72,13 +93,23 @@ function Register() {
           </div>
 
           <div className="auth-row">
-            <div className="auth-field">
+            <div className="auth-field password-field">
               <label>Password <span className="req">*</span></label>
-              <input type="password" placeholder="At least 8 characters" value={form.password} onChange={set("password")} />
+              <div className="password-input-wrapper">
+                <input type={showPassword ? "text" : "password"} placeholder="At least 8 characters" value={form.password} onChange={set("password")} />
+                <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)} title={showPassword ? "Hide password" : "Show password"}>
+                  {showPassword ? "👁️" : "👁️‍🗨️"}
+                </button>
+              </div>
             </div>
-            <div className="auth-field">
+            <div className="auth-field password-field">
               <label>Confirm Password <span className="req">*</span></label>
-              <input type="password" placeholder="Repeat password" value={form.confirm} onChange={set("confirm")} />
+              <div className="password-input-wrapper">
+                <input type={showConfirm ? "text" : "password"} placeholder="Repeat password" value={form.confirm} onChange={set("confirm")} />
+                <button type="button" className="password-toggle" onClick={() => setShowConfirm(!showConfirm)} title={showConfirm ? "Hide password" : "Show password"}>
+                  {showConfirm ? "👁️" : "👁️‍🗨️"}
+                </button>
+              </div>
             </div>
           </div>
 

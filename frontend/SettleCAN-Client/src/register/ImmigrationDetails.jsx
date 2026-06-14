@@ -39,6 +39,11 @@ const COUNTRIES = [
 
 const LANG_TESTS = ["None","IELTS","CELPIP","TEF Canada","TCF Canada","TOEFL"];
 
+function getToday() {
+  const today = new Date();
+  return today.toISOString().split("T")[0];
+}
+
 function ImmigrationDetails() {
   const navigate  = useNavigate();
   const location  = useLocation();
@@ -68,6 +73,10 @@ function ImmigrationDetails() {
     e.preventDefault();
     if (!form.agreeTerms) { setError("Please agree to the terms and conditions."); return; }
     if (!step1.firstName)  { setError("Missing account info — please go back to step 1."); return; }
+
+    const today = getToday();
+    if (form.arrivalDate && form.arrivalDate < today) { setError("Arrival date must be today or in the future."); return; }
+    if (form.permitExpiry && form.permitExpiry <= today) { setError("Visa expiry date must be in the future."); return; }
     setError("");
 
     const ok = await register({
@@ -142,11 +151,11 @@ function ImmigrationDetails() {
           <div className="auth-row">
             <div className="auth-field">
               <label>Permit Expiry Date</label>
-              <input type="date" value={form.permitExpiry} onChange={set("permitExpiry")} />
+              <input type="date" value={form.permitExpiry} onChange={set("permitExpiry")} min={getToday()} />
             </div>
             <div className="auth-field">
               <label>Expected / Actual Arrival in Canada</label>
-              <input type="date" value={form.arrivalDate} onChange={set("arrivalDate")} />
+              <input type="date" value={form.arrivalDate} onChange={set("arrivalDate")} min={getToday()} />
             </div>
           </div>
 
