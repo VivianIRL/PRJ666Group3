@@ -277,3 +277,45 @@
     &:hover { text-decoration: underline; }
   }
 }
+
+// ── Smart segmented date input (YYYY / MM / DD) ───────────────────────────────
+.smart-date {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border: 1.5px solid #e0d8da;
+  border-radius: 0.65rem;
+  background: #faf8f9;
+  padding: 0 0.6rem;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus-within {
+    border-color: $primary;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(142, 0, 2, 0.08);
+  }
+
+  &__seg {
+    border: none;
+    background: transparent;
+    font-size: 0.88rem;
+    color: #1a0d10;
+    padding: 0.58rem 0.2rem;
+    outline: none;
+    text-align: center;
+
+    &--year { width: 3.6rem; }
+    &--md   { width: 2rem;   }
+
+    &::placeholder { color: #b8a8ae; }
+  }
+
+  &__sep {
+    color: #c8b8be;
+    font-size: 0.82rem;
+    user-select: none;
+    flex-shrink: 0;
+    padding: 0 0.1rem;
+  }
+}

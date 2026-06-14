@@ -7,8 +7,12 @@ import "../scss/Dashboard.scss";
 
 // ── Read checklist from localStorage (written by Checklist.jsx) ───────────────
 function loadChecklist(uid) {
-  try { return JSON.parse(localStorage.getItem(`settlecan_checklist_${uid ?? "guest"}`)) ?? null; }
-  catch { return null; }
+  try {
+    const stored = JSON.parse(localStorage.getItem(`settlecan_checklist_${uid ?? "guest"}`));
+    if (!stored) return null;
+    // Stored as { status, categories } since the stale-state fix — extract categories
+    return Array.isArray(stored) ? stored : (stored.categories ?? null);
+  } catch { return null; }
 }
 
 // ── Status-specific priority tasks shown when checklist is not yet started ────

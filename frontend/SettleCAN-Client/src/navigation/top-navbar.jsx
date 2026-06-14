@@ -29,7 +29,7 @@ export default function TopNavbar() {
 
         <Nav className="nav-links">
           <Nav.Link as={NavLink} to="/about">About</Nav.Link>
-          <Nav.Link href="#contact">Contact</Nav.Link>
+          <Nav.Link as={NavLink} to="/contact">Contact</Nav.Link>
           {isAuthenticated && <Nav.Link as={NavLink} to="/dashboard">Dashboard</Nav.Link>}
         </Nav>
 
