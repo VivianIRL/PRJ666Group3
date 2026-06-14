@@ -25,8 +25,8 @@ function Login() {
     setError('');
 
     const result = await login(email, password);
-
-    if (result.success) {
+    console.log(result.success);
+    if (result) {
       navigate('/dashboard');
     } else {
       setError(result.error || 'Login failed. Please try again.');
