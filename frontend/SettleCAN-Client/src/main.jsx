@@ -61,6 +61,8 @@ import ImmigrationGuide from "./pages/static/ImmigrationGuide.jsx";
 import SettlementTips   from "./pages/static/SettlementTips.jsx";
 
 // Step-by-step task guides
+import Guides             from "./pages/Guides.jsx"
+import Info               from "./pages/Info.jsx"
 import SINGuide           from "./pages/guides/SINGuide.jsx";
 import BankAccountGuide   from "./pages/guides/BankAccountGuide.jsx";
 import HealthCardGuide    from "./pages/guides/HealthCardGuide.jsx";
@@ -118,12 +120,14 @@ createRoot(document.getElementById("root")).render(
               <Route path="/checklists"              element={<PersonalizedChecklists />} />
 
               {/* Information pages */}
+              <Route path="/info"             element={<Info />} />
               <Route path="/info/sin"         element={<SINInfo />} />
               <Route path="/info/work-permit" element={<WorkPermitInfo />} />
               <Route path="/info/health"      element={<HealthInfo />} />
               <Route path="/info/language"    element={<LanguageInfo />} />
 
               {/* Step-by-step task guides */}
+              <Route path="/guides"                element={<Guides />} />
               <Route path="/guides/sin"            element={<SINGuide />} />
               <Route path="/guides/bank-account"   element={<BankAccountGuide />} />
               <Route path="/guides/health-card"    element={<HealthCardGuide />} />

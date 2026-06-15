@@ -103,6 +103,25 @@ const FEATURES = [
     tag: "Live Updates",
     tagColor: "orange",
   },
+
+  {
+    icon: "📖",
+    eyebrow: "Guides",
+    title: "View Guides Index",
+    desc: "Read our guides on how to apply for important documents",
+    path: "/guides",
+    tag: "Guides",
+    tagColor: "gray"
+  },
+    {
+    icon: "ℹ️",
+    eyebrow: "Info",
+    title: "View Information Index",
+    desc: "Read up on important immigration-related information",
+    path: "/info",
+    tag: "Info",
+    tagColor: "gray"
+  },
 ];
 
 export default function FeaturesHub() {
