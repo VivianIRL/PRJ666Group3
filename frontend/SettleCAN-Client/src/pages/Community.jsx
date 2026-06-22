@@ -4,6 +4,7 @@ import { AuthContext } from "../state/AuthContext";
 import {
   fetchCommunityPosts,
   createCommunityPost,
+  fetchFAQ,
 } from "../service/taskService";
 import "../scss/Community.scss";
 
@@ -119,6 +120,8 @@ export default function Community() {
   const [replyInputs, setReplyInputs] = useState({});
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState("");
+  const [faqs, setFaqs] = useState([]);
+  const [openFaqId, setOpenFaqId] = useState(null);
 
   // Load posts from API on mount; fall back to INITIAL_POSTS if unavailable
   useEffect(() => {
@@ -130,6 +133,17 @@ export default function Community() {
       })
       .catch(() => {
         /* keep mock posts */
+      });
+  }, []);
+
+  // Load FAQ entries for the sidebar
+  useEffect(() => {
+    fetchFAQ()
+      .then((data) => {
+        if (Array.isArray(data)) setFaqs(data);
+      })
+      .catch(() => {
+        /* sidebar just won't show FAQ if offline */
       });
   }, []);
 
@@ -199,16 +213,6 @@ export default function Community() {
   function submitReply(postId) {
     const text = (replyInputs[postId] || "").trim();
     if (!text) return;
-
-    // Use the logged-in user's name and derive initials from it
-    const authorName = user?.name ?? user?.fullName ?? "You";
-    const initials = authorName
-      .split(" ")
-      .filter(Boolean)
-      .map((w) => w[0].toUpperCase())
-      .slice(0, 2)
-      .join("");
-
     setPosts((prev) =>
       prev.map((p) => {
         if (p.id !== postId) return p;
@@ -218,8 +222,8 @@ export default function Community() {
             ...p.replies,
             {
               id: Date.now(),
-              author: authorName,
-              initials,
+              author: "Rasa",
+              initials: "R",
               time: "Just now",
               text,
             },
@@ -421,6 +425,41 @@ export default function Community() {
                 ))}
               </ul>
             </div>
+
+            {faqs.length > 0 && (
+              <div className="side-card mb-3">
+                <h3 className="side-title">Frequently Asked Questions</h3>
+                <ul className="trending-list">
+                  {faqs.slice(0, 6).map((f) => (
+                    <li key={f.faq_id}>
+                      <button
+                        className="trending-link"
+                        style={{ textAlign: "left", display: "block" }}
+                        onClick={() =>
+                          setOpenFaqId((prev) =>
+                            prev === f.faq_id ? null : f.faq_id,
+                          )
+                        }
+                      >
+                        {f.question}
+                      </button>
+                      {openFaqId === f.faq_id && (
+                        <p
+                          style={{
+                            fontSize: "0.82rem",
+                            color: "#7a6a70",
+                            marginTop: "0.3rem",
+                            paddingLeft: "0.2rem",
+                          }}
+                        >
+                          {f.answer}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <div className="side-card">
               <h3 className="side-title">Community Guidelines</h3>
