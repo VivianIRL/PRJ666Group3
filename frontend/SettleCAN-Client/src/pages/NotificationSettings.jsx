@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "../scss/NotificationSettings.scss";
 import { NotificationsContext } from "../state/NotificationsContext";
 import { AuthContext } from "../state/AuthContext";
+import { getAccessToken } from "../service/tokenService";
 
 const BASE = import.meta.env.VITE_API_URL ?? "/api";
 
@@ -40,9 +41,7 @@ export default function NotificationSettings() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(user?.accessToken
-            ? { Authorization: `Bearer ${user.accessToken}` }
-            : {}),
+          Authorization: `Bearer ${getAccessToken()}`,
         },
         body: JSON.stringify({
           email,

@@ -1,6 +1,7 @@
 import { useContext, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../state/AuthContext";
+import { getAccessToken } from "../service/tokenService";
 import { NotificationsContext } from "../state/NotificationsContext";
 import "../scss/NotificationsDashboard.scss";
 
@@ -149,9 +150,7 @@ export default function NotificationsDashboard() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(user?.accessToken
-            ? { Authorization: `Bearer ${user.accessToken}` }
-            : {}),
+          Authorization: `Bearer ${getAccessToken()}`,
         },
         body: JSON.stringify({
           email: syncEmail,
