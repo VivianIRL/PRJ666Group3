@@ -36,7 +36,7 @@ function Login() {
   }
 
   return (
-    <div className="auth-page">
+    <div className="auth-page" data-testid="login">
       <div className="auth-card">
 
         <div className="auth-brand">settle<em>CAN</em></div>
@@ -54,6 +54,7 @@ function Login() {
               placeholder="you@example.com"
               value={email}
               onChange={e => setEmail(e.target.value)}
+              data-testid="login-email-address-input"
             />
           </div>
 
@@ -65,6 +66,7 @@ function Login() {
                 placeholder="At least 8 characters"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
+                data-testid="login-password-input"
               />
               <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)} title={showPassword ? "Hide password" : "Show password"}>
                 {showPassword ? "👁️" : "👁️‍🗨️"}
@@ -78,7 +80,7 @@ function Login() {
         </form>
 
         <p className="auth-footer">
-          Don't have an account? <Link to="/register">Sign up</Link>
+          Don't have an account? <Link to="/register" data-testid="login-sign-up-btn">Sign up</Link>
         </p>
       </div>
     </div>
