@@ -224,3 +224,30 @@ INSERT INTO task_checklist (task_template_id, item_description, is_required, sor
     (5, 'Apply online via IRCC portal at least 90 days early',     TRUE,  3),
     (5, 'Pay application fee',                                     TRUE,  4),
     (5, 'Note implied status — you can continue while waiting',    FALSE, 5);
+
+-- ── Seed: FAQ ──────────────────────────────────────────────────────────────────
+-- Powers the FAQ card in the Community page sidebar.
+INSERT INTO faq_db (question, answer, category) VALUES
+    ('How long does it take to get my SIN?',
+     'Most applicants receive their Social Insurance Number the same day if applying in person at a Service Canada office. Online applications can take up to 2 weeks.',
+     'Government'),
+
+    ('Do I need to pay for OHIP?',
+     'No, Ontario Health Insurance Plan (OHIP) is free for eligible residents. However, there is a 3-month waiting period for newcomers before coverage begins.',
+     'Health'),
+
+    ('Can I work while studying full-time?',
+     'Most study permits allow up to 20 hours per week of off-campus work during academic sessions, and full-time during scheduled breaks.',
+     'Employment'),
+
+    ('How early should I apply to renew my study permit?',
+     'IRCC recommends applying at least 30 days before your permit expires, though applying 90 days early is safer given processing time variability.',
+     'Immigration'),
+
+    ('What documents do I need to open a Canadian bank account?',
+     'Typically your passport, study or work permit, and proof of address (like a lease agreement or utility bill) are required.',
+     'Finance'),
+
+    ('Is filing taxes mandatory if I have no income?',
+     'Filing is not legally mandatory with zero income, but it is highly recommended since it establishes Canadian tax residency and may qualify you for benefits like the GST/HST credit.',
+     'Finance');
