@@ -4,7 +4,7 @@ import App from './App';
 import { StrictMode } from 'react';
 import { AuthProvider } from './state/AuthProvider';
 import { NotificationsProvider } from './state/NotificationsProvider';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, Routes } from 'react-router-dom';
 import TopNavbar from './navigation/top-navbar';
 import userEvent from '@testing-library/user-event';
 
@@ -53,22 +53,18 @@ describe('E2E Tests', () => {
     <AuthProvider>
       <NotificationsProvider>
         <BrowserRouter>
-          <TopNavbar />
-          <App />
+            <TopNavbar />
+            <App />
         </BrowserRouter>
       </NotificationsProvider>
     </AuthProvider>
   </StrictMode>);
 
-      const signUpBtn = screen.getByTestId('hero-get-started-btn')
+      const signUpBtn = screen.getByTestId('top-navbar-sign-in-btn')
     
       expect(signUpBtn).toBeDefined();
 
-      await fireEvent(signUpBtn,
-        new MouseEvent('click', {
-            bubbles: true,
-            cancelable: true,
-        }))
+      user.click(signUpBtn)
 
       const login = await screen.getByTestId('login')
 
