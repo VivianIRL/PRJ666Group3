@@ -1,42 +1,17 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import App from './App';
-import { StrictMode } from 'react';
-import { AuthProvider } from './state/AuthProvider';
-import { NotificationsProvider } from './state/NotificationsProvider';
-import { BrowserRouter, Routes } from 'react-router-dom';
-import TopNavbar from './navigation/top-navbar';
 import userEvent from '@testing-library/user-event';
+import Center from './Center';
 
 describe('E2E Tests', () => {
   it('Welcomes the user', async () => {
-      render(
-  <StrictMode>
-    <AuthProvider>
-      <NotificationsProvider>
-        <BrowserRouter>
-          <TopNavbar />
-          <App />
-        </BrowserRouter>
-      </NotificationsProvider>
-    </AuthProvider>
-  </StrictMode>);
+      render(<Center/>);
 
       expect(screen.getByText(/welcome to settlecan/i)).toBeDefined();
   });
     
   it('Basic user functions are available', async () => {
-      render(
-  <StrictMode>
-    <AuthProvider>
-      <NotificationsProvider>
-        <BrowserRouter>
-          <TopNavbar />
-          <App />
-        </BrowserRouter>
-      </NotificationsProvider>
-    </AuthProvider>
-  </StrictMode>);
+      render(<Center/>);
 
 
       expect(screen.getByTestId('top-navbar-about-btn')).toBeDefined();
@@ -48,23 +23,17 @@ describe('E2E Tests', () => {
   it('User can see sign-in screen', async () => {
       const user = userEvent.setup();
       
-      render(
-  <StrictMode>
-    <AuthProvider>
-      <NotificationsProvider>
-        <BrowserRouter>
-            <TopNavbar />
-            <App />
-        </BrowserRouter>
-      </NotificationsProvider>
-    </AuthProvider>
-  </StrictMode>);
+      render(<Center/>);
 
       const signUpBtn = screen.getByTestId('top-navbar-sign-in-btn')
     
       expect(signUpBtn).toBeDefined();
 
-      user.click(signUpBtn)
+      await fireEvent(signUpBtn,
+        new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+        }))
 
       const login = await screen.getByTestId('login')
 
