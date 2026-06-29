@@ -34,8 +34,8 @@ export default function Hero() {
           All the information you need, in one place.
         </p>
         <div className="hero-buttons">
-          <button className="btn-light" onClick={handleStart}>Get Started</button>
-          <button className="btn-dark" onClick={handleLearnMore}>Learn More</button>
+          <button className="btn-light" onClick={handleStart} data-testid="hero-learn-more-btn">Get Started</button>
+          <button className="btn-dark" onClick={handleLearnMore} data-testid="hero-get-started-btn">Learn More</button>
         </div>
       </div>
     </section>
