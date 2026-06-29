@@ -3,6 +3,22 @@ import { describe, it, expect } from 'vitest';
 import Center from './Center';
 
 describe('E2E Tests', () => {
+  async function clickElement(datatestID) {
+      const element = screen.getByTestId(datatestID)
+    
+      expect(element).toBeDefined();
+
+      await fireEvent(element,
+        new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+      }))
+  }
+  
+  async function changeValue(datatestID, input) {
+      await fireEvent.change(screen.getByTestId(datatestID), { target: { value: input } })
+  }
+
   it('Welcomes the user', async () => {
       render(<Center/>);
 
@@ -22,15 +38,7 @@ describe('E2E Tests', () => {
   it('User can see sign-in screen', async () => {
       render(<Center/>);
 
-      const signInBtn = screen.getByTestId('top-navbar-sign-in-btn')
-    
-      expect(signInBtn).toBeDefined();
-
-      await fireEvent(signInBtn,
-        new MouseEvent('click', {
-            bubbles: true,
-            cancelable: true,
-        }))
+      await clickElement('top-navbar-sign-in-btn')
 
       const login = await screen.getByTestId('login')
 
@@ -48,37 +56,36 @@ describe('E2E Tests', () => {
   it('User can register', async () => {
       render(<Center/>);
 
-      const signUpBtn = screen.getByTestId('top-navbar-sign-up-btn')
-    
-      expect(signUpBtn).toBeDefined();
-
-      await fireEvent(signUpBtn,
-        new MouseEvent('click', {
-            bubbles: true,
-            cancelable: true,
-        }))
+      await clickElement('top-navbar-sign-up-btn')
 
       const register = await screen.getByTestId('register')
 
       expect(register).toBeDefined();
     
-      await fireEvent.change(screen.getByTestId('register-first-name-input'), { target: { value: 'Maria' } })
-      await fireEvent.change(screen.getByTestId('register-last-name-input'), { target: { value: 'Smith' } })
-      await fireEvent.change(screen.getByTestId('register-email-input'), { target: { value: 'mariasmith@gmail.com' } })
-      await fireEvent.change(screen.getByTestId('register-dob-input'), { target: { value: '2003-05-20' } })
-      await fireEvent.change(screen.getByTestId('register-password-input'), { target: { value: '12345963' } })
-      await fireEvent.change(screen.getByTestId('register-confirm-password-input'), { target: { value: '12345963' } })
-
-      const immigrationBtn = screen.getByTestId('register-submit-btn')
-    
-      expect(immigrationBtn).toBeDefined();
-
-      await fireEvent(immigrationBtn,
-        new MouseEvent('click', {
-            bubbles: true,
-            cancelable: true,
-        }))
+      await changeValue('register-first-name-input', 'Maria')
+      await changeValue('register-last-name-input', 'Smith')
+      await changeValue('register-email-input', 'mariasmith@gmail.com')
+      await changeValue('register-dob-input', '2003-05-20')
+      await changeValue('register-password-input', '12345963')
+      await changeValue('register-confirm-password-input', '12345963')
+      await clickElement('register-submit-btn')
     
       expect(screen.getByTestId('immigration')).toBeDefined();
+    
+      await changeValue('immigration-status-select', 'Work Permit Holder')
+      await changeValue('immigration-province-select', 'Ontario')
+      await changeValue('immigration-country-select', 'United Arab Emirates')
+      await changeValue('immigration-tests-select', 'IELTS')
+      await changeValue('immigration-expiry-year-input', '2026')
+      await changeValue('immigration-expiry-month-input', '07')
+      await changeValue('immigration-expiry-day-input', '29')
+      await changeValue('immigration-arrival-year-input', '2026')
+      await changeValue('immigration-arrival-month-input', '06')
+      await changeValue('immigration-arrival-day-input', '30')
+      await clickElement('immigration-remember-me-checkbox')
+      await clickElement('immigration-agreement-checkbox')
+      await clickElement('immigration-create-account-btn')
+
+      expect(screen.getByText(/welcome, maria/i)).toBeDefined();
   });
 });
