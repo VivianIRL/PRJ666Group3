@@ -1,46 +1,52 @@
 name: Node.js CI Pipeline
 
-# 1. Trigger the pipeline on pushes or pull requets to main/dev branches
-
+# 1. Trigger the pipeline on pushes or pull requests to any branch except main
 on: 
- push: 
-  branches: 
-   - '**' # Matches every single branch (e.g., feature/add-logs, dev, updates)
-   - '!main' # The '!' means EXCLUDE main. It will not run on the main branch.
-  l_request:
-   branches:
-   - '**' # Step 1: Turn on the pipeline for ALL branches...
-   - '!main' # Step 1: Turn on the pipeline for ALL branches...
+  push: 
+    branches: 
+      - '**' 
+      - '!main' 
+  pull_request:
+    branches:
+      - '**'
+      - '!main'
+
 jobs:
- build-and-test:
-  runs-on: ubuntu-latest
+  build-and-test:
+    runs-on: ubuntu-latest
 
-  steps:
-    # 2. Check out the repository code onto the GitHub runner
-    - name: Checkout Code
-      uses: actions/checkout@v4
-    # 3. Set up the Node.js runtime enviorment
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with: 
-       node-index: '20' # Matches with your Node Version
-       cache: 'npm'
-    # 4. Install dependencies cleanly (using package-lock.json)
-    - name: Install dependencies
-      run: npm run lint --if-present
+    steps:
+      # 2. Check out the repository code onto the GitHub runner
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    # 6. Audit third-party package for high/critical security flaws
-    - name: Audit dependencies
-      run: npm audit --audit-level=high
-    # 7. Run Semgrep Security Scan
-    - name: Run Semgrep Security Scan
+      # 3. Set up the Node.js runtime environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with: 
+          node-version: '20' # Fixed property name
+          cache: 'npm'
+
+      # 4. Install dependencies cleanly
+      - name: Install dependencies
+        run: npm ci          # Added actual install command
+
+      # 5. Run your ESLint check
+      - name: Run Linter
+        run: npm run lint --if-present
+
+      # 6. Audit third-party packages for high/critical security flaws
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+      # 7. Run Semgrep Security Scan
+      - name: Run Semgrep Security Scan
         run: |
           python3 -m pip install semgrep
           semgrep scan --config auto --error
 
-    # 8. Run your Jest test suite
-    - name: Run Tests
+      # 8. Run your Jest test suite
+      - name: Run Tests
         run: npm test
         env:
           NODE_ENV: test
-          # Add any dummy environment variables your tests require here (e.g., JWT_SECRET=test_secret)
