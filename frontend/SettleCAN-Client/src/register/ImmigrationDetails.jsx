@@ -109,7 +109,7 @@ function ImmigrationDetails() {
   }
 
   return (
-    <div className="auth-page">
+    <div className="auth-page" data-testid="immigration">
       <div className="auth-card auth-card--wide">
 
         <div className="auth-brand">settle<em>CAN</em></div>
@@ -133,13 +133,13 @@ function ImmigrationDetails() {
           <div className="auth-row">
             <div className="auth-field">
               <label>Canadian Immigration Status</label>
-              <select value={form.immigrationStatus} onChange={set("immigrationStatus")}>
+              <select value={form.immigrationStatus} onChange={set("immigrationStatus")} data-testid="immigration-status-select">
                 {STATUSES.map(s => <option key={s}>{s}</option>)}
               </select>
             </div>
             <div className="auth-field">
               <label>Intended Province</label>
-              <select value={form.province} onChange={set("province")}>
+              <select value={form.province} onChange={set("province")} data-testid="immigration-province-select">
                 {PROVINCES.map(p => <option key={p}>{p}</option>)}
               </select>
             </div>
@@ -148,13 +148,13 @@ function ImmigrationDetails() {
           <div className="auth-row">
             <div className="auth-field">
               <label>Country of Origin</label>
-              <select value={form.country} onChange={set("country")}>
+              <select value={form.country} onChange={set("country")} data-testid="immigration-country-select">
                 {COUNTRIES.map(c => <option key={c}>{c}</option>)}
               </select>
             </div>
             <div className="auth-field">
               <label>Language Test Taken</label>
-              <select value={form.languageTest} onChange={set("languageTest")}>
+              <select value={form.languageTest} onChange={set("languageTest")} data-testid="immigration-tests-select">
                 {LANG_TESTS.map(t => <option key={t}>{t}</option>)}
               </select>
             </div>
@@ -170,26 +170,26 @@ function ImmigrationDetails() {
                   </span>
                 )}
               </label>
-              <SmartDateInput value={form.permitExpiry} onChange={setDate("permitExpiry")} />
+              <SmartDateInput value={form.permitExpiry} onChange={setDate("permitExpiry")} id="immigration-expiry"/>
             </div>
             <div className="auth-field">
               <label>Expected / Actual Arrival in Canada</label>
-              <SmartDateInput value={form.arrivalDate} onChange={setDate("arrivalDate")} />
+              <SmartDateInput value={form.arrivalDate} onChange={setDate("arrivalDate")} id="immigration-arrival" />
             </div>
           </div>
 
           <div className="auth-checks">
             <label className="auth-check">
-              <input type="checkbox" checked={form.rememberMe} onChange={set("rememberMe")} />
+              <input type="checkbox" checked={form.rememberMe} onChange={set("rememberMe")}  data-testid="immigration-remember-me-checkbox" />
               Remember me
             </label>
             <label className="auth-check">
-              <input type="checkbox" checked={form.agreeTerms} onChange={set("agreeTerms")} />
+              <input type="checkbox" checked={form.agreeTerms} onChange={set("agreeTerms")}  data-testid="immigration-agreement-checkbox" />
               I agree to the <Link to="/about">terms and conditions</Link>
             </label>
           </div>
 
-          <button type="submit" className="auth-btn" disabled={loading}>
+          <button type="submit" className="auth-btn" disabled={loading}  data-testid="immigration-create-account-btn">
             {loading ? "Creating account…" : "Create my account"}
           </button>
         </form>

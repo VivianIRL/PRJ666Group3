@@ -117,6 +117,7 @@ export default function SmartDateInput({ value, onChange, id }) {
         onChange={handleY}
         className="smart-date__seg smart-date__seg--year"
         aria-label="Year"
+        data-testid={id ? id + "-year-input" : null}
       />
       <span className="smart-date__sep">/</span>
       <input
@@ -131,6 +132,7 @@ export default function SmartDateInput({ value, onChange, id }) {
         onBlur={blurM}
         className="smart-date__seg smart-date__seg--md"
         aria-label="Month"
+        data-testid={id ? id + "-month-input" : null}
       />
       <span className="smart-date__sep">/</span>
       <input
@@ -145,6 +147,7 @@ export default function SmartDateInput({ value, onChange, id }) {
         onBlur={blurD}
         className="smart-date__seg smart-date__seg--md"
         aria-label="Day"
+        data-testid={id ? id + "-day-input" : null}
       />
     </div>
   );

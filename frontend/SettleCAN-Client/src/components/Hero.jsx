@@ -10,8 +10,8 @@ export default function Hero() {
           All the information you need, in one place.
         </p>
         <div className="hero-buttons">
-          <button className="btn-light">Get Started</button>
-          <button className="btn-dark">Learn More</button>
+          <button className="btn-light" data-testid="hero-get-started-btn">Get Started</button>
+          <button className="btn-dark" data-testid="hero-learn-more-btn">Learn More</button>
         </div>
       </div>
     </section>
