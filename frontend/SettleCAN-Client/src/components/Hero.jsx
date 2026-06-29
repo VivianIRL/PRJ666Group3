@@ -1,6 +1,30 @@
+import { useContext } from "react";
 import "../scss/Hero.scss";
+import { AuthContext } from "../state/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Hero() {
+  const { isAuthenticated } = useContext(AuthContext) ?? {};
+  let navigate = useNavigate(); 
+
+  function handleStart(e) {
+    e.preventDefault();
+    if (isAuthenticated) {
+      navigate("/dashboard")
+    } else {
+      navigate("/register")
+    }
+  }
+
+  function handleLearnMore(e) {
+    e.preventDefault();
+    if (isAuthenticated) {
+      navigate("/dashboard")
+    } else {
+      navigate("/about")
+    }
+  }
+
   return (
     <section className="hero">
       <div className="hero-content">
@@ -10,8 +34,8 @@ export default function Hero() {
           All the information you need, in one place.
         </p>
         <div className="hero-buttons">
-          <button className="btn-light" data-testid="hero-get-started-btn">Get Started</button>
-          <button className="btn-dark" data-testid="hero-learn-more-btn">Learn More</button>
+          <button className="btn-light" onClick={handleStart} data-testid="hero-learn-more-btn">Get Started</button>
+          <button className="btn-dark" onClick={handleLearnMore} data-testid="hero-get-started-btn">Learn More</button>
         </div>
       </div>
     </section>
