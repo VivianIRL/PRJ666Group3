@@ -66,6 +66,7 @@ const NAV = [
   { to: "/tasks",                   icon: "✅", label: "My Tasks"      },
   { to: "/notifications-dashboard", icon: "🔔", label: "Notifications" },
   { to: "/features",                icon: "🌐", label: "Resources"     },
+  { to: "/articles",               icon: "📰", label: "Articles"      },
   { to: "/community",               icon: "💬", label: "Community"     },
   { to: "/compliance",              icon: "📋", label: "Compliance"    },
   { to: "/document-alerts",         icon: "⏰", label: "Doc Alerts"    },

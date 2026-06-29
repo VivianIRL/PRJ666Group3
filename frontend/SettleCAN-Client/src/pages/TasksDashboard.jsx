@@ -7,9 +7,16 @@ import "../scss/TasksDashboard.scss";
 
 // ── localStorage keys ─────────────────────────────────────────────────────────
 // TASKS_DONE_KEY is shared with Checklist.jsx — acts as the cross-component signal
-const TASKS_DONE_KEY  = (uid) => `settlecan_tasks_done_${uid ?? 'guest'}`;
+const TASKS_DONE_KEY   = (uid) => `settlecan_tasks_done_${uid ?? 'guest'}`;
 // TASKS_STATE_KEY persists full per-task status (including "In Progress")
-const TASKS_STATE_KEY = (uid, status) => `settlecan_tasks_state_${uid ?? 'guest'}_${status ?? 'default'}`;
+const TASKS_STATE_KEY  = (uid, status) => `settlecan_tasks_state_${uid ?? 'guest'}_${status ?? 'default'}`;
+// CUSTOM_TASKS_KEY is written by Checklist.jsx when the user adds a custom item
+const CUSTOM_TASKS_KEY = (uid) => `settlecan_custom_tasks_${uid ?? 'guest'}`;
+
+function loadCustomTasks(uid) {
+  try { return JSON.parse(localStorage.getItem(CUSTOM_TASKS_KEY(uid))) ?? []; }
+  catch { return []; }
+}
 
 function loadTaskStateMap(uid, immigStatus) {
   try { return JSON.parse(localStorage.getItem(TASKS_STATE_KEY(uid, immigStatus))) ?? {}; }
@@ -178,10 +185,20 @@ function buildMockTasks(arrivalDate, immigStatus, uid) {
   try { doneDone = new Set(JSON.parse(localStorage.getItem(TASKS_DONE_KEY(uid))) ?? []); }
   catch { doneDone = new Set(); }
 
-  return fresh.map(t => {
+  const templateTasks = fresh.map(t => {
     if (doneDone.has(t.user_task_id)) return { ...t, status: "Completed" };
     return { ...t, status: savedMap[t.user_task_id] ?? "Pending" };
   });
+
+  // Merge in custom tasks added from the Checklist page
+  const customTasks = loadCustomTasks(uid).map(t => ({
+    ...t,
+    status: doneDone.has(t.user_task_id)
+      ? "Completed"
+      : (savedMap[t.user_task_id] ?? t.status ?? "Pending"),
+  }));
+
+  return [...templateTasks, ...customTasks];
 }
 
 // ── Normalise API task → UI shape ──────────────────────────────────────────────
@@ -315,7 +332,10 @@ export default function TasksDashboard() {
     try {
       const data = await fetchTasks();
       if (Array.isArray(data) && data.length > 0) {
-        setTasks(data.map(normalise));
+        const apiTasks    = data.map(normalise);
+        const apiIds      = new Set(apiTasks.map(t => t.user_task_id));
+        const extraCustom = loadCustomTasks(uid).filter(t => !apiIds.has(t.user_task_id));
+        setTasks([...apiTasks, ...extraCustom]);
       } else {
         setTasks(buildMockTasks(user?.arrivalDate, status, uid));
       }
@@ -333,12 +353,20 @@ export default function TasksDashboard() {
         let doneDone;
         try { doneDone = new Set(JSON.parse(localStorage.getItem(TASKS_DONE_KEY(uid))) ?? []); }
         catch { doneDone = new Set(); }
-        if (doneDone.size === 0) return prev;
-        return prev.map(t =>
+
+        const updated = prev.map(t =>
           doneDone.has(t.user_task_id) && t.status !== "Completed"
             ? { ...t, status: "Completed" }
             : t
         );
+
+        // Pick up any custom tasks added since page load
+        const existingIds = new Set(updated.map(t => t.user_task_id));
+        const newCustom   = loadCustomTasks(uid)
+          .filter(t => !existingIds.has(t.user_task_id))
+          .map(t => ({ ...t, status: doneDone.has(t.user_task_id) ? "Completed" : (t.status ?? "Pending") }));
+
+        return newCustom.length ? [...updated, ...newCustom] : updated;
       });
     }
     window.addEventListener('focus', onFocus);

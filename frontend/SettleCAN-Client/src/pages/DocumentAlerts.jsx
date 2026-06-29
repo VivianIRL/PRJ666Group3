@@ -1,6 +1,7 @@
 // DocumentAlerts.jsx — expiry countdowns for permits, health card, passport, etc.
 import { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../state/AuthContext";
+import { createNotification } from "../service/taskService";
 import "../scss/FeaturePages.scss";
 import "../scss/DocumentAlerts.scss";
 
@@ -154,8 +155,10 @@ export default function DocumentAlerts() {
       expiryDate: saved[d.id] ?? d.expiryDate,
     }));
   });
-  const [editId, setEditId] = useState(null);
+  const [editId, setEditId]       = useState(null);
   const [dateInput, setDateInput] = useState("");
+  const [remindedIds, setRemindedIds] = useState(new Set());
+  const [remindMsg, setRemindMsg]     = useState(null);
 
   // Re-load when the user changes (e.g. different account on same browser)
   useEffect(() => {
@@ -178,6 +181,21 @@ export default function DocumentAlerts() {
     saveDates(uid, dates);
     setEditId(null);
     setDateInput("");
+  }
+
+  async function sendReminder(doc) {
+    const days = daysUntil(doc.expiryDate);
+    const msg  = days !== null && days <= 0
+      ? `⚠️ Your ${doc.name} has expired. Renew immediately to maintain your status.`
+      : `📅 Your ${doc.name} expires in ${days} day${days !== 1 ? "s" : ""} (${doc.expiryDate}). Take action soon.`;
+    try {
+      await createNotification({ message: msg, send_email: false });
+      setRemindedIds(prev => new Set([...prev, doc.id]));
+      setRemindMsg({ ok: true, text: "Reminder saved to your notifications." });
+    } catch {
+      setRemindMsg({ ok: false, text: "Could not save reminder — check your connection." });
+    }
+    setTimeout(() => setRemindMsg(null), 3000);
   }
 
   function clearDate(id) {
@@ -211,6 +229,18 @@ export default function DocumentAlerts() {
           passport expires.
         </p>
       </div>
+
+      {/* Reminder feedback toast */}
+      {remindMsg && (
+        <div style={{
+          background: remindMsg.ok ? "#e6f9ef" : "#fdeaed",
+          color: remindMsg.ok ? "#15803d" : "#8E0002",
+          borderRadius: "0.6rem", padding: "0.6rem 1rem",
+          fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.75rem",
+        }}>
+          {remindMsg.text}
+        </div>
+      )}
 
       {/* Summary alerts */}
       {expiring.length > 0 && (
@@ -389,6 +419,16 @@ export default function DocumentAlerts() {
                   >
                     {doc.expiryDate ? "Edit Date" : "Add Expiry Date"}
                   </button>
+                  {doc.expiryDate && urgency && urgency !== "ok" && (
+                    <button
+                      className="fp-btn fp-btn--primary"
+                      style={{ padding: "0.28rem 0.7rem", fontSize: "0.75rem" }}
+                      onClick={() => sendReminder(doc)}
+                      disabled={remindedIds.has(doc.id)}
+                    >
+                      {remindedIds.has(doc.id) ? "✓ Reminded" : "🔔 Remind me"}
+                    </button>
+                  )}
                   {doc.expiryDate && (
                     <button
                       className="fp-btn fp-btn--ghost"
