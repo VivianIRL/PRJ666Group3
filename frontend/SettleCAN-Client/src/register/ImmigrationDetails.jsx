@@ -109,7 +109,7 @@ function ImmigrationDetails() {
   }
 
   return (
-    <div className="auth-page">
+    <div className="auth-page" data-testid="immigration">
       <div className="auth-card auth-card--wide">
 
         <div className="auth-brand">settle<em>CAN</em></div>
