@@ -3,8 +3,18 @@ import { AuthContext } from '../state/AuthContext';
 import '../scss/Checklist.scss';
 
 // ── localStorage persistence (per user) ──────────────────────────────────────
-const LS_KEY       = (uid) => `settlecan_checklist_${uid ?? 'guest'}`;
-const TASKS_DONE_KEY = (uid) => `settlecan_tasks_done_${uid ?? 'guest'}`;
+const LS_KEY           = (uid) => `settlecan_checklist_${uid ?? 'guest'}`;
+const TASKS_DONE_KEY   = (uid) => `settlecan_tasks_done_${uid ?? 'guest'}`;
+const CUSTOM_TASKS_KEY = (uid) => `settlecan_custom_tasks_${uid ?? 'guest'}`;
+
+function loadCustomTasks(uid) {
+  try { return JSON.parse(localStorage.getItem(CUSTOM_TASKS_KEY(uid))) ?? []; }
+  catch { return []; }
+}
+function saveCustomTasks(uid, tasks) {
+  try { localStorage.setItem(CUSTOM_TASKS_KEY(uid), JSON.stringify(tasks)); }
+  catch {}
+}
 
 // Persist and restore checklist state keyed by uid + immigration status.
 // If the stored status doesn't match the current status (e.g. account re-used,
@@ -53,7 +63,8 @@ function syncCheckedToTasks(categories, uid) {
     const done = new Set(JSON.parse(localStorage.getItem(TASKS_DONE_KEY(uid))) ?? []);
     categories.forEach(cat => {
       cat.items.forEach(item => {
-        const taskId = CHECKLIST_TO_TASK_ID[item.id];
+        // Custom items (id >= 600): task ID = item ID directly
+        const taskId = item.id >= 600 ? item.id : CHECKLIST_TO_TASK_ID[item.id];
         if (taskId !== undefined) {
           if (item.done) done.add(taskId);
           else done.delete(taskId);
@@ -70,7 +81,11 @@ function getAutoCheckedIds(uid) {
     const done = JSON.parse(localStorage.getItem(TASKS_DONE_KEY(uid))) ?? [];
     const ids = new Set();
     done.forEach(taskId => {
-      (TASK_TO_CHECKLIST_IDS[taskId] ?? []).forEach(cId => ids.add(cId));
+      if (taskId >= 600) {
+        ids.add(taskId); // custom task — checklist item ID equals task ID
+      } else {
+        (TASK_TO_CHECKLIST_IDS[taskId] ?? []).forEach(cId => ids.add(cId));
+      }
     });
     return ids;
   } catch { return new Set(); }
@@ -327,6 +342,9 @@ export default function Checklist() {
       if (c.id !== catId) return c;
       return { ...c, items: c.items.filter(i => i.id !== itemId) };
     }));
+    if (itemId >= 600) {
+      saveCustomTasks(uid, loadCustomTasks(uid).filter(t => t.user_task_id !== itemId));
+    }
     showToast('Item removed.');
   }
 
@@ -341,8 +359,23 @@ export default function Checklist() {
   function handleAddItem() {
     if (!newItemText.trim()) { setNewItemError('Please enter a checklist item.'); return; }
     setNewItemError('');
-    const item = { id: nextId++, text: newItemText.trim(), done: false, required: newItemRequired };
+    const newId = nextId++;
+    const item = { id: newId, text: newItemText.trim(), done: false, required: newItemRequired };
     setCategories(prev => prev.map(c => c.id === addCatId ? { ...c, items: [...c.items, item] } : c));
+
+    // Mirror to custom tasks so TasksDashboard picks it up on next focus/load
+    const catLabel = categories.find(c => c.id === addCatId)?.label ?? 'Custom';
+    saveCustomTasks(uid, [...loadCustomTasks(uid), {
+      user_task_id: newId,
+      title:        newItemText.trim(),
+      category:     catLabel,
+      status:       'Pending',
+      due_date:     null,
+      guideUrl:     '/checklist',
+      description:  'Added from your checklist.',
+      isCustom:     true,
+    }]);
+
     setShowAddModal(false);
     showToast('Item added!');
   }

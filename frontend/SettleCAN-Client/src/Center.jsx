@@ -42,6 +42,7 @@ import WorkEligibility      from "./pages/WorkEligibility.jsx";
 import PRPathway            from "./pages/PRPathway.jsx";
 import PolicyUpdates        from "./pages/PolicyUpdates.jsx";
 import PersonalizedChecklists from "./pages/PersonalizedChecklists.jsx";
+import ArticleView            from "./pages/ArticleView.jsx";
 
 // Information pages
 import SINInfo        from "./pages/info/SINInfo.jsx";
@@ -117,6 +118,8 @@ export default function Center() {
               <Route path="/pr-pathway"              element={<PRPathway />} />
               <Route path="/policy-updates"          element={<PolicyUpdates />} />
               <Route path="/checklists"              element={<PersonalizedChecklists />} />
+              <Route path="/articles"               element={<ArticleView />} />
+              <Route path="/articles/:id"           element={<ArticleView />} />
 
               {/* Information pages */}
               <Route path="/info"             element={<Info />} />
