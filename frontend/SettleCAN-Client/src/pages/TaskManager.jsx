@@ -17,16 +17,7 @@ function normalise(t) {
   };
 }
 
-const INITIAL_TASKS = [
-  { id: 1, title: 'Renew Study Permit', category: 'Immigration', due: '2026-04-30', priority: 'Urgent', status: 'In Progress', notes: 'Gather passport, enrollment letter, proof of funds. Submit via IRCC portal.' },
-  { id: 2, title: 'Pay Tuition Balance', category: 'Finance', due: '2026-05-15', priority: 'Upcoming', status: 'In Progress', notes: 'Log in to student portal and pay outstanding balance before deadline.' },
-  { id: 3, title: 'Book IELTS Exam', category: 'Language Testing', due: '2026-06-01', priority: 'Upcoming', status: 'In Progress', notes: 'Register at ielts.org. Choose a test centre close to campus.' },
-  { id: 4, title: 'Register for SIN Card', category: 'Government', due: '2026-03-10', priority: 'Upcoming', status: 'Completed', notes: 'Bring study permit and passport to Service Canada office.' },
-  { id: 5, title: 'Open Bank Account', category: 'Finance', due: '2026-03-05', priority: 'Upcoming', status: 'Completed', notes: 'TD and RBC have newcomer packages. Bring passport and study permit.' },
-  { id: 6, title: 'Set Up OHIP', category: 'Health', due: '2026-03-20', priority: 'Upcoming', status: 'Completed', notes: '3-month waiting period applies. Apply as soon as you arrive.' },
-];
-
-const TOTAL_OFFSET = 2; 
+const TOTAL_OFFSET = 0;
 
 function formatDate(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
@@ -52,7 +43,7 @@ function getAccentClass(priority, status) {
 }
 
 export default function TaskManager() {
-  const [tasks, setTasks]               = useState(INITIAL_TASKS);
+  const [tasks, setTasks]               = useState([]);
   const [loading, setLoading]           = useState(true);
   const [activeTab, setActiveTab]       = useState('All');
   const [showAddModal, setShowAddModal] = useState(false);

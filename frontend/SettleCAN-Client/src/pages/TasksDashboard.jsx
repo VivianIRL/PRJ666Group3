@@ -1,8 +1,10 @@
 // TasksDashboard.jsx — profile-aware tasks, 3-state toggle, clear status labels
 import { useState, useEffect, useCallback, useContext } from "react";
 import { Link } from "react-router-dom";
+import { Modal, Form, Row, Col, Button } from "react-bootstrap";
 import { AuthContext } from "../state/AuthContext";
-import { fetchTasks, updateTask } from "../service/taskService";
+import { fetchTasks, updateTask, createTask } from "../service/taskService";
+import TasksCalendarView from "../components/TasksCalendarView";
 import "../scss/TasksDashboard.scss";
 
 // ── localStorage keys ─────────────────────────────────────────────────────────
@@ -328,6 +330,57 @@ export default function TasksDashboard() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter]   = useState("All");
 
+  // ── Add task modal ────────────────────────────────────────────────────────
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [form, setForm]   = useState({ title: "", category: "", due: "", priority: "Upcoming", notes: "" });
+  const [errors, setErrors] = useState({});
+  const [toast, setToast]   = useState("");
+
+  function showToast(msg) { setToast(msg); setTimeout(() => setToast(""), 2500); }
+
+  function openAdd() {
+    setForm({ title: "", category: "", due: "", priority: "Upcoming", notes: "" });
+    setErrors({});
+    setShowAddModal(true);
+  }
+
+  function validateForm() {
+    const e = {};
+    if (!form.title.trim())    e.title    = "Please enter a task name.";
+    if (!form.category.trim()) e.category = "Please select a category.";
+    if (!form.due)             e.due      = "Please select a due date.";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
+  async function handleSave() {
+    if (!validateForm()) return;
+    const newId = Date.now();
+    const optimistic = {
+      user_task_id: newId,
+      title:        form.title,
+      category:     form.category,
+      due_date:     form.due,
+      status:       "Pending",
+      description:  form.notes,
+      guideUrl:     "/task-manager",
+    };
+    setTasks(prev => [optimistic, ...prev]);
+    // Persist to custom tasks so it survives refresh and syncs with Checklist
+    try {
+      const existing = JSON.parse(localStorage.getItem(CUSTOM_TASKS_KEY(uid))) ?? [];
+      localStorage.setItem(CUSTOM_TASKS_KEY(uid), JSON.stringify([...existing, optimistic]));
+    } catch {}
+    setShowAddModal(false);
+    showToast(`"${form.title}" added!`);
+    try {
+      const saved = await createTask({ title: form.title, description: form.notes, category: form.category, dueDate: form.due, customNote: form.notes });
+      if (saved?.user_task_id) {
+        setTasks(prev => prev.map(t => t.user_task_id === newId ? normalise(saved) : t));
+      }
+    } catch { /* keep optimistic */ }
+  }
+
   const loadTasks = useCallback(async () => {
     try {
       const data = await fetchTasks();
@@ -409,7 +462,7 @@ export default function TasksDashboard() {
   if (loading) return <div className="td-loading">Loading your tasks…</div>;
 
   return (
-    <div className="td-page">
+    <div className="td-page" style={{ maxWidth: "100%", width: "100%", boxSizing: "border-box" }}>
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="td-header">
@@ -420,7 +473,7 @@ export default function TasksDashboard() {
             {" "}{counts.completed} of {tasks.length} completed
           </p>
         </div>
-        <Link to="/task-manager" className="td-add-btn">+ Add task</Link>
+        <button className="td-add-btn" onClick={openAdd}>+ Add task</button>
       </div>
 
       {/* ── Progress bar ───────────────────────────────────────────────────── */}
@@ -431,36 +484,127 @@ export default function TasksDashboard() {
         <span className="td-progress__pct">{pct}%</span>
       </div>
 
-      {/* ── Filter tabs ────────────────────────────────────────────────────── */}
-      <div className="td-filters">
-        {FILTERS.map(f => {
-          const count = f === "All" ? counts.all
-            : f === "Not started" ? counts.pending
-            : f === "In Progress" ? counts.inProgress
-            : counts.completed;
-          return (
-            <button
-              key={f}
-              className={`td-filter ${filter === f ? "td-filter--active" : ""}`}
-              onClick={() => setFilter(f)}
-            >
-              {f}
-              <span className="td-filter__count">{count}</span>
-            </button>
-          );
-        })}
+      {/* ── Tasks + Calendar side by side ──────────────────────────────────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 400px", gap: "1.5rem", alignItems: "flex-start" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
+          {/* Filter tabs */}
+          <div className="td-filters">
+            {FILTERS.map(f => {
+              const count = f === "All" ? counts.all
+                : f === "Not started" ? counts.pending
+                : f === "In Progress" ? counts.inProgress
+                : counts.completed;
+              return (
+                <button
+                  key={f}
+                  className={`td-filter ${filter === f ? "td-filter--active" : ""}`}
+                  onClick={() => setFilter(f)}
+                >
+                  {f}
+                  <span className="td-filter__count">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Task list */}
+          <div className="td-list">
+            {filtered.length === 0 ? (
+              <div className="td-empty">No {filter.toLowerCase()} tasks.</div>
+            ) : (
+              filtered.map(t => (
+                <TaskCard key={t.user_task_id} task={t} onToggle={handleToggle} />
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Calendar */}
+        <div style={{ position: "sticky", top: "5rem", minWidth: 0, width: "100%", overflowX: "hidden" }}>
+          <TasksCalendarView tasks={tasks} onStatusChange={(id) => handleToggle(id)} />
+        </div>
       </div>
 
-      {/* ── Task list ──────────────────────────────────────────────────────── */}
-      <div className="td-list">
-        {filtered.length === 0 ? (
-          <div className="td-empty">No {filter.toLowerCase()} tasks.</div>
-        ) : (
-          filtered.map(t => (
-            <TaskCard key={t.user_task_id} task={t} onToggle={handleToggle} />
-          ))
-        )}
-      </div>
+      {/* ── Add Task Modal ─────────────────────────────────────────────────── */}
+      <Modal show={showAddModal} onHide={() => setShowAddModal(false)} centered size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Add New Task</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group className="mb-3">
+            <Form.Label>Task Name</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="e.g. Apply for SIN Card"
+              value={form.title}
+              onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+              isInvalid={!!errors.title}
+            />
+            <Form.Control.Feedback type="invalid">{errors.title}</Form.Control.Feedback>
+          </Form.Group>
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Category</Form.Label>
+                <Form.Select
+                  value={form.category}
+                  onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                  isInvalid={!!errors.category}
+                >
+                  <option value="">Select category…</option>
+                  <option>Immigration</option>
+                  <option>Finance</option>
+                  <option>Housing</option>
+                  <option>Language Testing</option>
+                  <option>Government</option>
+                  <option>Education</option>
+                  <option>Health</option>
+                  <option>Other</option>
+                </Form.Select>
+                <Form.Control.Feedback type="invalid">{errors.category}</Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Priority</Form.Label>
+                <Form.Select
+                  value={form.priority}
+                  onChange={e => setForm(f => ({ ...f, priority: e.target.value }))}
+                >
+                  <option>Urgent</option>
+                  <option>Upcoming</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
+          <Form.Group className="mb-3">
+            <Form.Label>Due Date</Form.Label>
+            <Form.Control
+              type="date"
+              value={form.due}
+              onChange={e => setForm(f => ({ ...f, due: e.target.value }))}
+              isInvalid={!!errors.due}
+            />
+            <Form.Control.Feedback type="invalid">{errors.due}</Form.Control.Feedback>
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Notes <span style={{ color: "#999", fontWeight: 400 }}>(optional)</span></Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              placeholder="Any documents needed, reminders, or extra details…"
+              value={form.notes}
+              onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline-secondary" onClick={() => setShowAddModal(false)}>Cancel</Button>
+          <Button style={{ background: "#8E0002", border: "none" }} onClick={handleSave}>Save Task</Button>
+        </Modal.Footer>
+      </Modal>
+
+      {toast && <div className="tm-toast" style={{ position: "fixed", bottom: "1.5rem", right: "1.5rem", background: "#1a0d10", color: "#fff", padding: "0.75rem 1.25rem", borderRadius: "0.65rem", zIndex: 9999, fontWeight: 600 }}>{toast}</div>}
 
     </div>
   );
