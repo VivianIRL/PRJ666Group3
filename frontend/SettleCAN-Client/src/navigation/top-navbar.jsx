@@ -30,7 +30,7 @@ export default function TopNavbar() {
         <Nav className="nav-links">
           <Nav.Link as={NavLink} to="/about" data-testid="top-navbar-about-btn">About</Nav.Link>
           <Nav.Link as={NavLink} to="/contact" data-testid="top-navbar-contact-btn">Contact</Nav.Link>
-          {isAuthenticated && <Nav.Link as={NavLink} to="/dashboard">Dashboard</Nav.Link>}
+          {isAuthenticated && <Nav.Link as={NavLink} to="/dashboard" data-testid="top-navbar-dashboard-btn">Dashboard</Nav.Link>}
         </Nav>
 
         <div className="auth-buttons">

@@ -1,22 +1,29 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Center from './Center';
+import { act } from 'react';
 
 describe('E2E Tests', () => {
+  beforeEach(() => {
+      vi.clearAllMocks();
+      
+      localStorage.clear();
+  });
+    
   async function clickElement(datatestID) {
       const element = screen.getByTestId(datatestID)
     
       expect(element).toBeDefined();
 
-      await fireEvent(element,
+      await act(() => {fireEvent(element,
         new MouseEvent('click', {
             bubbles: true,
             cancelable: true,
-      }))
+      }))})
   }
   
   async function changeValue(datatestID, input) {
-      await fireEvent.change(screen.getByTestId(datatestID), { target: { value: input } })
+      await act(() => { fireEvent.change(screen.getByTestId(datatestID), { target: { value: input } }) })
   }
 
   it('Welcomes the user', async () => {
@@ -51,8 +58,6 @@ describe('E2E Tests', () => {
       expect(logInSignUpBtn).toBeDefined();
   });
 
-  
-    
   it('User can register', async () => {
       render(<Center/>);
 
@@ -88,4 +93,27 @@ describe('E2E Tests', () => {
 
       expect(screen.getByText(/welcome, maria/i)).toBeDefined();
   });
+
+    it('User logs in automatically', async () => { 
+        localStorage.setItem("settlecan_user", JSON.stringify({
+            "id": "",
+            "email": "mariasmith@gmail.com",
+            "name": "maria",
+            "fullName": "maria smith",
+            "immigrationStatus": "Permanent Resident",
+            "province": "Ontario",
+            "arrivalDate": "2026-06-30",
+            "country": "United Arab Emirates",
+            "avatar": null
+        }));
+    
+        render(<Center/>);
+
+        await clickElement('top-navbar-dashboard-btn')
+
+        const dashboard = await screen.getByTestId('dashboard')
+
+        expect(dashboard).toBeDefined();
+    })
+
 });

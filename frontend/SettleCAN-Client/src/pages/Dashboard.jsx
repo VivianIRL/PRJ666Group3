@@ -112,7 +112,7 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="dashboard">
+    <div className="dashboard" data-testid="dashboard">
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="dash-header">
