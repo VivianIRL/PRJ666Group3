@@ -1,6 +1,5 @@
-
 .cms-page {
-  background: #F4F6FA;
+  background: #f4f6fa;
   min-height: calc(100vh - 60px);
 }
 
@@ -14,7 +13,7 @@
   width: 180px;
   flex-shrink: 0;
   background: #fff;
-  border-right: 1px solid #E0E0E0;
+  border-right: 1px solid #e0e0e0;
   padding: 20px 0;
 
   .sidebar-item {
@@ -26,11 +25,11 @@
     transition: background 0.15s;
 
     &:hover {
-      background: #F5F5F5;
+      background: #f5f5f5;
     }
 
     &.active {
-      background: #8B1A1A;
+      background: #8b1a1a;
       color: #fff;
       font-weight: 500;
     }
@@ -46,7 +45,7 @@
 .cms-title {
   font-size: 24px;
   font-weight: 600;
-  color: #1A1A1A;
+  color: #1a1a1a;
   margin-bottom: 4px;
 }
 
@@ -59,7 +58,7 @@
 // Stat cards
 .stat-card {
   background: #fff;
-  border: 1px solid #E0E0E0;
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
   padding: 18px 20px;
 
@@ -72,7 +71,7 @@
   .stat-value {
     font-size: 28px;
     font-weight: 600;
-    color: #1A1A1A;
+    color: #1a1a1a;
   }
 }
 
@@ -94,30 +93,39 @@
   .search-input {
     width: 200px;
     font-size: 13px;
-    border-color: #D0D0D0;
-    &:focus { border-color: #8B1A1A; box-shadow: none; }
+    border-color: #d0d0d0;
+    &:focus {
+      border-color: #8b1a1a;
+      box-shadow: none;
+    }
   }
 
   .filter-select {
     width: 160px;
     font-size: 13px;
-    border-color: #D0D0D0;
-    &:focus { border-color: #8B1A1A; box-shadow: none; }
+    border-color: #d0d0d0;
+    &:focus {
+      border-color: #8b1a1a;
+      box-shadow: none;
+    }
   }
 }
 
 .btn-add-content {
-  background: #8B1A1A !important;
-  border-color: #8B1A1A !important;
+  background: #8b1a1a !important;
+  border-color: #8b1a1a !important;
   font-size: 13px;
   font-weight: 500;
-  &:hover { background: #6e1414 !important; border-color: #6e1414 !important; }
+  &:hover {
+    background: #6e1414 !important;
+    border-color: #6e1414 !important;
+  }
 }
 
 // Table
 .table-wrap {
   background: #fff;
-  border: 1px solid #E0E0E0;
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -130,20 +138,24 @@
     font-weight: 600;
     color: #888;
     background: #fff;
-    border-bottom: 1px solid #E8E8E8;
+    border-bottom: 1px solid #e8e8e8;
     padding: 12px 20px;
   }
 
   tbody td {
     font-size: 13px;
-    color: #1A1A1A;
+    color: #1a1a1a;
     padding: 14px 20px;
     vertical-align: middle;
-    border-bottom: 1px solid #F0F0F0;
+    border-bottom: 1px solid #f0f0f0;
   }
 
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover td { background: #FAFAFA; }
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+  tbody tr:hover td {
+    background: #fafafa;
+  }
 }
 
 .status-badge {
@@ -156,11 +168,15 @@
 .action-link {
   font-size: 12px;
   font-weight: 500;
-  color: #8B1A1A;
+  color: #8b1a1a;
   cursor: pointer;
   margin-right: 12px;
-  &:hover { opacity: 0.65; }
-  &:last-child { margin-right: 0; }
+  &:hover {
+    opacity: 0.65;
+  }
+  &:last-child {
+    margin-right: 0;
+  }
 }
 
 // Modal
@@ -176,21 +192,23 @@
   font-weight: 400;
   text-transform: none;
   letter-spacing: 0;
-  color: #BBBBBB;
+  color: #bbbbbb;
 }
 
 .btn-save-modal {
-  background: #8B1A1A !important;
-  border-color: #8B1A1A !important;
+  background: #8b1a1a !important;
+  border-color: #8b1a1a !important;
   font-weight: 500;
-  &:hover { background: #6e1414 !important; }
+  &:hover {
+    background: #6e1414 !important;
+  }
 }
 
 .delete-icon {
   font-size: 32px;
   width: 60px;
   height: 60px;
-  background: #FDEAEA;
+  background: #fdeaea;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -204,7 +222,7 @@
   bottom: 28px;
   left: 50%;
   transform: translateX(-50%);
-  background: #1A3557;
+  background: #1a3557;
   color: #fff;
   padding: 11px 22px;
   border-radius: 8px;
@@ -215,6 +233,12 @@
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }

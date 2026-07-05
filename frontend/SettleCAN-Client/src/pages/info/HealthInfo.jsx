@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "../../scss/FeaturePages.scss";
 import "../../scss/InfoPage.scss";
+import LastUpdatedBadge from "../../components/LastUpdatedBadge";
 
 const PROVINCIAL_COVERAGE = [
   {
