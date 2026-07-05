@@ -41,6 +41,8 @@ export const assignTemplate       = (tmplId, b)  => req("POST",   `/tasks/templa
 export const fetchNotifications   = ()           => req("GET",    "/notifications");
 export const markNotifRead        = (id)         => req("PATCH",  `/notifications/${id}/read`);
 export const markAllNotifsRead    = ()           => req("PATCH",  "/notifications/read-all");
+export const createNotification   = (body)       => req("POST",   "/notifications",              body);
+export const sendNotifEmail       = (body)       => req("POST",   "/notifications/send-email",   body);
 
 // ── Community ─────────────────────────────────────────────────────────────────
 export const fetchCommunityPosts  = ()           => req("GET",    "/community/posts");
