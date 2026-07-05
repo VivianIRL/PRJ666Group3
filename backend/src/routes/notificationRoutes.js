@@ -37,6 +37,68 @@ router.patch("/:id/read", requireAuth, async (req, res) => {
   res.json({ message: "Marked as read." });
 });
 
+// ── POST /api/notifications/schedule-email ────────────────────────────────
+// Bug 25 fix: Instead of sending immediately, this calculates the send time
+// as 1 day before the reminder date and uses setTimeout to delay sending.
+// For production a proper job queue (e.g. Bull, node-cron) should be used,
+// but this approach works correctly for the current development scope.
+router.post("/schedule-email", requireAuth, async (req, res) => {
+  const { email, title, description, date } = req.body;
+  if (!email || !title || !date) {
+    return res
+      .status(400)
+      .json({ message: "email, title, and date are required." });
+  }
+
+  const targetDate = new Date(date);
+  const sendDate = new Date(targetDate);
+  sendDate.setDate(sendDate.getDate() - 1); // 1 day before
+  sendDate.setHours(9, 0, 0, 0); // 9am on that day
+
+  const now = new Date();
+  const delay = sendDate - now;
+
+  // If the send date is already in the past (e.g. reminder is today),
+  // send within 1 minute as a "last chance" reminder
+  const effectiveDelay = delay > 0 ? delay : 60 * 1000;
+  const scheduledFor =
+    delay > 0
+      ? sendDate.toLocaleDateString("en-CA", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "within 1 minute";
+
+  setTimeout(async () => {
+    try {
+      await transporter.sendMail({
+        from: `"SettleCAN" <${process.env.GMAIL_USER}>`,
+        to: email,
+        subject: `SettleCAN Reminder: ${title} is due tomorrow`,
+        html: `
+          <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:24px;">
+            <h2 style="color:#8E0002;margin-bottom:4px;">SettleCAN Reminder</h2>
+            <h3 style="margin-top:0;">${title} — Due Tomorrow</h3>
+            ${date ? `<p><strong>Due date:</strong> ${date}</p>` : ""}
+            ${description ? `<p>${description}</p>` : ""}
+            <hr style="border:none;border-top:1px solid #eee;margin:20px 0;"/>
+            <small style="color:#999;">This is an automated 1-day advance reminder from SettleCAN.</small>
+          </div>
+        `,
+      });
+    } catch (err) {
+      console.error("Scheduled email failed:", err.message);
+    }
+  }, effectiveDelay);
+
+  res.json({
+    success: true,
+    message: "Email reminder scheduled.",
+    scheduled_for: scheduledFor,
+  });
+});
+
 router.post("/send-email", requireAuth, async (req, res) => {
   const { email, title, description, date } = req.body;
   if (!email || !title) {
