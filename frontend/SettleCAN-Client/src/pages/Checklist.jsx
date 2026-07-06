@@ -13,7 +13,7 @@ function loadCustomTasks(uid) {
 }
 function saveCustomTasks(uid, tasks) {
   try { localStorage.setItem(CUSTOM_TASKS_KEY(uid), JSON.stringify(tasks)); }
-  catch (_e) { /* localStorage unavailable */ }
+  catch { /* localStorage unavailable */ }
 }
 
 // Persist and restore checklist state keyed by uid + immigration status.
@@ -28,7 +28,7 @@ function loadState(uid, status) {
 }
 function saveState(uid, status, categories) {
   try { localStorage.setItem(LS_KEY(uid), JSON.stringify({ status, categories })); }
-  catch (_e) { /* localStorage unavailable */ }
+  catch { /* localStorage unavailable */ }
 }
 
 // ── Task → Checklist item sync ────────────────────────────────────────────────
@@ -72,7 +72,7 @@ function syncCheckedToTasks(categories, uid) {
       });
     });
     localStorage.setItem(TASKS_DONE_KEY(uid), JSON.stringify([...done]));
-  } catch (_e) { /* localStorage unavailable */ }
+  } catch { /* localStorage unavailable */ }
 }
 
 // Read which task IDs have been completed and return the Set of checklist item IDs to auto-check
