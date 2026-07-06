@@ -1,4 +1,4 @@
-import { getAccessToken } from "./tokenService";
+import { getAccessToken, setAccessToken, getRefreshToken, setRefreshToken } from "./tokenService";
 
 const BASE = import.meta.env.VITE_API_URL ?? "/api";
 
@@ -10,20 +10,51 @@ function headers() {
   };
 }
 
+// Silently refresh the Supabase access token using the stored refresh token.
+let _refreshing = null;
+async function doRefresh() {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) throw new Error("No refresh token stored");
+  // Deduplicate concurrent refresh attempts
+  if (!_refreshing) {
+    _refreshing = fetch(`${BASE}/auth/refresh`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ refreshToken }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (!data.token) throw new Error("Refresh returned no token");
+        setAccessToken(data.token);
+        if (data.refreshToken) setRefreshToken(data.refreshToken);
+      })
+      .finally(() => { _refreshing = null; });
+  }
+  return _refreshing;
+}
+
 async function req(method, path, body) {
-  // fetch itself can throw a TypeError when the server is not reachable.
-  // Wrapping it here means every caller gets a consistent Error instead of
-  // an unhandled rejection, and all the page-level .catch(() => {}) blocks work.
+  const buildOpts = () => ({
+    method,
+    headers: headers(),
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+
   let res;
   try {
-    res = await fetch(`${BASE}${path}`, {
-      method,
-      headers: headers(),
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    res = await fetch(`${BASE}${path}`, buildOpts());
   } catch {
     throw new Error(`Backend unavailable (${method} ${path})`);
   }
+
+  // On 401 try a single silent token refresh then retry once
+  if (res.status === 401) {
+    try {
+      await doRefresh();
+      res = await fetch(`${BASE}${path}`, buildOpts());
+    } catch { /* refresh failed — let 401 fall through */ }
+  }
+
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || `${method} ${path} failed`);
   return data;

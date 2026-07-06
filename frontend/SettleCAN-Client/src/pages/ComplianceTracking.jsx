@@ -1,5 +1,6 @@
 // ComplianceTracking.jsx — track permit conditions, deadlines, and legal obligations
-import { useState } from "react";
+import { useState, useEffect, useContext } from "react";
+import { AuthContext } from "../state/AuthContext";
 import "../scss/FeaturePages.scss";
 
 const COMPLIANCE_ITEMS = [
@@ -93,7 +94,30 @@ const CATEGORIES = [
 ];
 
 export default function ComplianceTracking() {
-  const [items, setItems]     = useState(COMPLIANCE_ITEMS);
+  const { user } = useContext(AuthContext);
+  const storageKey = user?.id ? `compliance_checked_${user.id}` : null;
+
+  // Load checked IDs from localStorage on mount
+  const [checkedIds, setCheckedIds] = useState(() => {
+    if (!storageKey) return new Set();
+    try {
+      const raw = localStorage.getItem(storageKey);
+      return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch { /* localStorage unavailable */ }
+    return new Set();
+  });
+
+  // Derive items array from checkedIds so state is a lean Set, not a duplicated array
+  const items = COMPLIANCE_ITEMS.map(i => ({ ...i, checked: checkedIds.has(i.id) }));
+
+  // Persist whenever checkedIds changes
+  useEffect(() => {
+    if (!storageKey) return;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify([...checkedIds]));
+    } catch { /* localStorage unavailable */ }
+  }, [checkedIds, storageKey]);
+
   // Set of active category labels; empty set = show all
   const [activeFilters, setActiveFilters] = useState(new Set());
   const [openId, setOpenId]   = useState(null);
@@ -104,7 +128,11 @@ export default function ComplianceTracking() {
   const checked = items.filter(i => i.checked).length;
 
   function toggle(id) {
-    setItems(prev => prev.map(i => i.id === id ? { ...i, checked: !i.checked } : i));
+    setCheckedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
   }
 
   function toggleFilter(label) {

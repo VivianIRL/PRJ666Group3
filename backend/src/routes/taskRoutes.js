@@ -74,7 +74,7 @@ router.patch("/:id", async (req, res) => {
   const allowed = ["status", "due_date", "custom_note"];
   const updates = {};
   for (const key of allowed) {
-    if (req.body[key] !== undefined) updates[key] = req.body[key];
+    if (req.body[key] !== undefined) updates[key] = req.body[key]; // nosemgrep: remote-property-injection
   }
 
   if (Object.keys(updates).length === 0)

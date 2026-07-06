@@ -53,7 +53,8 @@ router.post("/register", async (req, res) => {
       province:          meta.province,
       arrivalDate:       meta.arrival_date,
     },
-    token: data.session?.access_token ?? null,
+    token:        data.session?.access_token  ?? null,
+    refreshToken: data.session?.refresh_token ?? null,
   });
 });
 
@@ -85,7 +86,24 @@ router.post("/login", async (req, res) => {
       arrivalDate:       meta.arrival_date       ?? "",
       country:           meta.country            ?? "",
     },
-    token: data.session?.access_token,
+    token:        data.session?.access_token,
+    refreshToken: data.session?.refresh_token ?? null,
+  });
+});
+
+// ── POST /api/auth/refresh ────────────────────────────────────────────────────
+router.post("/refresh", async (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken)
+    return res.status(400).json({ message: "refreshToken is required." });
+
+  const { data, error } = await supabase.auth.refreshSession({ refresh_token: refreshToken });
+  if (error || !data.session)
+    return res.status(401).json({ message: "Token refresh failed. Please log in again." });
+
+  return res.json({
+    token:        data.session.access_token,
+    refreshToken: data.session.refresh_token ?? null,
   });
 });
 

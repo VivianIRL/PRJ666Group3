@@ -16,7 +16,7 @@ function deriveGuideUrl(title = "") {
   if (t.includes("pr") || t.includes("permanent"))                  return "/pr-pathway";
   if (t.includes("ielts") || t.includes("celpip") || t.includes("language")) return "/international-students";
   if (t.includes("compliance") || t.includes("condition"))          return "/compliance";
-  return "/features";
+  return "/notification-settings";
 }
 
 function computeUrgency(daysLeft) {

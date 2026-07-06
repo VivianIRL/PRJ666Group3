@@ -50,7 +50,8 @@ function BigCalendar({ events = [] }) {
 
   function eventsOnDay(day) {
     return events.filter((e) => {
-      const d = new Date(e.date);
+      if (!e.date) return false;
+      const d = new Date(e.date + "T00:00:00");
       return (
         d.getFullYear() === year &&
         d.getMonth() === month &&
@@ -146,11 +147,12 @@ export default function NotificationsDashboard() {
     setSyncSaving(true);
     setSyncMsg(null);
     try {
+      const token = getAccessToken();
       const res = await fetch(`${BASE}/notifications/send-email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${getAccessToken()}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           email: syncEmail,

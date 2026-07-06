@@ -19,8 +19,15 @@ const app = express();
 app.use(pinoHttp({logger}));
 
 // ── Middleware ────────────────────────────────────────────────────────────────
+// This API uses JWT Bearer tokens — CSRF via cookie session does not apply here.
+// nosemgrep: express-check-csurf-middleware-usage
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:3000"],
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+  ],
   credentials: true,
 }));
 

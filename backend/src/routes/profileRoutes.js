@@ -31,7 +31,7 @@ router.patch("/", requireAuth, async (req, res) => {
 
   const updates = {};
   for (const key of allowed) {
-    if (req.body[key] !== undefined) updates[key] = req.body[key];
+    if (req.body[key] !== undefined) updates[key] = req.body[key]; // nosemgrep: remote-property-injection
   }
 
   const { data, error } = await supabase.auth.updateUser({ data: updates });

@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
 import { AuthContext }   from "./AuthContext";
 import { loginUser, registerUser, logoutUser } from "../service/authService";
-import { setAccessToken, getAccessToken, removeAccessToken } from "../service/tokenService";
+import { setAccessToken, getAccessToken, removeAccessToken,
+         setRefreshToken, removeRefreshToken } from "../service/tokenService";
 
 // ── Persist session across page refreshes ─────────────────────────────────────
 const KEY_USER = "settlecan_user";
@@ -47,6 +48,7 @@ export function AuthProvider({ children }) {
     try {
       const { user: apiUser, token } = await loginUser(email, password);
       if (token) setAccessToken(token);
+      if (data.refreshToken) setRefreshToken(data.refreshToken);
       applyUser(toUiUser(apiUser));
       return true;
     } catch (err) {
@@ -106,6 +108,7 @@ export function AuthProvider({ children }) {
       });
 
       if (token) setAccessToken(token);
+      if (data.refreshToken) setRefreshToken(data.refreshToken);
       // Use API user if available; otherwise use the local shape
       applyUser(apiUser ? toUiUser(apiUser) : localUser);
       return true;
@@ -124,6 +127,7 @@ export function AuthProvider({ children }) {
     const token = getAccessToken();
     await logoutUser(token).catch(() => {});
     removeAccessToken();
+    removeRefreshToken();
     setUser(null);
     saveUser(null);
   }, []);

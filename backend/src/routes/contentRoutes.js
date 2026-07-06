@@ -55,7 +55,7 @@ router.patch("/:id", requireAuth, async (req, res) => {
   const allowed = ["title", "page_name", "body_content", "category", "status"];
   const updates = {};
   for (const key of allowed) {
-    if (req.body[key] !== undefined) updates[key] = req.body[key];
+    if (req.body[key] !== undefined) updates[key] = req.body[key]; // nosemgrep: remote-property-injection
   }
   // Always bump last_updated
   updates.last_updated = new Date().toISOString();

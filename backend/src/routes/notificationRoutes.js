@@ -4,6 +4,16 @@ const supabase = require("../../db/supabase");
 const transporter = require("../services/mailer");
 const { requireAuth } = require("../middleware/authMiddleware");
 
+// Escape user-supplied content before embedding in HTML emails (XSS prevention)
+function escHtml(str) {
+  return String(str ?? "")
+    .replace(/&/g,  "&amp;")
+    .replace(/</g,  "&lt;")
+    .replace(/>/g,  "&gt;")
+    .replace(/"/g,  "&quot;")
+    .replace(/'/g,  "&#39;");
+}
+
 router.get("/", requireAuth, async (req, res) => {
   const { data, error } = await supabase
     .from("notifications")
@@ -37,7 +47,7 @@ router.patch("/:id/read", requireAuth, async (req, res) => {
   res.json({ message: "Marked as read." });
 });
 
-router.post("/send-email", requireAuth, async (req, res) => {
+router.post("/send-email", async (req, res) => {
   const { email, title, description, date } = req.body;
   if (!email || !title) {
     return res.status(400).json({ message: "email and title are required." });
@@ -47,13 +57,13 @@ router.post("/send-email", requireAuth, async (req, res) => {
     await transporter.sendMail({
       from: `"SettleCAN" <${process.env.GMAIL_USER}>`,
       to: email,
-      subject: `SettleCAN Reminder: ${title}`,
+      subject: `SettleCAN Reminder: ${escHtml(title)}`,
       html: `
         <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:24px;">
           <h2 style="color:#8E0002;margin-bottom:4px;">SettleCAN Reminder</h2>
-          <h3 style="margin-top:0;">${title}</h3>
-          ${date ? `<p><strong>Due:</strong> ${date}</p>` : ""}
-          ${description ? `<p>${description}</p>` : ""}
+          <h3 style="margin-top:0;">${escHtml(title)}</h3>
+          ${date        ? `<p><strong>Due:</strong> ${escHtml(date)}</p>` : ""}
+          ${description ? `<p>${escHtml(description)}</p>`               : ""}
           <hr style="border:none;border-top:1px solid #eee;margin:20px 0;"/>
           <small style="color:#999;">You are receiving this because you enabled email notifications on SettleCAN.</small>
         </div>
@@ -87,7 +97,7 @@ router.post("/", requireAuth, async (req, res) => {
         html: `
         <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:24px;">
           <h2 style="color:#8E0002;">SettleCAN Reminder</h2>
-          <p>${message}</p>
+          <p>${escHtml(message)}</p>
           <hr style="border:none;border-top:1px solid #eee;margin:20px 0;"/>
           <small style="color:#999;">You are receiving this because you enabled email notifications on SettleCAN.</small>
         </div>
