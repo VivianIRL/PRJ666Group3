@@ -23,30 +23,38 @@ jobs:
       # 3. Set up the Node.js runtime environment
       - name: Set up Node.js
         uses: actions/setup-node@v4
-        with: 
-          node-version: '20' # Fixed property name
-          cache: 'npm'
+        with:
+          node-version: '20'
 
-      # 4. Install dependencies cleanly
-      - name: Install dependencies
-        run: npm ci          # Added actual install command
+      # 4. Install frontend dependencies
+      - name: Install frontend dependencies
+        working-directory: frontend/SettleCAN-Client
+        run: npm ci
 
-      # 5. Run your ESLint check
+      # 5. Install backend dependencies
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      # 6. Run ESLint on the frontend
       - name: Run Linter
+        working-directory: frontend/SettleCAN-Client
         run: npm run lint --if-present
 
-      # 6. Audit third-party packages for high/critical security flaws
-      - name: Audit dependencies
-        run: npm audit --audit-level=high
+      # 7. Audit frontend packages for high/critical security flaws
+      - name: Audit frontend dependencies
+        working-directory: frontend/SettleCAN-Client
+        run: npm audit --audit-level=high --omit=dev
 
-      # 7. Run Semgrep Security Scan
+      # 8. Run Semgrep Security Scan
       - name: Run Semgrep Security Scan
         run: |
           python3 -m pip install semgrep
           semgrep scan --config auto --error
 
-      # 8. Run your Jest test suite
+      # 9. Run frontend test suite (vitest)
       - name: Run Tests
-        run: npm test
+        working-directory: frontend/SettleCAN-Client
+        run: npm test -- --run
         env:
           NODE_ENV: test
