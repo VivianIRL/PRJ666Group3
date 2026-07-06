@@ -1,15 +1,13 @@
 name: Node.js CI Pipeline
 
-# 1. Trigger the pipeline on pushes or pull requests to any branch except main
-on: 
-  push: 
-    branches: 
-      - '**' 
-      - '!main' 
+# 1. Trigger the pipeline on pushes or pull requests to any branch
+on:
+  push:
+    branches:
+      - '**'
   pull_request:
     branches:
       - '**'
-      - '!main'
 
 jobs:
   build-and-test:
