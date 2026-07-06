@@ -22,7 +22,7 @@ function Register() {
   const { clearAuthError } = useContext(AuthContext);
 
   // Clear any stale auth error from a previous login attempt
-  useEffect(() => { clearAuthError(); }, []);
+  useEffect(() => { clearAuthError(); }, [clearAuthError]);
 
   const [form, setForm] = useState({
     firstName: "", lastName: "", dob: "", email: "", password: "", confirm: "",

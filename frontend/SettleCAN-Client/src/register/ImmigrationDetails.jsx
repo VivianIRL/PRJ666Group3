@@ -49,7 +49,7 @@ function ImmigrationDetails() {
   const { register, loading, authError, clearAuthError } = useContext(AuthContext);
 
   // Clear any stale auth error from a previous login attempt
-  useEffect(() => { clearAuthError(); }, []);
+  useEffect(() => { clearAuthError(); }, [clearAuthError]);
 
   // Data passed from step 1
   const step1 = location.state ?? {};

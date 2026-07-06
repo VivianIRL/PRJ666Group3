@@ -3,7 +3,7 @@
 // Pulls from GET /api/content; falls back to curated static articles when offline.
 import { useState, useEffect, useRef } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { fetchContent, fetchContentById } from "../service/taskService";
+import { fetchContent } from "../service/taskService";
 import "../scss/ArticleView.scss";
 
 // ── Static fallback articles (shown when API is offline) ──────────────────────
