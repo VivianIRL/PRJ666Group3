@@ -26,7 +26,8 @@ function MiniCalendar({ events = [] }) {
 
   function hasEvent(day) {
     return events.some(e => {
-      const d = new Date(e.date);
+      if (!e.date) return false;
+      const d = new Date(e.date + "T00:00:00");
       return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
     });
   }
