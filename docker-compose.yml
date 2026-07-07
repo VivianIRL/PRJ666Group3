@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"  # This hyphen indicates the start of an array item
+    environment:
+      - PORT=5000
+    
+  frontend:
+    build: ./frontend/SettleCAN-Client
+    ports:
+      - "3000:80"    # This hyphen indicates the start of an array item
+    depends_on:
+      - backend
