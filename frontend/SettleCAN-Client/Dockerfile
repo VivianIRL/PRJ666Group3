@@ -8,7 +8,18 @@ RUN npm run build
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
-# Copy the built files from the build stage to Nginx
+
+# Copy built files
 COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
+
+# 1. Update permissions for the non-root user
+RUN touch /var/run/nginx.pid && \
+    chown -R nginx:nginx /var/run/nginx.pid /var/cache/nginx /var/log/nginx /usr/share/nginx/html
+
+# 2. Switch to the non-root user
+USER nginx
+
+# 3. Expose the non-privileged port
+EXPOSE 8080
+
 CMD ["nginx", "-g", "daemon off;"]
