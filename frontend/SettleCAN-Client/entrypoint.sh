@@ -1,5 +1,5 @@
 #!/bin/sh
-# Substitute the environment variable and start Nginx
-envsubst '$BACKEND_URL' < /etc/nginx/conf.d/default.conf > /etc/nginx/conf.d/default.conf.tmp
-mv /etc/nginx/conf.d/default.conf.tmp /etc/nginx/conf.d/default.conf
-nginx -g 'daemon off;'
+# Substitute variable and save to a file the nginx user can read
+envsubst '${BACKEND_URL}' < /tmp/nginx.conf.template > /tmp/nginx.conf
+# Start Nginx using the generated config
+nginx -c /tmp/nginx.conf -g 'daemon off;'
