@@ -1,7 +1,7 @@
 // Register.jsx — Step 1: basic account info
 // Passes firstName, lastName, email to ImmigrationDetails via router state
 import { useState, useContext, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../state/AuthContext";
 import "../scss/Auth.scss";
 
@@ -18,13 +18,14 @@ function calculateAge(dobString) {
 }
 
 function Register() {
+  const location = useLocation();
   const navigate = useNavigate();
   const { clearAuthError } = useContext(AuthContext);
 
   // Clear any stale auth error from a previous login attempt
   useEffect(() => { clearAuthError(); }, [clearAuthError]);
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState(() => location.state?.form ?? {
     firstName: "", lastName: "", dob: "", email: "", password: "", confirm: "",
   });
   const [error, setError] = useState("");

@@ -9,5 +9,8 @@
     "dev:frontend": "npm run dev --prefix frontend/SettleCAN-Client",
     "test": "npm test --prefix frontend/SettleCAN-Client",
     "lint": "npm run lint --prefix frontend/SettleCAN-Client"
+  },
+  "dependencies": {
+    "ws": "^8.21.1"
   }
 }
