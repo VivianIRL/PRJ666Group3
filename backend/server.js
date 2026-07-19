@@ -4,7 +4,7 @@ const app    = require("./app");
 const logger = require("./logger"); // Import your configured Pino logger
 
 // ── Start ─────────────────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
   // Use logger.info instead of console.log
