@@ -1,10 +1,15 @@
 #!/bin/sh
 
-# Use envsubst to replace variables and output to /tmp/nginx.conf
-# We must explicitly list the variables to prevent envsubst from 
-# replacing other special Nginx characters like $uri or $host
-envsubst '${PORT} ${BACKEND_URL}' < /tmp/nginx.conf.template > /tmp/nginx.conf
+# 1. Substitute variables and create the config
+envsubst '${PORT} ${BACKEND_URL}' < /tmp/nginx.conf.template > /tmp/default.conf
 
-# Start Nginx using the generated config file
-# Ensure the nginx user has read access to /tmp/nginx.conf
-exec nginx -c /tmp/nginx.conf -g 'daemon off;'
+# 2. Check if Nginx config is valid
+nginx -t -c /tmp/default.conf
+
+if [ $? -eq 0 ]; then
+    # 3. Start Nginx
+    exec nginx -c /tmp/default.conf -g 'daemon off;'
+else
+    echo "Nginx configuration test failed!"
+    exit 1
+fi
