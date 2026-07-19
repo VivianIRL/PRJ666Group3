@@ -16,6 +16,9 @@ COPY nginx.conf /tmp/nginx.conf.template
 
 RUN chown -R nginx:nginx /etc/nginx/conf.d
 
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # 1. Update permissions for the non-root user
 RUN touch /var/run/nginx.pid && \
     chown -R nginx:nginx /var/run/nginx.pid /var/cache/nginx /var/log/nginx /usr/share/nginx/html
@@ -29,7 +32,6 @@ USER nginx
 # 3. Expose the non-privileged port
 EXPOSE 8080
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+
 
 CMD ["/entrypoint.sh"]
