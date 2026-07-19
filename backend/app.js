@@ -20,12 +20,16 @@ app.use(pinoHttp({logger}));
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:3000"],
+  origin: [
+    "http://localhost:5173", 
+    "http://localhost:3000", 
+    "https://prj666group3-1064803374828.us-central1.run.app"
+  ],
   credentials: true,
 }));
 
 app.use(express.json());
-logger.debug("Core middleware layers (CORS, JSON Parser) intialized.");
+logger.debug("Core middleware layers (CORS, JSON Parser) initialized.");
 
 
 // ── Health check ──────────────────────────────────────────────────────────────
