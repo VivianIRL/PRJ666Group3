@@ -26,6 +26,10 @@ RUN touch /var/run/nginx.pid && \
 # Create the temporary directories and set ownership
 RUN mkdir -p /tmp/client_temp /tmp/proxy_temp /tmp/fastcgi_temp /tmp/uwsgi_temp /tmp/scgi_temp && \
     chown -R nginx:nginx /tmp
+
+ENV PORT=8080
+ENV BACKEND_URL=http://your-backend-service
+
 # 2. Switch to the non-root user
 USER nginx
 
