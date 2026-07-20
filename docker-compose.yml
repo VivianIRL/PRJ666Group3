@@ -10,11 +10,10 @@ services:
   frontend:
     build: ./frontend/SettleCAN-Client
     ports:
-      - "3000:80"    # This hyphen indicates the start of an array item
+      - "8080:8080"    # This hyphen indicates the start of an array item
     depends_on:
       - backend
     volumes:
-    # This maps your local config file into the container
-    - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend/SettleCAN-Client/nginx.conf:/etc/nginx/nginx.conf:ro
     env_file:
       - ./frontend/SettleCAN-Client/.env
