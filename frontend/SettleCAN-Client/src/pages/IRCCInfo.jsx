@@ -1,5 +1,9 @@
 // IRCCInfo.jsx — Official IRCC information integration
+import { useState, useEffect } from "react";
+import LastUpdatedBadge from "../components/LastUpdatedBadge";
 import "../scss/FeaturePages.scss";
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const PORTALS = [
   { icon: "🌐", title: "IRCC Online Portal", desc: "Apply for, renew, or check status of study permits, work permits, PR, and citizenship.", url: "https://www.canada.ca/en/immigration-refugees-citizenship.html", tag: "Main Portal" },
@@ -29,6 +33,17 @@ const STREAMS = [
 ];
 
 export default function IRCCInfo() {
+  const [apiContent, setApiContent] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/info/ircc`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.success) setApiContent(data.content); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="fp-page">
       <div className="fp-header">
@@ -39,6 +54,8 @@ export default function IRCCInfo() {
           current processing times, and all major immigration streams.
         </p>
       </div>
+
+      <LastUpdatedBadge dateStr={apiContent?.last_updated} loading={loading} />
 
       <div className="fp-alert fp-alert--info">
         <span className="fp-alert__icon">ℹ️</span>

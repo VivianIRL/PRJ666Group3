@@ -17,5 +17,13 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    rules: {
+      // React Compiler rules (react-hooks v5+) — project does not use the
+      // React Compiler, so disable these to avoid false positives.
+      'react-hooks/purity':                      'off',
+      'react-hooks/set-state-in-effect':          'off',
+      'react-hooks/preserve-manual-memoization':  'off',
+      'react-hooks/static-components':            'off',
+    },
   },
 ])

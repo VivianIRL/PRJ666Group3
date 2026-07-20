@@ -1,6 +1,7 @@
 // HealthInfo.jsx — comprehensive health coverage information for newcomers in Canada
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import LastUpdatedBadge from "../../components/LastUpdatedBadge";
 import "../../scss/FeaturePages.scss";
 import "../../scss/InfoPage.scss";
 
@@ -213,6 +214,7 @@ export default function HealthInfo() {
           <Link to="/guides/health-card" className="info-hero__cta">
             → Step-by-step: Register for your health card
           </Link>
+          <LastUpdatedBadge dateStr={apiContent?.last_updated} loading={loading} />
         </div>
       </div>
 

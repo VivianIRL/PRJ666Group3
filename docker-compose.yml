@@ -1,0 +1,19 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"  # This hyphen indicates the start of an array item
+    environment:
+      - PORT=5000
+    env_file:
+      - backend/.env
+  frontend:
+    build: ./frontend/SettleCAN-Client
+    ports:
+      - "8080:8080"    # This hyphen indicates the start of an array item
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend/SettleCAN-Client/nginx.conf:/etc/nginx/nginx.conf:ro
+    env_file:
+      - ./frontend/SettleCAN-Client/.env

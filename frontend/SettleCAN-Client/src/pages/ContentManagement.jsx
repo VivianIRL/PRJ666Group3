@@ -33,7 +33,7 @@ function getStatusVariant(status) {
 
 export default function ContentManagement() {
   const [articles, setArticles]           = useState(INITIAL_ARTICLES);
-  const [loading, setLoading]             = useState(true);
+  const [, setLoading]                     = useState(true);
   const [search, setSearch]               = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
   const [showAddModal, setShowAddModal]   = useState(false);

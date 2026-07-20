@@ -215,6 +215,75 @@ export default function HousingSupport() {
         </div>
       </div>
 
+      {/* Tenant rights guidance */}
+      <div className="fp-section">
+        <h2 className="fp-section__title">🛡️ Know Your Tenant Rights</h2>
+        <p style={{ fontSize: "0.87rem", color: "#6b5a61", marginBottom: "1rem" }}>
+          As a tenant in Canada, you have legal protections regardless of your immigration status.
+          These rights apply whether you are on a fixed-term or month-to-month lease.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          {[
+            {
+              icon: "🔑",
+              right: "Right to Quiet Enjoyment",
+              detail: "Your landlord cannot enter your home without giving at least 24 hours written notice (except in emergencies). Repeated unannounced visits may constitute harassment and can be reported to your provincial tenant board.",
+            },
+            {
+              icon: "🛠️",
+              right: "Right to a Safe & Maintained Home",
+              detail: "Landlords must keep the property in good repair and comply with health and safety standards. If repairs are not made after written request, you can apply to your tenant board for a rent abatement or an order to repair.",
+            },
+            {
+              icon: "💰",
+              right: "Protection Against Illegal Rent Increases",
+              detail: "In most provinces, landlords can only increase rent once per year and must give 90 days written notice. Increases above the provincial guideline require tenant board approval. Alberta and Saskatchewan have no rent control — check your province's rules.",
+            },
+            {
+              icon: "🚪",
+              right: "Protection Against Illegal Eviction",
+              detail: "A landlord cannot evict you without a valid legal reason (e.g., non-payment, damage, personal use). Proper written notice periods apply — typically 60 to 90 days. If you receive an N12 or eviction notice, contact a legal clinic before leaving.",
+            },
+            {
+              icon: "🚫",
+              right: "Protection Against Discrimination",
+              detail: "It is illegal for a landlord to refuse to rent to you based on race, national origin, immigration status, religion, family status, gender, or disability under the Canadian Human Rights Act and provincial human rights codes.",
+            },
+            {
+              icon: "🌡️",
+              right: "Right to Heat & Essential Services",
+              detail: "Landlords cannot cut off heat, water, or electricity as a form of eviction or retaliation. In Ontario, landlords must maintain a minimum indoor temperature of 21°C from September 1 to June 15. Similar standards apply in other provinces.",
+            },
+            {
+              icon: "📄",
+              right: "Right to a Standard Lease",
+              detail: "In Ontario, landlords are required to use the government's standard lease form. You can request a copy within 21 days of signing. If not provided, you may be able to withhold one month's rent until it is delivered.",
+            },
+            {
+              icon: "💼",
+              right: "Security Deposit Limits",
+              detail: "In most provinces, landlords can only collect a deposit equal to the last month's rent. They cannot ask for a damage deposit on top of this (except in some western provinces). Any deposit beyond these limits may be illegal.",
+            },
+          ].map(item => (
+            <div key={item.right} className="fp-card" style={{ flexDirection: "row", gap: "1rem", alignItems: "flex-start" }}>
+              <span style={{ fontSize: "1.4rem", flexShrink: 0 }}>{item.icon}</span>
+              <div>
+                <strong style={{ fontSize: "0.9rem", color: "#1a0d10", display: "block", marginBottom: "0.25rem" }}>{item.right}</strong>
+                <p className="fp-card__body" style={{ margin: 0 }}>{item.detail}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="fp-alert fp-alert--danger" style={{ marginTop: "1rem" }}>
+          <span className="fp-alert__icon">⚠️</span>
+          <span className="fp-alert__text">
+            <strong className="fp-alert__title">If your rights are being violated</strong>
+            Do not leave your home voluntarily if pressured by a landlord. Document everything in writing.
+            Contact your provincial tenant board or a community legal clinic immediately — many offer free advice to newcomers.
+          </span>
+        </div>
+      </div>
+
       {/* Tenant boards */}
       <div className="fp-section">
         <h2 className="fp-section__title">⚖️ Provincial Tenant Rights Boards</h2>

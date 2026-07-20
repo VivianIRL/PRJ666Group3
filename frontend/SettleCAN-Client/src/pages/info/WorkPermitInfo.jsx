@@ -1,6 +1,7 @@
 // WorkPermitInfo.jsx — comprehensive information about work permits in Canada
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import LastUpdatedBadge from "../../components/LastUpdatedBadge";
 import "../../scss/FeaturePages.scss";
 import "../../scss/InfoPage.scss";
 
@@ -170,6 +171,7 @@ export default function WorkPermitInfo() {
           <Link to="/guides/permit-renewal" className="info-hero__cta">
             → Step-by-step: Renew your work permit
           </Link>
+          <LastUpdatedBadge dateStr={apiContent?.last_updated} loading={loading} />
         </div>
       </div>
 
@@ -369,6 +371,74 @@ export default function WorkPermitInfo() {
               <div className="fp-step__num">Step {s.step}</div>
               <div className="fp-step__title">{s.title}</div>
               <div className="fp-step__body">{s.body}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Work-hour restrictions */}
+      <div className="fp-section">
+        <h2 className="fp-section__title">⏱️ Work-Hour Restrictions by Permit Type</h2>
+        <div className="fp-alert fp-alert--warning">
+          <span className="fp-alert__icon">⚠️</span>
+          <span className="fp-alert__text">
+            <strong className="fp-alert__title">Working more hours than authorized is a status violation</strong>
+            Exceeding your authorized work hours — even by accident — can affect future immigration applications. Always know your permit's specific conditions.
+          </span>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          {[
+            {
+              icon: "🎓",
+              group: "International Students (Study Permit)",
+              hours: "24 hrs/week off-campus during academic sessions",
+              full: "Full-time during scheduled breaks (reading week, summer, winter)",
+              note: "Co-op and mandatory internship placements do NOT count toward the 24-hour limit — they require a separate co-op work permit authorization on your study permit.",
+              color: "#2563eb",
+            },
+            {
+              icon: "🔓",
+              group: "Open Work Permit Holders",
+              hours: "No hour restriction",
+              full: "Can work full-time for any eligible employer",
+              note: "Some open permits have occupation or location restrictions noted on the permit itself. Check for any conditions printed on your document.",
+              color: "#15803d",
+            },
+            {
+              icon: "🔒",
+              group: "Employer-Specific (Closed) Permit",
+              hours: "No hour restriction — but employer-restricted",
+              full: "Can work any hours for the named employer only",
+              note: "Working for a second employer — even casually or part-time — is not permitted without applying for a new permit. This includes unpaid internships or gig platforms.",
+              color: "#b45309",
+            },
+            {
+              icon: "🌍",
+              group: "Visitor / No Work Authorization",
+              hours: "0 hours — working is not permitted",
+              full: "No work authorization exists on a visitor record",
+              note: "Exceptions: certain short business activities (attending conferences, board meetings) may be allowed. Performing paid work without a permit is a serious violation.",
+              color: "#8E0002",
+            },
+          ].map(item => (
+            <div key={item.group} className="fp-card" style={{ borderLeft: `3px solid ${item.color}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.4rem" }}>
+                <span style={{ fontSize: "1.3rem" }}>{item.icon}</span>
+                <strong style={{ fontSize: "0.92rem", color: "#1a0d10" }}>{item.group}</strong>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem 1.5rem", marginBottom: "0.5rem" }}>
+                <div>
+                  <div style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", color: "#9a8a90", marginBottom: "0.15rem" }}>During studies / regular periods</div>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 700, color: item.color }}>{item.hours}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", color: "#9a8a90", marginBottom: "0.15rem" }}>Breaks / exceptions</div>
+                  <div style={{ fontSize: "0.85rem", color: "#3a2a30" }}>{item.full}</div>
+                </div>
+              </div>
+              <div style={{ background: "#f9f5f6", borderRadius: "0.4rem", padding: "0.5rem 0.75rem", fontSize: "0.8rem", color: "#5a4a50" }}>
+                💡 {item.note}
+              </div>
             </div>
           ))}
         </div>

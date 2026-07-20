@@ -136,7 +136,8 @@ function MonthView({ tasks = [], onStatusChange }) {
 
   function tasksOnDay(day) {
     return tasks.filter(t => {
-      const d = new Date(t.due_date);
+      if (!t.due_date) return false;
+      const d = new Date(t.due_date + "T00:00:00");
       return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
     });
   }

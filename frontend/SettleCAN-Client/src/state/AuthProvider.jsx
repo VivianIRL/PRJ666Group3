@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { AuthContext }   from "./AuthContext";
-import { loginUser, registerUser, logoutUser } from "../service/authService";
+import { loginUser, registerUser, logoutUser, updateProfile as updateProfileRequest } from "../service/authService";
 import { setAccessToken, getAccessToken, removeAccessToken } from "../service/tokenService";
 
 // ── Persist session across page refreshes ─────────────────────────────────────
@@ -20,12 +20,16 @@ function toUiUser(apiUser) {
   return {
     id:                apiUser.id               ?? "",
     email:             apiUser.email            ?? "",
-    name:              apiUser.firstName        ?? "",
-    fullName:          `${apiUser.firstName ?? ""} ${apiUser.lastName ?? ""}`.trim(),
+    name:              apiUser.firstName || apiUser.email?.split("@")[0] || "",
+    fullName:          `${apiUser.firstName ?? ""} ${apiUser.lastName ?? ""}`.trim() || apiUser.email || "",
     immigrationStatus: apiUser.immigrationStatus ?? "International Student",
     province:          apiUser.province         ?? "",
     arrivalDate:       apiUser.arrivalDate      ?? "",
+    permitExpiry:      apiUser.permitExpiry     ?? "",
+    languageTest:      apiUser.languageTest     ?? "",
     country:           apiUser.country          ?? "",
+    firstName:         apiUser.firstName        ?? "",
+    lastName:          apiUser.lastName         ?? "",
     avatar:            null,
   };
 }
@@ -119,6 +123,32 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const updateProfile = useCallback(async (profile) => {
+    setLoading(true);
+    setAuthError(null);
+
+    try {
+      const response = await updateProfileRequest(getAccessToken(), {
+        first_name: profile.firstName,
+        last_name: profile.lastName,
+        immigration_status: profile.immigrationStatus,
+        province: profile.province,
+        country: profile.country,
+        arrival_date: profile.arrivalDate,
+        permit_expiry: profile.permitExpiry,
+        language_test: profile.languageTest,
+      });
+      const updatedProfile = response.profile ?? response;
+      applyUser(toUiUser({ ...user, ...updatedProfile }));
+      return true;
+    } catch (err) {
+      setAuthError(err.message || "Could not update profile");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
   // ── logout ────────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
     const token = getAccessToken();
@@ -139,6 +169,7 @@ export function AuthProvider({ children }) {
       clearAuthError,
       login,
       register,
+      updateProfile,
       logout,
     }}>
       {children}

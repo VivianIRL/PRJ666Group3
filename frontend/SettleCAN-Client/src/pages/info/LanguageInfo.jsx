@@ -88,7 +88,6 @@ const IMMIGRATION_IMPACT = [
 
 export default function LanguageInfo() {
   const [activeTest, setActiveTest] = useState(0);
-  const [openFaq, setOpenFaq]       = useState(null);
   const [apiResources, setApiResources] = useState([]);
 
   // Fetch supplementary resources from the backend (resource_library table)

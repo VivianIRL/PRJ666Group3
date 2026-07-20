@@ -29,7 +29,7 @@ function saveTaskStateMap(tasks, uid, immigStatus) {
     const map = {};
     tasks.forEach(t => { map[t.user_task_id] = t.status; });
     localStorage.setItem(TASKS_STATE_KEY(uid, immigStatus), JSON.stringify(map));
-  } catch {}
+  } catch { /* localStorage unavailable */ }
 }
 
 // ── Status cycle ───────────────────────────────────────────────────────────────
@@ -370,7 +370,7 @@ export default function TasksDashboard() {
     try {
       const existing = JSON.parse(localStorage.getItem(CUSTOM_TASKS_KEY(uid))) ?? [];
       localStorage.setItem(CUSTOM_TASKS_KEY(uid), JSON.stringify([...existing, optimistic]));
-    } catch {}
+    } catch { /* localStorage unavailable */ }
     setShowAddModal(false);
     showToast(`"${form.title}" added!`);
     try {
@@ -443,7 +443,7 @@ export default function TasksDashboard() {
         ? [...new Set([...done, id])]
         : done.filter(d => d !== id);
       localStorage.setItem(TASKS_DONE_KEY(uid), JSON.stringify(newDone));
-    } catch {}
+    } catch { /* localStorage unavailable */ }
 
     await updateTask(id, { status: next }).catch(() => {});
   }

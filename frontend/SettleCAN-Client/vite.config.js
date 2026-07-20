@@ -7,6 +7,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
+    css: false,
   },
   server: {
     host: '127.0.0.1',
@@ -15,7 +16,7 @@ export default defineConfig({
     // Production should use the real backend URL via VITE_API_URL env var.
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'backend',
         changeOrigin: true,
       },
     },

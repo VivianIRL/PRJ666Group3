@@ -74,7 +74,7 @@ function Login() {
             </div>
           </div>
 
-          <div className="auth-forgot"><Link to="/">Forgot password?</Link></div>
+          <div className="auth-forgot"><a href="/forgot-password">Forgot password?</a></div>
 
           <button type="submit" className="auth-btn" disabled={loading}>{loading ? 'Logging in...' : 'Log in'}</button>
         </form>
