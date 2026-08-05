@@ -47,6 +47,7 @@ router.post("/register", async (req, res) => {
     user: {
       id:                data.user?.id,
       email:             data.user?.email,
+      dob:               meta.dob ?? "",
       firstName:         meta.first_name,
       lastName:          meta.last_name,
       immigrationStatus: meta.immigration_status,
@@ -78,6 +79,7 @@ router.post("/login", async (req, res) => {
     user: {
       id:                data.user?.id,
       email:             data.user?.email,
+      dob:               meta.dob ?? "",
       firstName:         meta.first_name         ?? "",
       lastName:          meta.last_name          ?? "",
       immigrationStatus: meta.immigration_status ?? "International Student",
@@ -87,6 +89,51 @@ router.post("/login", async (req, res) => {
     },
     token: data.session?.access_token,
   });
+});
+
+// ── POST /api/auth/forgot-password ─────────────────────────────────────────────
+router.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: "Email is required." });
+  }
+
+  const redirectTo = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password`;
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+
+  if (error) {
+    return res.status(400).json({ message: "Could not send reset email." });
+  }
+
+  return res.json({ message: "If an account exists for that email, a reset link has been sent." });
+});
+
+// ── POST /api/auth/reset-password ─────────────────────────────────────────────
+router.post("/reset-password", async (req, res) => {
+  const { accessToken, refreshToken, password } = req.body;
+
+  if (!accessToken || !refreshToken || !password) {
+    return res.status(400).json({ message: "Reset link and password are required." });
+  }
+  if (password.length < 8) {
+    return res.status(400).json({ message: "Password must be at least 8 characters." });
+  }
+
+  const { error: sessionError } = await supabase.auth.setSession({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+  });
+  if (sessionError) {
+    return res.status(401).json({ message: "This reset link is invalid or has expired." });
+  }
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    return res.status(400).json({ message: "Could not reset password." });
+  }
+
+  return res.json({ message: "Password reset successfully." });
 });
 
 // ── POST /api/auth/logout ─────────────────────────────────────────────────────
@@ -110,6 +157,7 @@ router.get("/me", async (req, res) => {
     user: {
       id:                data.user.id,
       email:             data.user.email,
+      dob:               meta.dob ?? "",
       firstName:         meta.first_name         ?? "",
       lastName:          meta.last_name          ?? "",
       immigrationStatus: meta.immigration_status ?? "International Student",

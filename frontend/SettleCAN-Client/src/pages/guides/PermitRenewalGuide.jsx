@@ -1,7 +1,11 @@
 // PermitRenewalGuide.jsx — renew a study or work permit before it expires
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../../state/AuthContext";
+import { loadChecklist, saveChecklist } from "../../data/guideChecklist";
 import "../../scss/TaskGuide.scss";
+
+const GUIDE_ID = "permit-renewal";
 
 const STEPS = [
   {
@@ -67,7 +71,16 @@ const DOCS = [
 ];
 
 export default function PermitRenewalGuide() {
-  const [checked, setChecked] = useState({});
+  const { user } = useContext(AuthContext);
+  const [checked, setChecked] = useState(() => loadChecklist(GUIDE_ID, user?.id));
+
+  function toggleDoc(i) {
+    setChecked((p) => {
+      const next = { ...p, [i]: !p[i] };
+      saveChecklist(GUIDE_ID, user?.id, next);
+      return next;
+    });
+  }
 
   return (
     <div className="tg-page">
@@ -128,8 +141,8 @@ export default function PermitRenewalGuide() {
         <div className="tg-docs__list">
           {DOCS.map((doc, i) => (
             <div key={i} className="tg-docs__item">
-              <input type="checkbox" id={`doc-${i}`} checked={!!checked[i]} onChange={() => setChecked(p => ({ ...p, [i]: !p[i] }))} />
-              <label htmlFor={`doc-${i}`}>{doc.label}{doc.required ? <span style={{ color: "#8E0002", fontWeight: 700 }}> · Required</span> : <span> · If applicable</span>}</label>
+              <input type="checkbox" id={`doc-${i}`} checked={!!checked[i]} onChange={() => toggleDoc(i)} />
+              <label htmlFor={`doc-${i}`}>{doc.label}{doc.required ? <span style={{ color: "var(--color-primary)", fontWeight: 700 }}> · Required</span> : <span> · If applicable</span>}</label>
             </div>
           ))}
         </div>

@@ -3,7 +3,7 @@
 // Pulls from GET /api/content; falls back to curated static articles when offline.
 import { useState, useEffect, useRef } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { fetchContent, fetchContentById } from "../service/taskService";
+import { fetchContent } from "../service/taskService";
 import "../scss/ArticleView.scss";
 
 // ── Static fallback articles (shown when API is offline) ──────────────────────
@@ -82,7 +82,7 @@ const STATIC_ARTICLES = [
     ],
     relatedPaths: [
       { label: "Health Info Page", path: "/info/health" },
-      { label: "Settlement Checklist", path: "/checklist" },
+      { label: "My Tasks", path: "/tasks" },
       { label: "Document Alerts", path: "/document-alerts" },
     ],
   },
@@ -133,9 +133,36 @@ function estimateReadTime(sections = []) {
   return Math.max(1, Math.round(words / 200));
 }
 
+// content_db stores an article body as one flat text field (no structured
+// sections column) — admin-authored content marks section breaks with a
+// "## Heading" line, the same lightweight convention used when seeding
+// Welcome/Immigration Guide/Housing Tips. Splitting on that gives these
+// articles the same multi-section + table-of-contents layout as the static
+// ones below, instead of one unbroken block with no sidebar.
+function parseSections(bodyContent, fallbackHeading) {
+  // Normalize CRLF (Windows-saved SQL seed files, or a browser textarea
+  // submitting \r\n for Enter) to plain \n first — otherwise the \r sitting
+  // between a heading and its body blocks the per-section match below, even
+  // though the coarser split (which only needs a bare \n before the next
+  // "## ") still succeeds, silently falling every section back to the
+  // article's own title instead of its real heading.
+  const raw = (bodyContent ?? "").replace(/\r\n/g, "\n").trim();
+  if (!raw) return [];
+  if (!raw.includes("## ")) return [{ heading: fallbackHeading, body: raw }];
+
+  return raw
+    .split(/\n(?=## )/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const match = part.match(/^## (.+?)\n([\s\S]*)$/);
+      return match ? { heading: match[1].trim(), body: match[2].trim() } : { heading: fallbackHeading, body: part };
+    });
+}
+
 function categoryColor(cat) {
   const MAP = {
-    Employment: "#2563eb", Health: "#15803d", Immigration: "#8E0002",
+    Employment: "#2563eb", Health: "#15803d", Immigration: "var(--color-primary)",
     Finance: "#d97706", Housing: "#7c3aed", General: "#475569",
   };
   return MAP[cat] ?? "#475569";
@@ -324,15 +351,22 @@ export default function ArticleView() {
     fetchContent()
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
-          // Merge API articles (add readTime estimate if missing)
+          // Merge API articles, splitting body_content into headed
+          // sections (see parseSections) so these render with the same
+          // table-of-contents layout as the static articles below.
           const api = data
             .filter(a => a.status === "Published")
-            .map(a => ({
-              ...a,
-              id:       String(a.content_id ?? a.id),
-              sections: a.sections ?? [],
-              readTime: a.readTime ?? estimateReadTime(a.sections ?? []),
-            }));
+            .map(a => {
+              const sections = a.sections ?? parseSections(a.body_content, a.title);
+              const firstBody = sections[0]?.body?.trim();
+              return {
+                ...a,
+                id:       String(a.content_id ?? a.id),
+                summary:  a.summary ?? (firstBody ? firstBody.slice(0, 160) + (firstBody.length > 160 ? "…" : "") : undefined),
+                sections,
+                readTime: a.readTime ?? estimateReadTime(sections),
+              };
+            });
           // Keep static articles that don't have an API counterpart
           const apiIds = new Set(api.map(a => a.id));
           const merged = [...api, ...STATIC_ARTICLES.filter(s => !apiIds.has(s.id))];

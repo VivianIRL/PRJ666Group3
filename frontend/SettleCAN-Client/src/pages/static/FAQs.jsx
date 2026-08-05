@@ -116,7 +116,7 @@ export default function FAQs() {
                     }}
                   >
                     <span style={{ fontWeight: 700, fontSize: "0.92rem", color: "#1a0d10", flex: 1 }}>{faq.q}</span>
-                    <span style={{ fontSize: "1.1rem", color: "#8E0002", flexShrink: 0, transition: "transform 0.2s", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
+                    <span style={{ fontSize: "1.1rem", color: "var(--color-primary)", flexShrink: 0, transition: "transform 0.2s", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
                   </button>
                   {isOpen && (
                     <div style={{ padding: "0 1.25rem 1rem", fontSize: "0.88rem", color: "#4a3a40", lineHeight: 1.7, borderTop: "1px solid #f0e8ea" }}>

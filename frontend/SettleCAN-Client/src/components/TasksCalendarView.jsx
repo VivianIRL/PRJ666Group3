@@ -1,4 +1,5 @@
-// TasksCalendarView.jsx — month + week calendar views for task due dates
+// TasksCalendarView.jsx — the one shared calendar component in the app.
+// Used both embedded in My Tasks and on the standalone /calendar page.
 import { useState } from "react";
 import "../scss/TasksCalendarView.scss";
 
@@ -8,11 +9,58 @@ const MONTH_NAMES = [
   "July","August","September","October","November","December",
 ];
 
+// "In Progress" matches $in-progress in scss/_variables.scss and
+// IN_PROGRESS_COLOR in TasksDashboard.jsx — one color for that status
+// everywhere it appears (checkbox, badge, calendar pill, detail card).
 const STATUS_COLOR = {
   "Completed":   "#27ae60",
-  "In Progress": "#2563eb",
-  "Pending":     "#8E0002",
+  "In Progress": "#f97316",
+  "Pending":     "var(--color-primary)",
+  "Document":    "#2563eb",
 };
+
+// Documents don't have a task status — plot them as pseudo-tasks so the
+// month/week grids can render tasks and document expiries together.
+function documentsAsEvents(documents = []) {
+  return documents
+    .filter((d) => d.expiryDate)
+    .map((d) => ({
+      user_task_id: `doc-${d.id}`,
+      title: d.name,
+      category: d.category ?? "Document",
+      status: "Document",
+      due_date: d.expiryDate,
+      kind: "document",
+    }));
+}
+
+// ── Month/Year picker — jump directly to any month/year, or step one at a
+// time with the flanking arrows. ────────────────────────────────────────────
+function MonthYearPicker({ year, month, onChange, onPrev, onNext }) {
+  const yearOptions = Array.from({ length: 8 }, (_, i) => new Date().getFullYear() - 3 + i);
+  return (
+    <div className="tasks-cal__picker">
+      <button className="tasks-cal__nav-btn" onClick={onPrev} aria-label="Previous month">‹</button>
+      <select
+        className="tasks-cal__picker-select"
+        value={month}
+        onChange={(e) => onChange(year, Number(e.target.value))}
+        aria-label="Jump to month"
+      >
+        {MONTH_NAMES.map((m, i) => <option key={m} value={i}>{m}</option>)}
+      </select>
+      <select
+        className="tasks-cal__picker-select"
+        value={year}
+        onChange={(e) => onChange(Number(e.target.value), month)}
+        aria-label="Jump to year"
+      >
+        {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
+      </select>
+      <button className="tasks-cal__nav-btn" onClick={onNext} aria-label="Next month">›</button>
+    </div>
+  );
+}
 
 // ── Week view ─────────────────────────────────────────────────────────────────
 function WeekView({ tasks = [], onStatusChange }) {
@@ -60,12 +108,12 @@ function WeekView({ tasks = [], onStatusChange }) {
   return (
     <div className="tasks-cal__week">
       <div className="tasks-cal__nav">
-        <button className="tasks-cal__nav-btn" onClick={prevWeek}>&#8249;</button>
+        <button className="tasks-cal__nav-btn" onClick={prevWeek} aria-label="Previous week">&#8249;</button>
         <div className="tasks-cal__nav-center">
           <span className="tasks-cal__month">{startLabel} – {endLabel}</span>
-          <button className="tasks-cal__today-btn" onClick={goThisWeek}>This week</button>
+          <button className="tasks-cal__today-link" onClick={goThisWeek}>Today</button>
         </div>
-        <button className="tasks-cal__nav-btn" onClick={nextWeek}>&#8250;</button>
+        <button className="tasks-cal__nav-btn" onClick={nextWeek} aria-label="Next week">&#8250;</button>
       </div>
 
       <div className="tasks-cal__week-grid">
@@ -90,11 +138,11 @@ function WeekView({ tasks = [], onStatusChange }) {
                   <div
                     key={t.user_task_id}
                     className="tasks-cal__week-pill"
-                    style={{ borderLeft: `3px solid ${STATUS_COLOR[t.status] ?? "#8E0002"}` }}
+                    style={{ borderLeft: `3px solid ${STATUS_COLOR[t.status] ?? "var(--color-primary)"}` }}
                   >
                     <span className="tasks-cal__week-pill-cat">{t.category}</span>
                     <span className="tasks-cal__week-pill-title">{t.title}</span>
-                    {onStatusChange && t.status !== "Completed" && (
+                    {onStatusChange && t.status !== "Completed" && t.kind !== "document" && (
                       <button
                         className="tasks-cal__week-done"
                         onClick={() => onStatusChange(t.user_task_id, "Completed")}
@@ -125,9 +173,16 @@ function MonthView({ tasks = [], onStatusChange }) {
   const [month, setMonth]   = useState(today.getMonth());
   const [selected, setSelected] = useState(null);
 
-  function prevMonth() { month === 0 ? (setMonth(11), setYear(y => y - 1)) : setMonth(m => m - 1); }
-  function nextMonth() { month === 11 ? (setMonth(0), setYear(y => y + 1)) : setMonth(m => m + 1); }
-  function goToday()   { setYear(today.getFullYear()); setMonth(today.getMonth()); setSelected(null); }
+  function jumpTo(newYear, newMonth) { setYear(newYear); setMonth(newMonth); setSelected(null); }
+  function prevMonth() {
+    if (month === 0) { setYear(year - 1); setMonth(11); } else { setMonth(month - 1); }
+    setSelected(null);
+  }
+  function nextMonth() {
+    if (month === 11) { setYear(year + 1); setMonth(0); } else { setMonth(month + 1); }
+    setSelected(null);
+  }
+  function goToday() { setYear(today.getFullYear()); setMonth(today.getMonth()); setSelected(null); }
 
   const firstDay    = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -136,7 +191,8 @@ function MonthView({ tasks = [], onStatusChange }) {
 
   function tasksOnDay(day) {
     return tasks.filter(t => {
-      const d = new Date(t.due_date);
+      if (!t.due_date) return false;
+      const d = new Date(t.due_date + "T00:00:00");
       return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
     });
   }
@@ -149,12 +205,8 @@ function MonthView({ tasks = [], onStatusChange }) {
   return (
     <>
       <div className="tasks-cal__nav">
-        <button className="tasks-cal__nav-btn" onClick={prevMonth}>&#8249;</button>
-        <div className="tasks-cal__nav-center">
-          <span className="tasks-cal__month">{MONTH_NAMES[month]} {year}</span>
-          <button className="tasks-cal__today-btn" onClick={goToday}>Today</button>
-        </div>
-        <button className="tasks-cal__nav-btn" onClick={nextMonth}>&#8250;</button>
+        <MonthYearPicker year={year} month={month} onChange={jumpTo} onPrev={prevMonth} onNext={nextMonth} />
+        <button className="tasks-cal__today-link" onClick={goToday}>Today</button>
       </div>
 
       <div className="tasks-cal__grid">
@@ -181,10 +233,10 @@ function MonthView({ tasks = [], onStatusChange }) {
                   <span
                     key={t.user_task_id}
                     className="tasks-cal__event-pill"
-                    style={{ background: STATUS_COLOR[t.status] ?? "#8E0002" }}
+                    style={{ background: STATUS_COLOR[t.status] ?? "var(--color-primary)" }}
                     title={t.title}
                   >
-                    {t.title}
+                    {t.kind === "document" ? "📄 " : ""}{t.title}
                   </span>
                 ))}
                 {dayTasks.length > 2 && <span className="tasks-cal__event-more">+{dayTasks.length - 2} more</span>}
@@ -203,13 +255,13 @@ function MonthView({ tasks = [], onStatusChange }) {
           {selected.tasks.map(t => (
             <div key={t.user_task_id} className="tasks-cal__detail-task">
               <div className="tasks-cal__detail-task-left">
-                <span className="tasks-cal__detail-dot" style={{ background: STATUS_COLOR[t.status] ?? "#8E0002" }} />
+                <span className="tasks-cal__detail-dot" style={{ background: STATUS_COLOR[t.status] ?? "var(--color-primary)" }} />
                 <div>
                   <span className="tasks-cal__detail-cat">{t.category}</span>
                   <span className="tasks-cal__detail-name">{t.title}</span>
                 </div>
               </div>
-              {onStatusChange && t.status !== "Completed" && (
+              {onStatusChange && t.status !== "Completed" && t.kind !== "document" && (
                 <button
                   className="tasks-cal__detail-done"
                   onClick={() => { onStatusChange(t.user_task_id, "Completed"); setSelected(null); }}
@@ -226,11 +278,20 @@ function MonthView({ tasks = [], onStatusChange }) {
 }
 
 // ── Root with Month / Week toggle ─────────────────────────────────────────────
-export default function TasksCalendarView({ tasks = [], onStatusChange }) {
+// `embedded` caps the component's width at 40% of its container (per the
+// design spec) — used when this calendar sits alongside other content (e.g.
+// the My Tasks sidebar). The standalone /calendar page omits it and takes
+// the full width of its own, dedicated container instead.
+export default function TasksCalendarView({ tasks = [], documents = [], onStatusChange, embedded = false }) {
   const [view, setView] = useState("month");
+  const events = [...tasks, ...documentsAsEvents(documents)];
+
+  const guardedOnStatusChange = onStatusChange
+    ? (id, ...args) => { if (String(id).startsWith("doc-")) return; onStatusChange(id, ...args); }
+    : undefined;
 
   return (
-    <div className="tasks-cal">
+    <div className={`tasks-cal ${embedded ? "tasks-cal--embedded" : ""}`}>
       <div className="tasks-cal__view-toggle">
         <button
           className={`tasks-cal__view-btn${view === "month" ? " tasks-cal__view-btn--active" : ""}`}
@@ -247,8 +308,8 @@ export default function TasksCalendarView({ tasks = [], onStatusChange }) {
       </div>
 
       {view === "month"
-        ? <MonthView tasks={tasks} onStatusChange={onStatusChange} />
-        : <WeekView  tasks={tasks} onStatusChange={onStatusChange} />
+        ? <MonthView tasks={events} onStatusChange={guardedOnStatusChange} />
+        : <WeekView  tasks={events} onStatusChange={guardedOnStatusChange} />
       }
 
       <div className="tasks-cal__legend">

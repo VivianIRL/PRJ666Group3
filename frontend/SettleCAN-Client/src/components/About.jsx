@@ -3,7 +3,7 @@ import groupPicture from "../assets/group-picture.png";
 
 export default function About() {
   return (
-    <section id="about" className="about" style={{ display: "flex", alignItems: "center" }}>
+    <section id="about" className="about">
       <div className="about-text">
         <h2>About settleCAN</h2>
         <p>

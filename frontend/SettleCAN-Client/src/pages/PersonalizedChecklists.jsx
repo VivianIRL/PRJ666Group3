@@ -165,7 +165,7 @@ export default function PersonalizedChecklists() {
                   type="checkbox"
                   checked={!!checked[i]}
                   onChange={() => setChecked(prev => ({ ...prev, [i]: !prev[i] }))}
-                  style={{ width: 16, height: 16, accentColor: "#8E0002", flexShrink: 0, marginTop: 2 }}
+                  style={{ width: 16, height: 16, accentColor: "var(--color-primary)", flexShrink: 0, marginTop: 2 }}
                 />
                 <span style={{ fontSize: "0.875rem", color: checked[i] ? "#9a8a90" : "#1a0d10", textDecoration: checked[i] ? "line-through" : "none", lineHeight: 1.45 }}>
                   {task}

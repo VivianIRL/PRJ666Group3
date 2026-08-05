@@ -37,11 +37,12 @@ export default function NotificationSettings() {
     setSaving(true);
     setFeedback(null);
     try {
+      const token = getAccessToken();
       const res = await fetch(`${BASE}/notifications/send-email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${getAccessToken()}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           email,

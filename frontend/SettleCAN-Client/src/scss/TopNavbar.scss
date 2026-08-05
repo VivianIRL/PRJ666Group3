@@ -18,10 +18,14 @@
     cursor: pointer;
     margin-right: 3rem;
 
+    @media (max-width: 480px) { margin-right: 0.75rem; }
+
     .brand-text {
       font-size: 1.5rem;
       font-weight: 600;
       color: $text-dark;
+
+      @media (max-width: 480px) { font-size: 1.15rem; }
 
       .brand-highlight {
         color: $primary;
@@ -78,6 +82,91 @@
       justify-content: center;
       line-height: 1;
     }
+
+    &--toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+
+      &::after { display: none; } // hide bootstrap's dropdown caret
+    }
+  }
+
+  // Wraps TasksCalendarView, which already renders its own white card
+  // (background/radius/shadow) — the Dropdown.Menu itself is stripped
+  // down to a plain positioning shell so the calendar isn't double-boxed.
+  .calendar-dropdown {
+    width: 360px;
+    max-width: 92vw;
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+
+    .tasks-cal { box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
+  }
+
+  .notif-dropdown {
+    width: 320px;
+    max-width: 90vw;
+    padding: 0.4rem 0;
+    border: 1px solid #ede5e7;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+
+    &__header {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #9a8a90;
+      padding: 0.4rem 1rem 0.5rem;
+    }
+
+    &__empty {
+      padding: 0.75rem 1rem 1rem;
+      font-size: 0.85rem;
+      color: #9a8a90;
+    }
+
+    &__item {
+      display: flex !important;
+      align-items: flex-start;
+      gap: 0.6rem;
+      padding: 0.55rem 1rem;
+      white-space: normal;
+    }
+
+    &__dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    &__text { min-width: 0; }
+
+    &__title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: $text-dark;
+    }
+
+    &__desc {
+      font-size: 0.75rem;
+      color: #9a8a90;
+      margin-top: 1px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &__view-all {
+      text-align: center;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: $primary;
+    }
   }
 
   .auth-buttons {
@@ -86,6 +175,8 @@
     gap: 0.75rem;
     margin-left: auto;
 
+    @media (max-width: 480px) { gap: 0.4rem; }
+
     .signup-btn {
       background-color: $primary;
       border: none;
@@ -93,6 +184,8 @@
       font-weight: 600;
       padding: 0.45rem 1.2rem;
       border-radius: 6px;
+
+      @media (max-width: 480px) { padding: 0.4rem 0.7rem; font-size: 0.85rem; }
     }
 
     .signin-btn {
@@ -102,6 +195,8 @@
       font-weight: 500;
       padding: 0.45rem 1.2rem;
       border-radius: 6px;
+
+      @media (max-width: 480px) { padding: 0.4rem 0.7rem; font-size: 0.85rem; }
     }
   }
 }

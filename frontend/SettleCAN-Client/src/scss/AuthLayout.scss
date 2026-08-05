@@ -4,7 +4,7 @@
   display: flex;
   min-height: calc(100vh - 56px); // leaves room for the sticky TopNavbar
   width: 100%;
-  background: #f7f5f6;
+  background: #E5E3E1;
 
   &__main {
     flex: 1;
@@ -13,10 +13,18 @@
   }
 }
 
-// Also make the sidebar not exceed the remaining height
-.app-sidebar {
-  height: calc(100vh - 56px);
-  top: 56px; // sit below the sticky navbar
+// Also make the sidebar not exceed the remaining height — desktop only.
+// On mobile the TopNavbar is hidden entirely (see the media query below),
+// so the drawer needs to run the true full viewport height starting at
+// top: 0, not "56px below a navbar that isn't there" — this used to be
+// unconditional and silently overrode AppSidebar.scss's mobile top: 0 rule
+// (same specificity, loads later in the bundle), leaving a 56px gap of app
+// background above the drawer.
+@media (min-width: 768px) {
+  .app-sidebar {
+    height: calc(100vh - 56px);
+    top: 56px; // sit below the sticky navbar
+  }
 }
 
 // Override the old #root centering/border for authenticated pages
@@ -26,5 +34,19 @@ body:has(.auth-layout) {
     max-width: 100%;
     border: none;
     text-align: left;
+  }
+}
+
+// On mobile, authenticated pages use the sidebar's own hamburger/drawer
+// (see AppSidebar.scss, which owns the rest of the mobile positioning)
+// instead of the marketing TopNavbar — its About/Contact links and
+// duplicate Sign out button aren't relevant once a user is in the app, and
+// removing it gives the page content the full viewport height instead of
+// losing 56px to a bar that's not being used.
+@media (max-width: 767px) {
+  body:has(.auth-layout) .top-navbar { display: none; }
+
+  .auth-layout {
+    min-height: 100vh;
   }
 }

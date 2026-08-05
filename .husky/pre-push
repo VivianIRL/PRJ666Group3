@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🧪 Running Jest integration tests before pushing..."
+NODE_ENV=test npm test
+
+echo "[SUCCESS] All checks passed. Proceeding with push!"

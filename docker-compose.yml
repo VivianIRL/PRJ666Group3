@@ -1,0 +1,23 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+    env_file:
+      - backend/.env
+      
+  frontend:
+    build: ./frontend/SettleCAN-Client
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+    environment:
+      - BACKEND_URL=http://backend:5000
+    volumes:
+      # Mount as a template instead of overriding the main config directly
+      - ./frontend/SettleCAN-Client/nginx.conf:/etc/nginx/templates/nginx.conf.template:ro
+    env_file:
+      - ./frontend/SettleCAN-Client/.env

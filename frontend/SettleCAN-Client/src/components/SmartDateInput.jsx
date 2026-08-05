@@ -32,10 +32,16 @@ export default function SmartDateInput({ value, onChange, id }) {
     }
   }, [value]);
 
+  // Only composes (and fires onChange) once month AND day are both full
+  // two-digit segments — not as soon as either has a single digit. Without
+  // this, typing the "2" of "28" alone would already satisfy nd.length >= 1
+  // and emit "...-02", which the caller (TasksDashboard's date editor)
+  // treats as a complete date and immediately closes the input — kicking
+  // the user out before the second digit can be typed.
   function emit(ny, nm, nd) {
     let composed = "";
-    if (ny.length === 4 && nm.length >= 1 && nd.length >= 1) {
-      composed = `${ny}-${nm.padStart(2, "0")}-${nd.padStart(2, "0")}`;
+    if (ny.length === 4 && nm.length === 2 && nd.length === 2) {
+      composed = `${ny}-${nm}-${nd}`;
     }
     lastEmitted.current = composed;
     onChange(composed);

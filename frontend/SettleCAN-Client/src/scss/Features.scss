@@ -7,10 +7,12 @@
   padding: 4rem 2rem;
   background-color: white;
 
+  // Each card gets its own accent instead of every card sharing the same
+  // flat dusty-rose — a small curated palette (not a random color per
+  // card), each accent used for the tint, icon badge, and heading.
   .feature-card {
-    background-color: #e9d3d3;
-    padding: 1.5rem;
-    border-radius: 10px;
+    padding: 1.75rem 1.5rem;
+    border-radius: 1.25rem;
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -18,16 +20,30 @@
     align-items: center;
     height: 100%;
     min-height: 250px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(20,10,12,0.08);
+    }
+
+    &__icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.1rem;
+    }
 
     img {
-      width: 80px;
-      height: 80px;
+      width: 40px;
+      height: 40px;
       object-fit: contain;
-      margin-bottom: 1rem;
     }
 
     h3 {
-      color: $primary;
       margin-bottom: 0.5rem;
       font-size: 1.1rem;
     }
@@ -37,6 +53,30 @@
       line-height: 1.5;
       margin: 0;
       font-size: 0.95rem;
+    }
+
+    &--blue {
+      background-color: #eff6ff;
+      .feature-card__icon { background-color: #dbeafe; }
+      h3 { color: #2563eb; }
+    }
+
+    &--amber {
+      background-color: #fffbeb;
+      .feature-card__icon { background-color: #fef3c7; }
+      h3 { color: #d97706; }
+    }
+
+    &--teal {
+      background-color: #f0fdfa;
+      .feature-card__icon { background-color: #ccfbf1; }
+      h3 { color: #0d9488; }
+    }
+
+    &--purple {
+      background-color: #faf5ff;
+      .feature-card__icon { background-color: #f3e8ff; }
+      h3 { color: #7c3aed; }
     }
   }
 }

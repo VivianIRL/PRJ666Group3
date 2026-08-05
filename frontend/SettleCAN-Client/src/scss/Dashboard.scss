@@ -1,15 +1,17 @@
 @use "./variables" as *;
 
+// Trial palette: page is pure white, so cards are defined by a faint
+// cool-gray tint + shadow instead of a darker page background.
 %card {
-  background: #fff;
-  border-radius: 1rem;
-  border: 1px solid #f0e8ea;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  background: #F8FAFC;
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 2px rgba(20,10,12,0.05), 0 6px 20px rgba(20,10,12,0.07);
 }
 
 .dashboard {
   padding: 2rem 2.25rem;
   max-width: 860px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -61,7 +63,7 @@
     font-weight: 700;
     padding: 0.15rem 0.65rem;
     border-radius: 999px;
-    border: 1px solid rgba(142,0,2,0.15);
+    border: 1px solid rgba($primary,0.15);
   }
 
   .dash-notif-chip {
@@ -122,13 +124,12 @@
       margin: 0;
     }
 
-    &__link {
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: $primary;
-      text-decoration: none;
-      &:hover { text-decoration: underline; }
-    }
+    // The card itself is a Link (to /tasks) — undo default anchor styling
+    // so it reads as a card, not a giant blue underlined link.
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.1s;
+    &:hover { transform: translateY(-1px); color: inherit; }
   }
 
   .dash-prog-track {
@@ -222,10 +223,9 @@
     gap: 0.75rem;
     padding: 0.9rem 1rem;
     text-decoration: none;
-    transition: box-shadow 0.15s, transform 0.1s;
+    transition: transform 0.1s;
 
     &:hover {
-      box-shadow: 0 4px 16px rgba(0,0,0,0.09);
       transform: translateY(-1px);
     }
 
@@ -261,6 +261,104 @@
     &__arrow {
       font-size: 0.85rem;
       color: #c0a8b0;
+    }
+  }
+
+  // ── Loading skeletons — shown instead of default/fallback content while
+  // the real task fetch is in flight, so the dashboard never flashes
+  // placeholder data before settling on the real numbers. ───────────────────
+  .dash-skeleton-line {
+    height: 1rem;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #f0e8ea 25%, #f7f2f3 37%, #f0e8ea 63%);
+    background-size: 400% 100%;
+    animation: dash-shimmer 1.4s ease infinite;
+
+    & + & { margin-top: 0.5rem; }
+  }
+
+  .dash-next-item--skeleton {
+    height: 52px;
+    background: linear-gradient(90deg, #f0e8ea 25%, #f7f2f3 37%, #f0e8ea 63%);
+    background-size: 400% 100%;
+    animation: dash-shimmer 1.4s ease infinite;
+  }
+
+  @keyframes dash-shimmer {
+    0%   { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+  }
+
+  // ── Compliance card ──────────────────────────────────────────────────────
+  .dash-compliance-card {
+    @extend %card;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    &__top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    &__fraction {
+      font-size: 0.9rem;
+      color: #1a0d10;
+      margin: 0;
+      strong { color: $primary; }
+    }
+
+    &__pct {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: $primary;
+      line-height: 1;
+    }
+
+    &__done {
+      font-size: 0.85rem;
+      color: #15803d;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    &__scroll {
+      max-height: 180px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      padding-right: 0.25rem;
+    }
+
+    &__row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.5rem 0.65rem;
+      border-radius: 0.6rem;
+      text-decoration: none;
+      transition: background 0.15s;
+
+      &:hover { background: #f7f2f3; }
+    }
+
+    &__dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #9a8a90;
+      flex-shrink: 0;
+
+      &--high { background: #dc2626; }
+    }
+
+    &__row-text {
+      font-size: 0.85rem;
+      color: #2b1a1f;
+      font-weight: 500;
     }
   }
 
@@ -300,5 +398,52 @@
     transition: border-color 0.15s, color 0.15s;
 
     &:hover { border-color: $primary; color: $primary; }
+  }
+
+  // ── Mobile: spacious, decluttered, scroll-first layout ────────────────────
+  // The date line and reminder chip are dropped (the sidebar's own hamburger
+  // sits in that same top-left corner now that the marketing TopNavbar is
+  // hidden on mobile — see AuthLayout.scss); removing them, plus the extra
+  // top padding below, is what turns the greeting into a clear "hero" rather
+  // than one more line squeezed under a nav row. Every gap in this block is
+  // deliberately larger than its desktop value so scrolling — not fitting
+  // everything above the fold — is the natural way through the page.
+  @media (max-width: 640px) {
+    padding: 4.5rem 1.25rem 3rem;
+    gap: 2.5rem;
+
+    .dash-date,
+    .dash-notif-chip {
+      display: none;
+    }
+
+    .dash-header {
+      margin-bottom: 0.5rem;
+    }
+
+    .dash-stats {
+      gap: 1rem;
+    }
+
+    .dash-stat {
+      padding: 1.25rem;
+    }
+
+    .dash-section {
+      gap: 1rem;
+    }
+
+    .dash-next-list,
+    .dash-compliance-card__scroll {
+      gap: 0.75rem;
+    }
+
+    .dash-next-item {
+      padding: 1.1rem 1rem;
+    }
+
+    .dash-compliance-card__row {
+      padding: 0.75rem 0.65rem;
+    }
   }
 }

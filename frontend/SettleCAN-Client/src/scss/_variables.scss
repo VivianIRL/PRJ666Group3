@@ -1,4 +1,9 @@
 $primary: #8E0002;
+$primary-hover: #6e1414; // matches --color-primary-hover in _designTokens.scss
 $text-dark: #333;
 $light-bg: #f5f5f5;
 $max-width: 1200px;
+// Single source of truth for "In Progress" status — used by the task
+// checkbox, status badges, and every calendar view so the color is
+// consistent everywhere a task's status is shown.
+$in-progress: #f97316;

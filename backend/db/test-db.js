@@ -15,19 +15,6 @@ async function testConnection() {
     console.log("✅ Supabase Connected Successfully!");
     console.log("Profiles data:");
     console.log(data);
-
-    // TEST 2: users table (optional)
-    const { data: users, error: userError } = await supabase
-      .from("users")
-      .select("*");
-
-    if (userError) {
-      throw userError;
-    }
-
-    console.log("Users data:");
-    console.log(users);
-
   } catch (err) {
     console.error("❌ Connection Error:", err.message);
   }

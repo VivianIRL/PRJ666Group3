@@ -88,17 +88,17 @@ export default function WorkEligibility() {
 
               {openType === i && (
                 <div style={{ marginTop: "0.5rem", borderTop: "1px solid #f0eaec", paddingTop: "0.75rem" }}>
-                  <p style={{ fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", color: "#8E0002", marginBottom: "0.3rem" }}>Examples</p>
+                  <p style={{ fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", color: "var(--color-primary)", marginBottom: "0.3rem" }}>Examples</p>
                   <ul style={{ paddingLeft: "1.1rem", margin: "0 0 0.6rem", fontSize: "0.83rem", color: "#3a2a30" }}>
                     {pt.examples.map(e => <li key={e}>{e}</li>)}
                   </ul>
-                  <p style={{ fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", color: "#8E0002", marginBottom: "0.3rem" }}>Conditions</p>
+                  <p style={{ fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", color: "var(--color-primary)", marginBottom: "0.3rem" }}>Conditions</p>
                   <ul style={{ paddingLeft: "1.1rem", margin: "0", fontSize: "0.83rem", color: "#5a4a50" }}>
                     {pt.conditions.map(c => <li key={c} style={{ marginBottom: "0.15rem" }}>{c}</li>)}
                   </ul>
                 </div>
               )}
-              <span style={{ fontSize: "0.75rem", color: "#8E0002", fontWeight: 600, marginTop: "auto" }}>{openType === i ? "▲ Less" : "▼ More details"}</span>
+              <span style={{ fontSize: "0.75rem", color: "var(--color-primary)", fontWeight: 600, marginTop: "auto" }}>{openType === i ? "▲ Less" : "▼ More details"}</span>
             </div>
           ))}
         </div>

@@ -45,7 +45,7 @@
 
   &:focus {
     border-color: $primary;
-    box-shadow: 0 0 0 3px rgba(142, 0, 2, 0.08);
+    box-shadow: 0 0 0 3px rgba($primary, 0.08);
     background: #fff;
   }
 }
@@ -103,7 +103,7 @@
 
   &:hover {
     border-color: $primary;
-    box-shadow: 0 6px 20px rgba(142,0,2,0.1);
+    box-shadow: 0 6px 20px rgba($primary,0.1);
     transform: translateY(-2px);
   }
 
@@ -322,12 +322,15 @@
     color: #3a2a30;
     line-height: 1.75;
     margin: 0;
+    // content_db articles store body text as one flat field with blank-line
+    // paragraph breaks (no HTML) — preserve those breaks on render.
+    white-space: pre-line;
   }
 }
 
 // ── External links block ──────────────────────────────────────────────────────
 .av-links {
-  background: #f9f5f6;
+  background: #F9F5F6;
   border: 1.5px solid #ede5e7;
   border-radius: 0.85rem;
   padding: 1.1rem 1.35rem;

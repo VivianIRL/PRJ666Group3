@@ -1,6 +1,7 @@
 .notification-settings {
   min-height: 100vh;
-  background: #f7f5f6;
+  // Matches .auth-layout's background (AuthLayout.scss).
+  background: #E5E3E1;
   padding: 1.5rem 2rem;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 

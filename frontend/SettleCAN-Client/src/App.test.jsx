@@ -61,7 +61,7 @@ describe('E2E Tests', () => {
       const register = await screen.getByTestId('register')
 
       expect(register).toBeDefined();
-    
+
       await changeValue('register-first-name-input', 'Maria')
       await changeValue('register-last-name-input', 'Smith')
       await changeValue('register-email-input', 'mariasmith@gmail.com')
@@ -69,9 +69,9 @@ describe('E2E Tests', () => {
       await changeValue('register-password-input', '12345963')
       await changeValue('register-confirm-password-input', '12345963')
       await clickElement('register-submit-btn')
-    
+
       expect(screen.getByTestId('immigration')).toBeDefined();
-    
+
       await changeValue('immigration-status-select', 'Work Permit Holder')
       await changeValue('immigration-province-select', 'Ontario')
       await changeValue('immigration-country-select', 'United Arab Emirates')
@@ -87,5 +87,27 @@ describe('E2E Tests', () => {
       await clickElement('immigration-create-account-btn')
 
       expect(screen.getByText(/welcome, maria/i)).toBeDefined();
+  });
+
+  it('keeps account details when returning to step one', async () => {
+      render(<Center/>);
+
+      await clickElement('top-navbar-sign-up-btn')
+      await changeValue('register-first-name-input', 'Maria')
+      await changeValue('register-last-name-input', 'Smith')
+      await changeValue('register-email-input', 'mariasmith@gmail.com')
+      await changeValue('register-dob-input', '2003-05-20')
+      await changeValue('register-password-input', '12345963')
+      await changeValue('register-confirm-password-input', '12345963')
+      await clickElement('register-submit-btn')
+
+      await fireEvent.click(screen.getByRole('link', { name: /back to step 1/i }))
+
+      expect(screen.getByTestId('register-first-name-input').value).toBe('Maria')
+      expect(screen.getByTestId('register-last-name-input').value).toBe('Smith')
+      expect(screen.getByTestId('register-email-input').value).toBe('mariasmith@gmail.com')
+      expect(screen.getByTestId('register-dob-input').value).toBe('2003-05-20')
+      expect(screen.getByTestId('register-password-input').value).toBe('12345963')
+      expect(screen.getByTestId('register-confirm-password-input').value).toBe('12345963')
   });
 });

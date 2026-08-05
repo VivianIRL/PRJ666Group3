@@ -97,7 +97,7 @@ export default function PostArrival() {
       <div style={{ marginBottom: "1.5rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "#6b5a61", marginBottom: "0.4rem" }}>
           <span>{doneTasks} of {totalTasks} tasks complete</span>
-          <span style={{ fontWeight: 700, color: "#8E0002" }}>{Math.round((doneTasks / totalTasks) * 100)}%</span>
+          <span style={{ fontWeight: 700, color: "var(--color-primary)" }}>{Math.round((doneTasks / totalTasks) * 100)}%</span>
         </div>
         <div className="fp-progress">
           <div className="fp-progress__bar" style={{ width: `${(doneTasks / totalTasks) * 100}%` }} />
@@ -122,7 +122,7 @@ export default function PostArrival() {
                       type="checkbox"
                       checked={task.done}
                       onChange={() => toggleTask(phaseIdx, task.id)}
-                      style={{ width: 16, height: 16, accentColor: "#8E0002", marginTop: 2, flexShrink: 0 }}
+                      style={{ width: 16, height: 16, accentColor: "var(--color-primary)", marginTop: 2, flexShrink: 0 }}
                     />
                     <span style={{ textDecoration: task.done ? "line-through" : "none", lineHeight: 1.4 }}>{task.label}</span>
                   </label>

@@ -1,7 +1,11 @@
 // SINGuide.jsx — step-by-step guide for applying for a Social Insurance Number
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../../state/AuthContext";
+import { loadChecklist, saveChecklist } from "../../data/guideChecklist";
 import "../../scss/TaskGuide.scss";
+
+const GUIDE_ID = "sin";
 
 const STEPS = [
   {
@@ -44,7 +48,16 @@ const DOCS = [
 ];
 
 export default function SINGuide() {
-  const [checked, setChecked] = useState({});
+  const { user } = useContext(AuthContext);
+  const [checked, setChecked] = useState(() => loadChecklist(GUIDE_ID, user?.id));
+
+  function toggleDoc(i) {
+    setChecked((p) => {
+      const next = { ...p, [i]: !p[i] };
+      saveChecklist(GUIDE_ID, user?.id, next);
+      return next;
+    });
+  }
 
   return (
     <div className="tg-page">
@@ -104,12 +117,12 @@ export default function SINGuide() {
                 type="checkbox"
                 id={`doc-${i}`}
                 checked={!!checked[i]}
-                onChange={() => setChecked(p => ({ ...p, [i]: !p[i] }))}
+                onChange={() => toggleDoc(i)}
               />
               <label htmlFor={`doc-${i}`}>
                 {doc.label}
                 {doc.required
-                  ? <span style={{ color: "#8E0002", fontWeight: 700 }}> · Required</span>
+                  ? <span style={{ color: "var(--color-primary)", fontWeight: 700 }}> · Required</span>
                   : <span> · If applicable</span>}
               </label>
             </div>

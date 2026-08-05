@@ -1,6 +1,7 @@
 // HealthInfo.jsx — comprehensive health coverage information for newcomers in Canada
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import LastUpdatedBadge from "../../components/LastUpdatedBadge";
 import "../../scss/FeaturePages.scss";
 import "../../scss/InfoPage.scss";
 
@@ -213,6 +214,7 @@ export default function HealthInfo() {
           <Link to="/guides/health-card" className="info-hero__cta">
             → Step-by-step: Register for your health card
           </Link>
+          <LastUpdatedBadge dateStr={apiContent?.last_updated} loading={loading} />
         </div>
       </div>
 
@@ -271,7 +273,7 @@ export default function HealthInfo() {
                     style={{
                       fontSize: "0.75rem",
                       fontWeight: 700,
-                      color: "#8E0002",
+                      color: "var(--color-primary)",
                       textDecoration: "none",
                       flexShrink: 0,
                     }}
@@ -383,7 +385,7 @@ export default function HealthInfo() {
                     style={{
                       fontSize: "0.75rem",
                       fontWeight: 700,
-                      color: "#8E0002",
+                      color: "var(--color-primary)",
                       textDecoration: "none",
                     }}
                   >
@@ -474,7 +476,7 @@ export default function HealthInfo() {
                     style={{
                       fontWeight: 700,
                       fontSize: "0.85rem",
-                      color: "#8E0002",
+                      color: "var(--color-primary)",
                     }}
                   >
                     {r.phone}
@@ -487,7 +489,7 @@ export default function HealthInfo() {
                   style={{
                     fontSize: "0.75rem",
                     fontWeight: 700,
-                    color: "#8E0002",
+                    color: "var(--color-primary)",
                     textDecoration: "none",
                   }}
                 >
@@ -558,7 +560,7 @@ export default function HealthInfo() {
                 rel="noreferrer"
                 style={{
                   fontSize: "0.83rem",
-                  color: "#8E0002",
+                  color: "var(--color-primary)",
                   fontWeight: 600,
                 }}
               >
@@ -572,7 +574,7 @@ export default function HealthInfo() {
                 rel="noreferrer"
                 style={{
                   fontSize: "0.83rem",
-                  color: "#8E0002",
+                  color: "var(--color-primary)",
                   fontWeight: 600,
                 }}
               >
@@ -586,7 +588,7 @@ export default function HealthInfo() {
                 rel="noreferrer"
                 style={{
                   fontSize: "0.83rem",
-                  color: "#8E0002",
+                  color: "var(--color-primary)",
                   fontWeight: 600,
                 }}
               >

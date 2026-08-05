@@ -1,319 +1,250 @@
-// TasksDashboard.jsx — profile-aware tasks, 3-state toggle, clear status labels
-import { useState, useEffect, useCallback, useContext } from "react";
-import { Link } from "react-router-dom";
-import { Modal, Form, Row, Col, Button } from "react-bootstrap";
+// TasksDashboard.jsx — "My Tasks": a real, persisted task hierarchy.
+// Every task can have subtasks (unlimited nesting), and every task/subtask
+// has an optional due date. Setting a date IS the entire "create a
+// reminder" step — the backend's daily sweep reads due_date directly and
+// emails 7/3/1 days before; there's no separate notification toggle to set.
+// Backed by the /api/v2/tasks hierarchy API — see
+// docs/TASK_NOTIFICATION_SYSTEM_DESIGN.md.
+import { useState, useEffect, useCallback, useContext, useRef } from "react";
+import { useSearchParams, Link } from "react-router-dom";
+import { Modal, Form, Button } from "react-bootstrap";
 import { AuthContext } from "../state/AuthContext";
-import { fetchTasks, updateTask, createTask } from "../service/taskService";
+import {
+  fetchTaskTree, createTaskNode, updateTaskNode, deleteTaskNode,
+  createSubtask, generateOnboardingTasks,
+} from "../service/taskService";
 import TasksCalendarView from "../components/TasksCalendarView";
+import SmartDateInput from "../components/SmartDateInput";
+import { getTaskResource } from "../utils/taskResourceLinks";
 import "../scss/TasksDashboard.scss";
 
-// ── localStorage keys ─────────────────────────────────────────────────────────
-// TASKS_DONE_KEY is shared with Checklist.jsx — acts as the cross-component signal
-const TASKS_DONE_KEY   = (uid) => `settlecan_tasks_done_${uid ?? 'guest'}`;
-// TASKS_STATE_KEY persists full per-task status (including "In Progress")
-const TASKS_STATE_KEY  = (uid, status) => `settlecan_tasks_state_${uid ?? 'guest'}_${status ?? 'default'}`;
-// CUSTOM_TASKS_KEY is written by Checklist.jsx when the user adds a custom item
-const CUSTOM_TASKS_KEY = (uid) => `settlecan_custom_tasks_${uid ?? 'guest'}`;
-
-function loadCustomTasks(uid) {
-  try { return JSON.parse(localStorage.getItem(CUSTOM_TASKS_KEY(uid))) ?? []; }
-  catch { return []; }
-}
-
-function loadTaskStateMap(uid, immigStatus) {
-  try { return JSON.parse(localStorage.getItem(TASKS_STATE_KEY(uid, immigStatus))) ?? {}; }
-  catch { return {}; }
-}
-function saveTaskStateMap(tasks, uid, immigStatus) {
-  try {
-    const map = {};
-    tasks.forEach(t => { map[t.user_task_id] = t.status; });
-    localStorage.setItem(TASKS_STATE_KEY(uid, immigStatus), JSON.stringify(map));
-  } catch {}
-}
-
-// ── Status cycle ───────────────────────────────────────────────────────────────
-const NEXT_STATUS = {
-  "Pending":     "In Progress",
-  "In Progress": "Completed",
-  "Completed":   "Pending",
-};
-
+// #f97316 = $in-progress in scss/_variables.scss — kept in sync manually
+// since JS can't import a Sass variable; also used by TasksCalendarView.jsx
+// so the calendar's day pills and detail cards match this exactly.
+const IN_PROGRESS_COLOR = "#f97316";
 const STATUS_CONFIG = {
-  "Completed":   { bg: "#e6f9ef", text: "#15803d", label: "Done",        hint: "Click to reset" },
-  "In Progress": { bg: "#fff7e6", text: "#b45309", label: "In progress", hint: "Click to complete" },
-  "Pending":     { bg: "#f5f0f2", text: "#7a6a70", label: "Not started", hint: "Click to start" },
+  COMPLETED:   { bg: "#e6f9ef", text: "#15803d",       label: "Done",        hint: "Click to reset" },
+  IN_PROGRESS: { bg: "#fff1e6", text: IN_PROGRESS_COLOR, label: "In progress", hint: "Click to complete" },
+  NOT_STARTED: { bg: "#f5f0f2", text: "#7a6a70",       label: "Not started", hint: "Click to start" },
 };
+const NEXT_STATUS = { NOT_STARTED: "IN_PROGRESS", IN_PROGRESS: "COMPLETED", COMPLETED: "NOT_STARTED" };
+const FILTERS = ["All", "Not started", "In Progress", "Completed"];
+const FILTER_TO_STATUS = { "Not started": "NOT_STARTED", "In Progress": "IN_PROGRESS", "Completed": "COMPLETED" };
 
-// ── Task templates per immigration status ──────────────────────────────────────
-// IDs 1–6: shared settlement tasks (SIN, bank, health, housing, permit, tax)
-// IDs 7–12: visitor-specific tasks
-const TEMPLATES = {
-  "International Student": [
-    { user_task_id: 1, title: "Apply for Social Insurance Number (SIN)", category: "Employment",
-      base_due_days: 7,   guideUrl: "/guides/sin",
-      description: "Visit Service Canada or apply online. You need your passport and study permit." },
-    { user_task_id: 2, title: "Open a Canadian Bank Account", category: "Banking",
-      base_due_days: 14,  guideUrl: "/guides/bank-account",
-      description: "TD and RBC have newcomer packages with no monthly fees for the first year." },
-    { user_task_id: 3, title: "Register for Provincial Health Card", category: "Health",
-      base_due_days: 30,  guideUrl: "/guides/health-card",
-      description: "3-month waiting period applies in most provinces — apply as soon as you arrive." },
-    { user_task_id: 4, title: "Secure Permanent Housing", category: "Housing",
-      base_due_days: 30,  guideUrl: "/housing",
-      description: "Connect with settlement agencies or search Kijiji, Zillow, and Facebook Marketplace." },
-    { user_task_id: 5, title: "Check Study Permit Expiry & Renewal", category: "Immigration",
-      base_due_days: 90,  guideUrl: "/guides/permit-renewal",
-      description: "Apply to renew at least 90 days before expiry through the IRCC online portal." },
-    { user_task_id: 6, title: "File Annual Income Tax Return", category: "Finance",
-      fixed_due: "04-30", guideUrl: "/guides/tax-return",
-      description: "Even with no income, filing taxes establishes Canadian tax residency and unlocks benefits." },
-  ],
-  "Work Permit Holder": [
-    { user_task_id: 1, title: "Apply for Social Insurance Number (SIN)", category: "Employment",
-      base_due_days: 7,   guideUrl: "/guides/sin",
-      description: "Required to work legally in Canada. Visit Service Canada or apply online." },
-    { user_task_id: 3, title: "Register for Provincial Health Card", category: "Health",
-      base_due_days: 14,  guideUrl: "/guides/health-card",
-      description: "3-month waiting period in most provinces — apply on arrival." },
-    { user_task_id: 2, title: "Open a Canadian Bank Account", category: "Banking",
-      base_due_days: 14,  guideUrl: "/guides/bank-account",
-      description: "Needed for payroll. TD, RBC, and Scotiabank offer newcomer packages." },
-    { user_task_id: 4, title: "Secure Permanent Housing", category: "Housing",
-      base_due_days: 30,  guideUrl: "/housing",
-      description: "Budget for first and last month's rent. Get tenant insurance." },
-    { user_task_id: 5, title: "Renew Work Permit Before Expiry", category: "Immigration",
-      base_due_days: 90,  guideUrl: "/guides/permit-renewal",
-      description: "Apply at least 90 days before expiry. Maintained status rules apply." },
-    { user_task_id: 6, title: "File Annual Income Tax Return", category: "Finance",
-      fixed_due: "04-30", guideUrl: "/guides/tax-return",
-      description: "File by April 30. Even partial-year residents must file." },
-  ],
-  "Permanent Resident": [
-    { user_task_id: 3, title: "Register for Provincial Health Card", category: "Health",
-      base_due_days: 7,   guideUrl: "/guides/health-card",
-      description: "Apply immediately on landing — the 3-month wait starts from your application date." },
-    { user_task_id: 1, title: "Apply for / Update Your SIN", category: "Employment",
-      base_due_days: 14,  guideUrl: "/guides/sin",
-      description: "If you had a temporary SIN (starting with 9), update it to a permanent SIN now." },
-    { user_task_id: 2, title: "Open a Canadian Bank Account", category: "Banking",
-      base_due_days: 14,  guideUrl: "/guides/bank-account",
-      description: "Start building your credit history with a secured card." },
-    { user_task_id: 4, title: "Secure Permanent Housing", category: "Housing",
-      base_due_days: 30,  guideUrl: "/housing",
-      description: "You have the same tenancy rights as Canadian citizens." },
-    { user_task_id: 6, title: "File Annual Income Tax Return", category: "Finance",
-      fixed_due: "04-30", guideUrl: "/guides/tax-return",
-      description: "Establishes Canadian tax residency and unlocks the Canada Child Benefit and GST credits." },
-  ],
-  "Refugee / Protected Person": [
-    { user_task_id: 1, title: "Apply for Social Insurance Number (SIN)", category: "Employment",
-      base_due_days: 7,   guideUrl: "/guides/sin",
-      description: "You can apply for a SIN once you have your Protected Person determination." },
-    { user_task_id: 3, title: "Register for IFHP Health Coverage", category: "Health",
-      base_due_days: 7,   guideUrl: "/guides/health-card",
-      description: "The Interim Federal Health Program covers you while you wait for provincial health." },
-    { user_task_id: 2, title: "Open a Canadian Bank Account", category: "Banking",
-      base_due_days: 14,  guideUrl: "/guides/bank-account",
-      description: "Required for RAP payments and future employment." },
-    { user_task_id: 4, title: "Secure Stable Housing", category: "Housing",
-      base_due_days: 14,  guideUrl: "/housing",
-      description: "Contact your RAP provider or local settlement agency for housing support." },
-    { user_task_id: 6, title: "File Annual Income Tax Return", category: "Finance",
-      fixed_due: "04-30", guideUrl: "/guides/tax-return",
-      description: "Filing taxes unlocks the Canada Child Benefit and other income-tested benefits." },
-  ],
-  "Visitor / Tourist": [
-    { user_task_id: 7,  title: "Confirm Your Authorized Stay Duration", category: "Immigration",
-      base_due_days: 1,  guideUrl: "/checklist",
-      description: "Check your entry stamp or eTA for your exact 'authorized to remain until' date. Note it somewhere safe — do not overstay." },
-    { user_task_id: 8,  title: "Purchase Visitor Health Insurance", category: "Health",
-      base_due_days: 1,  guideUrl: "/checklist",
-      description: "Provincial health insurance does not cover visitors. Buy private coverage before you arrive or on your first day." },
-    { user_task_id: 9,  title: "Get a Local SIM or Activate Roaming", category: "Essentials",
-      base_due_days: 3,  hideDue: true, guideUrl: "/checklist",
-      description: "Canadian prepaid SIMs (Fido, Public Mobile, Lucky) are often cheaper than roaming. Available at most convenience stores." },
-    { user_task_id: 10, title: "Download a Transit App for Your City", category: "Essentials",
-      base_due_days: 3,  hideDue: true, guideUrl: "/checklist",
-      description: "TTC (Toronto), STM (Montréal), TransLink (Vancouver). The Transit app works across most Canadian cities." },
-    { user_task_id: 11, title: "Apply to Extend Your Stay If Needed", category: "Immigration",
-      base_due_days: 150, guideUrl: "/checklist",
-      description: "Apply via IRCC at least 30 days before your authorized stay ends (around the 5-month mark). Overstaying affects all future Canadian applications." },
-    { user_task_id: 12, title: "Explore Permit Options for Longer Stays", category: "Immigration",
-      base_due_days: 60, hideDue: true, guideUrl: "/immigration-guide",
-      description: "If you want to study or work in Canada, you need a separate permit. Research options early — processing takes time." },
-  ],
-};
-
-function getTemplates(status) {
-  return TEMPLATES[status] ?? TEMPLATES["International Student"];
-}
-
-// Returns the next upcoming occurrence of a MM-DD calendar date (e.g. "04-30" → April 30)
-function nextCalendarDate(mmdd) {
-  const today = new Date();
-  const year  = today.getFullYear();
-  const candidate = new Date(`${year}-${mmdd}T00:00:00`);
-  // If this year's date has already passed, use next year's
-  return candidate < today ? new Date(`${year + 1}-${mmdd}T00:00:00`) : candidate;
-}
-
-// Build tasks from templates, then restore saved state from localStorage
-function buildMockTasks(arrivalDate, immigStatus, uid) {
-  const base = arrivalDate ? new Date(arrivalDate + "T00:00:00") : new Date();
-  if (isNaN(base)) return buildMockTasks(null, immigStatus, uid);
-  const fresh = getTemplates(immigStatus).map(t => {
-    let dueStr = null;
-    if (!t.hideDue) {
-      if (t.fixed_due) {
-        // Fixed annual calendar date (e.g. April 30 for tax returns)
-        dueStr = nextCalendarDate(t.fixed_due).toISOString().split("T")[0];
-      } else if (t.base_due_days != null) {
-        const due = new Date(base);
-        due.setDate(due.getDate() + t.base_due_days);
-        dueStr = due.toISOString().split("T")[0];
-      }
-    }
-    return {
-      ...t,
-      status:   "Pending",
-      due_date: dueStr,
-    };
-  });
-  // Restore previously saved statuses (includes "In Progress")
-  const savedMap = loadTaskStateMap(uid, immigStatus);
-  // Also honour any completions signalled from the Checklist
-  let doneDone;
-  try { doneDone = new Set(JSON.parse(localStorage.getItem(TASKS_DONE_KEY(uid))) ?? []); }
-  catch { doneDone = new Set(); }
-
-  const templateTasks = fresh.map(t => {
-    if (doneDone.has(t.user_task_id)) return { ...t, status: "Completed" };
-    return { ...t, status: savedMap[t.user_task_id] ?? "Pending" };
-  });
-
-  // Merge in custom tasks added from the Checklist page
-  const customTasks = loadCustomTasks(uid).map(t => ({
-    ...t,
-    status: doneDone.has(t.user_task_id)
-      ? "Completed"
-      : (savedMap[t.user_task_id] ?? t.status ?? "Pending"),
-  }));
-
-  return [...templateTasks, ...customTasks];
-}
-
-// ── Normalise API task → UI shape ──────────────────────────────────────────────
-function normalise(t) {
-  const tmpl = t.task_templates ?? {};
-  return {
-    user_task_id: t.user_task_id,
-    title:        tmpl.title       ?? t.title       ?? "Untitled",
-    description:  tmpl.description ?? t.description ?? "",
-    category:     tmpl.category    ?? t.category    ?? "General",
-    status:       t.status         ?? "Pending",
-    due_date:     t.due_date       ?? "",
-    guideUrl:     t.guideUrl       ?? "/features",
-  };
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function daysLeft(dateStr) {
   if (!dateStr) return null;
   return Math.ceil((new Date(dateStr) - new Date()) / 86400000);
 }
-
 function fmtDate(dateStr) {
-  if (!dateStr) return "No due date";
-  return new Date(dateStr + "T00:00:00").toLocaleDateString("en-CA", {
-    month: "short", day: "numeric", year: "numeric",
-  });
+  if (!dateStr) return "";
+  return new Date(dateStr + "T00:00:00").toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" });
 }
-
 function urgency(days) {
   if (days === null) return "";
-  if (days < 0)  return "overdue";
+  if (days < 0) return "overdue";
   if (days <= 7) return "soon";
   return "";
 }
 
-const FILTERS = ["All", "Not started", "In Progress", "Completed"];
+// Root tasks + every descendant, flattened — used to feed the calendar.
+function flatten(nodes) {
+  const out = [];
+  for (const n of nodes) {
+    out.push(n);
+    if (n.children?.length) out.push(...flatten(n.children));
+  }
+  return out;
+}
 
-// ── Check button ──────────────────────────────────────────────────────────────
-function CheckButton({ status, onClick }) {
-  const isDone     = status === "Completed";
-  const inProgress = status === "In Progress";
-  const cfg        = STATUS_CONFIG[status] ?? STATUS_CONFIG["Pending"];
-
+function CheckButton({ status, interactive, onClick }) {
+  const isDone = status === "COMPLETED";
+  const inProgress = status === "IN_PROGRESS";
+  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.NOT_STARTED;
   return (
     <button
       className={`td-check ${isDone ? "td-check--done" : inProgress ? "td-check--progress" : ""}`}
-      onClick={onClick}
-      title={cfg.hint}
+      onClick={interactive ? onClick : (e) => e.stopPropagation()}
+      title={interactive ? cfg.hint : "This task's status follows its subtasks"}
       aria-label={cfg.hint}
+      style={interactive ? undefined : { cursor: "default" }}
     >
       {isDone && (
         <svg viewBox="0 0 14 14" fill="none">
-          <path d="M2 7l4 4 6-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M2 7l4 4 6-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       )}
       {inProgress && (
         <svg viewBox="0 0 14 14" fill="none">
-          <circle cx="7" cy="7" r="5" fill="#b45309" opacity="0.15"/>
-          <path d="M7 3v4l2.5 2.5" stroke="#b45309" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M7 3v4l2.5 2.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
         </svg>
       )}
     </button>
   );
 }
 
-// ── Task card ─────────────────────────────────────────────────────────────────
-function TaskCard({ task, onToggle }) {
-  const [expanded, setExpanded] = useState(false);
-  const days = task.due_date ? daysLeft(task.due_date) : null;
-  const urg  = task.due_date ? urgency(days) : "";
-  const cfg  = STATUS_CONFIG[task.status] ?? STATUS_CONFIG["Pending"];
+// ── One subtask row (checkbox + title + inline date + delete) ─────────────────
+function SubtaskRow({ subtask, onToggleStatus, onSetDate, onDelete, highlighted }) {
+  const [editingDate, setEditingDate] = useState(false);
+  const days = subtask.dueDate ? daysLeft(subtask.dueDate) : null;
+  const urg = subtask.dueDate ? urgency(days) : "";
+  const rowRef = useRef(null);
+
+  useEffect(() => {
+    if (highlighted) rowRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [highlighted]);
 
   return (
-    <div className={`td-card ${task.status === "Completed" ? "td-card--done" : ""} ${urg ? `td-card--${urg}` : ""}`}>
-      <div className="td-card__main" onClick={() => setExpanded(e => !e)}>
-        <div className="td-card__left">
-          <CheckButton
-            status={task.status}
-            onClick={e => { e.stopPropagation(); onToggle(task.user_task_id); }}
+    <div ref={rowRef} className={`td-subtask ${urg ? `td-subtask--${urg}` : ""} ${highlighted ? "td-subtask--highlight" : ""}`}>
+      <CheckButton status={subtask.status} interactive onClick={() => onToggleStatus(subtask)} />
+      <span className={`td-subtask__title ${subtask.status === "COMPLETED" ? "td-subtask__title--done" : ""}`}>
+        {subtask.title}
+      </span>
+
+      {editingDate ? (
+        <span className="td-subtask__date-editor" onClick={(e) => e.stopPropagation()}>
+          <SmartDateInput
+            value={subtask.dueDate ?? ""}
+            onChange={(v) => { if (v) { onSetDate(subtask, v); setEditingDate(false); } }}
           />
+          <button className="td-subtask__date-cancel" onClick={() => setEditingDate(false)}>✕</button>
+        </span>
+      ) : subtask.dueDate ? (
+        <button className={`td-subtask__due td-subtask__due--${urg || "ok"}`} onClick={() => setEditingDate(true)}>
+          {urg === "overdue" ? "⚠ " : urg === "soon" ? "⏰ " : "📅 "}{fmtDate(subtask.dueDate)}
+        </button>
+      ) : (
+        <button className="td-subtask__add-date" onClick={() => setEditingDate(true)}>+ date</button>
+      )}
+
+      <button className="td-subtask__delete" onClick={() => onDelete(subtask)} title="Remove subtask">×</button>
+    </div>
+  );
+}
+
+// ── One root task card (expands to its date subsection + subtasks) ────────────
+function TaskCard({ task, onToggleStatus, onSetDate, onAddSubtask, onDeleteSubtask, onToggleSubtaskStatus, onSetSubtaskDate, highlightId }) {
+  const children = task.children ?? [];
+  const highlightedChildId = children.find((c) => highlightId && String(c.id) === String(highlightId))?.id;
+  const isHighlighted = highlightId != null && String(task.id) === String(highlightId);
+
+  const [expanded, setExpanded] = useState(isHighlighted || highlightedChildId != null);
+  const [addingSubtask, setAddingSubtask] = useState(false);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const [editingDate, setEditingDate] = useState(false);
+  const cardRef = useRef(null);
+
+  const hasChildren = children.length > 0;
+  const doneCount = children.filter((c) => c.status === "COMPLETED").length;
+  const days = task.dueDate ? daysLeft(task.dueDate) : null;
+  const urg = task.dueDate ? urgency(days) : "";
+  const cfg = STATUS_CONFIG[task.status] ?? STATUS_CONFIG.NOT_STARTED;
+  const resource = getTaskResource(task);
+
+  useEffect(() => {
+    if (isHighlighted) {
+      setExpanded(true);
+      cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    } else if (highlightedChildId != null) {
+      setExpanded(true);
+    }
+  }, [isHighlighted, highlightedChildId]);
+
+  async function submitSubtask() {
+    if (!newSubtaskTitle.trim()) return;
+    await onAddSubtask(task, newSubtaskTitle.trim());
+    setNewSubtaskTitle("");
+    setAddingSubtask(false);
+  }
+
+  return (
+    <div ref={cardRef} className={`td-card ${task.status === "COMPLETED" ? "td-card--done" : ""} ${urg ? `td-card--${urg}` : ""} ${isHighlighted ? "td-card--highlight" : ""}`}>
+      <div className="td-card__main" onClick={() => setExpanded((e) => !e)}>
+        <div className="td-card__left">
+          <CheckButton status={task.status} interactive={!hasChildren} onClick={(e) => { e.stopPropagation(); onToggleStatus(task); }} />
           <div>
-            <p className={`td-card__title ${task.status === "Completed" ? "td-card__title--done" : ""}`}>
-              {task.title}
-            </p>
+            <p className={`td-card__title ${task.status === "COMPLETED" ? "td-card__title--done" : ""}`}>{task.title}</p>
             <p className="td-card__meta">
-              <span className="td-card__cat">{task.category}</span>
-              {task.due_date && (
+              {task.type === "CUSTOM" && <span className="td-card__cat">Custom</span>}
+              {hasChildren && <span className="td-card__cat">{doneCount} of {children.length} subtasks</span>}
+              {task.dueDate && (
                 <span className={`td-card__due ${urg ? `td-card__due--${urg}` : ""}`}>
                   {urg === "overdue" ? "⚠ Overdue · " : urg === "soon" ? "⏰ Due soon · " : ""}
-                  {fmtDate(task.due_date)}
+                  {fmtDate(task.dueDate)}
                 </span>
               )}
             </p>
           </div>
         </div>
         <div className="td-card__right">
-          <span className="td-card__status" style={{ background: cfg.bg, color: cfg.text }}>
-            {cfg.label}
-          </span>
+          <span className="td-card__status" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
           <span className="td-card__chevron">{expanded ? "▲" : "▼"}</span>
         </div>
       </div>
 
       {expanded && (
-        <div className="td-card__detail">
+        <div className="td-card__detail" onClick={(e) => e.stopPropagation()}>
           {task.description && <p className="td-card__desc">{task.description}</p>}
-          <p className="td-card__cycle-hint">
-            {task.status === "Pending"     && "Click the circle to mark as In Progress."}
-            {task.status === "In Progress" && "Click the circle again to mark as Complete."}
-            {task.status === "Completed"   && "Click the circle to uncheck and reset to Pending."}
-          </p>
-          <Link to={task.guideUrl} className="td-card__guide">View step-by-step guide →</Link>
+
+          {/* Date subsection — the entire "set up a reminder" flow */}
+          <div className="td-card__date-row">
+            {editingDate ? (
+              <>
+                <SmartDateInput
+                  value={task.dueDate ?? ""}
+                  onChange={(v) => { if (v) { onSetDate(task, v); setEditingDate(false); } }}
+                />
+                {task.dueDate && (
+                  <button className="td-card__date-clear" onClick={() => { onSetDate(task, null); setEditingDate(false); }}>Clear date</button>
+                )}
+                <button className="td-card__date-cancel" onClick={() => setEditingDate(false)}>✕</button>
+              </>
+            ) : (
+              <button className="td-card__date-set" onClick={() => setEditingDate(true)}>
+                📅 {task.dueDate ? `Due ${fmtDate(task.dueDate)} — edit` : "Set a date (optional) — you'll be reminded automatically"}
+              </button>
+            )}
+          </div>
+
+          {/* Subtasks — this task's own checklist */}
+          <div className="td-card__subtasks">
+            {children.map((sub) => (
+              <SubtaskRow
+                key={sub.id}
+                subtask={sub}
+                onToggleStatus={onToggleSubtaskStatus}
+                onSetDate={onSetSubtaskDate}
+                onDelete={onDeleteSubtask}
+                highlighted={highlightedChildId != null && String(sub.id) === String(highlightedChildId)}
+              />
+            ))}
+            {addingSubtask ? (
+              <div className="td-card__add-subtask">
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="Subtask name…"
+                  value={newSubtaskTitle}
+                  onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") submitSubtask(); if (e.key === "Escape") setAddingSubtask(false); }}
+                />
+                <button className="td-card__add-subtask-save" onClick={submitSubtask}>Add</button>
+                <button className="td-card__add-subtask-cancel" onClick={() => setAddingSubtask(false)}>Cancel</button>
+              </div>
+            ) : (
+              <button className="td-card__add-subtask-btn" onClick={() => setAddingSubtask(true)}>+ Add subtask</button>
+            )}
+          </div>
+
+          {resource && (
+            <Link to={resource.path} className="td-card__resource-banner">
+              <span className="td-card__resource-icon">📖</span>
+              <span className="td-card__resource-text">
+                <span className="td-card__resource-eyebrow">Related resource</span>
+                <span className="td-card__resource-label">{resource.label}</span>
+              </span>
+              <span className="td-card__resource-arrow">→</span>
+            </Link>
+          )}
         </div>
       )}
     </div>
@@ -323,284 +254,305 @@ function TaskCard({ task, onToggle }) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function TasksDashboard() {
   const { user } = useContext(AuthContext);
-  const uid      = user?.id ?? 'guest';
-  const status   = user?.immigrationStatus;
+  const [searchParams] = useSearchParams();
+  const highlightId = searchParams.get("highlight");
 
-  const [tasks, setTasks]     = useState(() => buildMockTasks(user?.arrivalDate, status, uid));
+  const [tree, setTree] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter]   = useState("All");
+  const [loadError, setLoadError] = useState(false);
+  const [filter, setFilter] = useState("Not started");
 
-  // ── Add task modal ────────────────────────────────────────────────────────
   const [showAddModal, setShowAddModal] = useState(false);
-  const [form, setForm]   = useState({ title: "", category: "", due: "", priority: "Upcoming", notes: "" });
+  const [form, setForm] = useState({ title: "", due: "", subtasks: [] });
   const [errors, setErrors] = useState({});
-  const [toast, setToast]   = useState("");
+  const [toast, setToast] = useState("");
 
   function showToast(msg) { setToast(msg); setTimeout(() => setToast(""), 2500); }
 
+  const load = useCallback(async () => {
+    if (!user?.id) return;
+    setLoading(true);
+    setLoadError(false);
+    try {
+      // Idempotent — a no-op after the first successful call for this user.
+      await generateOnboardingTasks(user.id).catch(() => {});
+      const data = await fetchTaskTree();
+      setTree(Array.isArray(data) ? data : []);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => { load(); }, [load]);
+
+  function replaceTree(updated) {
+    if (Array.isArray(updated)) setTree(updated);
+  }
+
+  async function handleToggleStatus(task) {
+    const next = NEXT_STATUS[task.status] ?? "NOT_STARTED";
+    try {
+      replaceTree(await updateTaskNode(task.id, { status: next }));
+    } catch { showToast("Couldn't update the task — check your connection."); }
+  }
+
+  async function handleSetDate(task, dueDate) {
+    try {
+      replaceTree(await updateTaskNode(task.id, { dueDate }));
+      if (dueDate) showToast("Date set — you'll get reminders 7, 3, and 1 day before.");
+    } catch { showToast("Couldn't update the date — check your connection."); }
+  }
+
+  async function handleToggleSubtaskStatus(subtask) {
+    // Subtasks are a binary checklist item — done or not — not a 3-way
+    // cycle. The parent task's status is never set directly (its checkbox
+    // is non-interactive whenever it has children — see TaskCard below);
+    // it's derived server-side (recompute_ancestor_status, in
+    // 002_task_hierarchy_system.sql) from its children's statuses: NOT_STARTED
+    // while none are done, IN_PROGRESS as soon as any subtask is completed,
+    // COMPLETED once every subtask is.
+    const next = subtask.status === "COMPLETED" ? "NOT_STARTED" : "COMPLETED";
+    try {
+      replaceTree(await updateTaskNode(subtask.id, { status: next }));
+    } catch { showToast("Couldn't update the subtask — check your connection."); }
+  }
+
+  async function handleSetSubtaskDate(subtask, dueDate) {
+    try {
+      replaceTree(await updateTaskNode(subtask.id, { dueDate }));
+      if (dueDate) showToast("Date set — you'll get reminders 7, 3, and 1 day before.");
+    } catch { showToast("Couldn't update the date — check your connection."); }
+  }
+
+  async function handleDeleteSubtask(subtask) {
+    try {
+      await deleteTaskNode(subtask.id);
+      await load();
+    } catch { showToast("Couldn't remove the subtask."); }
+  }
+
+  async function handleAddSubtask(task, title) {
+    try {
+      await createSubtask(task.id, { title });
+      await load();
+    } catch { showToast("Couldn't add the subtask."); }
+  }
+
   function openAdd() {
-    setForm({ title: "", category: "", due: "", priority: "Upcoming", notes: "" });
+    setForm({ title: "", due: "", subtasks: [] });
     setErrors({});
     setShowAddModal(true);
   }
 
+  function addSubtaskRow() {
+    setForm((f) => ({ ...f, subtasks: [...f.subtasks, { title: "", due: "" }] }));
+  }
+  function updateSubtaskRow(index, field, value) {
+    setForm((f) => ({
+      ...f,
+      subtasks: f.subtasks.map((s, i) => (i === index ? { ...s, [field]: value } : s)),
+    }));
+  }
+  function removeSubtaskRow(index) {
+    setForm((f) => ({ ...f, subtasks: f.subtasks.filter((_, i) => i !== index) }));
+  }
+
   function validateForm() {
     const e = {};
-    if (!form.title.trim())    e.title    = "Please enter a task name.";
-    if (!form.category.trim()) e.category = "Please select a category.";
-    if (!form.due)             e.due      = "Please select a due date.";
+    if (!form.title.trim()) e.title = "Please enter a task name.";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
 
   async function handleSave() {
     if (!validateForm()) return;
-    const newId = Date.now();
-    const optimistic = {
-      user_task_id: newId,
-      title:        form.title,
-      category:     form.category,
-      due_date:     form.due,
-      status:       "Pending",
-      description:  form.notes,
-      guideUrl:     "/task-manager",
-    };
-    setTasks(prev => [optimistic, ...prev]);
-    // Persist to custom tasks so it survives refresh and syncs with Checklist
     try {
-      const existing = JSON.parse(localStorage.getItem(CUSTOM_TASKS_KEY(uid))) ?? [];
-      localStorage.setItem(CUSTOM_TASKS_KEY(uid), JSON.stringify([...existing, optimistic]));
-    } catch {}
-    setShowAddModal(false);
-    showToast(`"${form.title}" added!`);
-    try {
-      const saved = await createTask({ title: form.title, description: form.notes, category: form.category, dueDate: form.due, customNote: form.notes });
-      if (saved?.user_task_id) {
-        setTasks(prev => prev.map(t => t.user_task_id === newId ? normalise(saved) : t));
+      const task = await createTaskNode({ title: form.title.trim(), dueDate: form.due || null });
+      const namedSubtasks = form.subtasks.filter((s) => s.title.trim());
+      for (const s of namedSubtasks) {
+        await createSubtask(task.id, { title: s.title.trim(), dueDate: s.due || null }).catch(() => {});
       }
-    } catch { /* keep optimistic */ }
-  }
-
-  const loadTasks = useCallback(async () => {
-    try {
-      const data = await fetchTasks();
-      if (Array.isArray(data) && data.length > 0) {
-        const apiTasks    = data.map(normalise);
-        const apiIds      = new Set(apiTasks.map(t => t.user_task_id));
-        const extraCustom = loadCustomTasks(uid).filter(t => !apiIds.has(t.user_task_id));
-        setTasks([...apiTasks, ...extraCustom]);
-      } else {
-        setTasks(buildMockTasks(user?.arrivalDate, status, uid));
-      }
+      setShowAddModal(false);
+      showToast(`"${form.title}" added${namedSubtasks.length ? ` with ${namedSubtasks.length} subtask${namedSubtasks.length === 1 ? "" : "s"}` : ""}!`);
+      await load();
     } catch {
-      setTasks(buildMockTasks(user?.arrivalDate, status, uid));
-    } finally { setLoading(false); }
-  }, [user?.arrivalDate, status, uid]);
-
-  useEffect(() => { loadTasks(); }, [loadTasks]);
-
-  // Re-sync from Checklist when this page regains focus
-  useEffect(() => {
-    function onFocus() {
-      setTasks(prev => {
-        let doneDone;
-        try { doneDone = new Set(JSON.parse(localStorage.getItem(TASKS_DONE_KEY(uid))) ?? []); }
-        catch { doneDone = new Set(); }
-
-        const updated = prev.map(t =>
-          doneDone.has(t.user_task_id) && t.status !== "Completed"
-            ? { ...t, status: "Completed" }
-            : t
-        );
-
-        // Pick up any custom tasks added since page load
-        const existingIds = new Set(updated.map(t => t.user_task_id));
-        const newCustom   = loadCustomTasks(uid)
-          .filter(t => !existingIds.has(t.user_task_id))
-          .map(t => ({ ...t, status: doneDone.has(t.user_task_id) ? "Completed" : (t.status ?? "Pending") }));
-
-        return newCustom.length ? [...updated, ...newCustom] : updated;
-      });
+      showToast("Couldn't add the task — check your connection.");
     }
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
-  }, [uid]);
-
-  async function handleToggle(id) {
-    const current = tasks.find(t => t.user_task_id === id);
-    const next    = NEXT_STATUS[current?.status ?? "Pending"] ?? "Pending";
-
-    const updated = tasks.map(t => t.user_task_id === id ? { ...t, status: next } : t);
-    setTasks(updated);
-
-    // Persist full task state so page reloads restore statuses
-    saveTaskStateMap(updated, uid, status);
-
-    // Update the shared done-key so Checklist stays in sync
-    try {
-      const done = JSON.parse(localStorage.getItem(TASKS_DONE_KEY(uid))) ?? [];
-      const newDone = next === "Completed"
-        ? [...new Set([...done, id])]
-        : done.filter(d => d !== id);
-      localStorage.setItem(TASKS_DONE_KEY(uid), JSON.stringify(newDone));
-    } catch {}
-
-    await updateTask(id, { status: next }).catch(() => {});
   }
 
-  const filterKey = filter === "Not started" ? "Pending" : filter;
-  const filtered  = filter === "All" ? tasks : tasks.filter(t => t.status === filterKey);
+  const flat = flatten(tree);
+  const filterKey = FILTER_TO_STATUS[filter];
+  const filteredRoots = (filter === "All" ? tree : tree.filter((t) => t.status === filterKey))
+    .slice()
+    // Earliest due date first, so the most overdue tasks sort to the top;
+    // tasks with no due date carry no urgency signal, so they sink to the end.
+    .sort((a, b) => {
+      if (!a.dueDate && !b.dueDate) return 0;
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate) - new Date(b.dueDate);
+    });
 
   const counts = {
-    all:        tasks.length,
-    pending:    tasks.filter(t => t.status === "Pending").length,
-    inProgress: tasks.filter(t => t.status === "In Progress").length,
-    completed:  tasks.filter(t => t.status === "Completed").length,
+    all: tree.length,
+    pending: tree.filter((t) => t.status === "NOT_STARTED").length,
+    inProgress: tree.filter((t) => t.status === "IN_PROGRESS").length,
+    completed: tree.filter((t) => t.status === "COMPLETED").length,
   };
-  const pct = tasks.length ? Math.round((counts.completed / tasks.length) * 100) : 0;
+  const pct = tree.length ? Math.round((counts.completed / tree.length) * 100) : 0;
 
   if (loading) return <div className="td-loading">Loading your tasks…</div>;
 
-  return (
-    <div className="td-page" style={{ maxWidth: "100%", width: "100%", boxSizing: "border-box" }}>
+  if (loadError) {
+    return (
+      <div className="td-page">
+        <div className="td-empty">
+          Couldn't load your tasks. Check your connection and try again.
+          <div style={{ marginTop: "0.75rem" }}>
+            <button className="td-add-btn" onClick={load}>Retry</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
+  return (
+    <div className="td-page">
+
       <div className="td-header">
         <div>
           <h1 className="td-title">My Tasks</h1>
           <p className="td-sub">
-            {status && <span className="td-status-badge">{status}</span>}
-            {" "}{counts.completed} of {tasks.length} completed
+            {user?.immigrationStatus && <span className="td-status-badge">{user.immigrationStatus}</span>}
+            {" "}{counts.completed} of {tree.length} completed
           </p>
         </div>
         <button className="td-add-btn" onClick={openAdd}>+ Add task</button>
       </div>
 
-      {/* ── Progress bar ───────────────────────────────────────────────────── */}
       <div className="td-progress">
-        <div className="td-progress__track">
-          <div className="td-progress__fill" style={{ width: `${pct}%` }} />
-        </div>
+        <div className="td-progress__track"><div className="td-progress__fill" style={{ width: `${pct}%` }} /></div>
         <span className="td-progress__pct">{pct}%</span>
       </div>
 
-      {/* ── Tasks + Calendar side by side ──────────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 400px", gap: "1.5rem", alignItems: "flex-start" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
-          {/* Filter tabs */}
+      <div className="td-body">
+        <div className="td-left">
           <div className="td-filters">
-            {FILTERS.map(f => {
-              const count = f === "All" ? counts.all
-                : f === "Not started" ? counts.pending
-                : f === "In Progress" ? counts.inProgress
-                : counts.completed;
+            {FILTERS.map((f) => {
+              const count = f === "All" ? counts.all : f === "Not started" ? counts.pending : f === "In Progress" ? counts.inProgress : counts.completed;
               return (
-                <button
-                  key={f}
-                  className={`td-filter ${filter === f ? "td-filter--active" : ""}`}
-                  onClick={() => setFilter(f)}
-                >
-                  {f}
-                  <span className="td-filter__count">{count}</span>
+                <button key={f} className={`td-filter ${filter === f ? "td-filter--active" : ""}`} onClick={() => setFilter(f)}>
+                  {f}<span className="td-filter__count">{count}</span>
                 </button>
               );
             })}
           </div>
 
-          {/* Task list */}
           <div className="td-list">
-            {filtered.length === 0 ? (
+            {tree.length === 0 ? (
+              <div className="td-empty td-empty--zero">
+                <div className="td-empty__icon">🗂️</div>
+                <div className="td-empty__title">No tasks yet</div>
+                <div className="td-empty__body">
+                  Your settlement tasks will show up here once they're generated for your profile,
+                  or you can add your first one now.
+                </div>
+                <button className="td-add-btn" onClick={openAdd}>+ Add your first task</button>
+              </div>
+            ) : filteredRoots.length === 0 ? (
               <div className="td-empty">No {filter.toLowerCase()} tasks.</div>
             ) : (
-              filtered.map(t => (
-                <TaskCard key={t.user_task_id} task={t} onToggle={handleToggle} />
+              filteredRoots.map((t) => (
+                <TaskCard
+                  key={t.id}
+                  task={t}
+                  onToggleStatus={handleToggleStatus}
+                  onSetDate={handleSetDate}
+                  onAddSubtask={handleAddSubtask}
+                  onDeleteSubtask={handleDeleteSubtask}
+                  onToggleSubtaskStatus={handleToggleSubtaskStatus}
+                  onSetSubtaskDate={handleSetSubtaskDate}
+                  highlightId={highlightId}
+                />
               ))
             )}
           </div>
         </div>
 
-        {/* Calendar */}
-        <div style={{ position: "sticky", top: "5rem", minWidth: 0, width: "100%", overflowX: "hidden" }}>
-          <TasksCalendarView tasks={tasks} onStatusChange={(id) => handleToggle(id)} />
+        <div className="td-right">
+          <TasksCalendarView
+            tasks={flat
+              .filter((t) => t.dueDate)
+              .map((t) => ({
+                user_task_id: t.id,
+                title: t.title,
+                category: t.parentId ? "Subtask" : "Task",
+                status: t.status === "COMPLETED" ? "Completed" : t.status === "IN_PROGRESS" ? "In Progress" : "Pending",
+                due_date: t.dueDate,
+              }))}
+            embedded
+          />
         </div>
       </div>
 
-      {/* ── Add Task Modal ─────────────────────────────────────────────────── */}
       <Modal show={showAddModal} onHide={() => setShowAddModal(false)} centered size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Add New Task</Modal.Title>
-        </Modal.Header>
+        <Modal.Header closeButton><Modal.Title>Add New Task</Modal.Title></Modal.Header>
         <Modal.Body>
           <Form.Group className="mb-3">
             <Form.Label>Task Name</Form.Label>
             <Form.Control
               type="text"
-              placeholder="e.g. Apply for SIN Card"
+              placeholder="e.g. Book appointment with advisor"
               value={form.title}
-              onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
               isInvalid={!!errors.title}
             />
             <Form.Control.Feedback type="invalid">{errors.title}</Form.Control.Feedback>
           </Form.Group>
-          <Row>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Category</Form.Label>
-                <Form.Select
-                  value={form.category}
-                  onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-                  isInvalid={!!errors.category}
-                >
-                  <option value="">Select category…</option>
-                  <option>Immigration</option>
-                  <option>Finance</option>
-                  <option>Housing</option>
-                  <option>Language Testing</option>
-                  <option>Government</option>
-                  <option>Education</option>
-                  <option>Health</option>
-                  <option>Other</option>
-                </Form.Select>
-                <Form.Control.Feedback type="invalid">{errors.category}</Form.Control.Feedback>
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Priority</Form.Label>
-                <Form.Select
-                  value={form.priority}
-                  onChange={e => setForm(f => ({ ...f, priority: e.target.value }))}
-                >
-                  <option>Urgent</option>
-                  <option>Upcoming</option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-          </Row>
           <Form.Group className="mb-3">
-            <Form.Label>Due Date</Form.Label>
-            <Form.Control
-              type="date"
-              value={form.due}
-              onChange={e => setForm(f => ({ ...f, due: e.target.value }))}
-              isInvalid={!!errors.due}
-            />
-            <Form.Control.Feedback type="invalid">{errors.due}</Form.Control.Feedback>
+            <Form.Label>Due Date <span style={{ color: "#999", fontWeight: 400 }}>(optional — you'll be reminded automatically)</span></Form.Label>
+            <Form.Control type="date" value={form.due} onChange={(e) => setForm((f) => ({ ...f, due: e.target.value }))} />
           </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Notes <span style={{ color: "#999", fontWeight: 400 }}>(optional)</span></Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={3}
-              placeholder="Any documents needed, reminders, or extra details…"
-              value={form.notes}
-              onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-            />
+          <Form.Group className="mb-2">
+            <Form.Label>
+              Subtasks <span style={{ color: "#999", fontWeight: 400 }}>(optional — each can have its own date)</span>
+            </Form.Label>
+            <div className="td-subtask-rows">
+              {form.subtasks.map((s, i) => (
+                <div key={i} className="td-subtask-row">
+                  <Form.Control
+                    type="text"
+                    placeholder="Subtask name"
+                    value={s.title}
+                    onChange={(e) => updateSubtaskRow(i, "title", e.target.value)}
+                  />
+                  <Form.Control
+                    type="date"
+                    value={s.due}
+                    onChange={(e) => updateSubtaskRow(i, "due", e.target.value)}
+                  />
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    className="td-subtask-row__remove"
+                    onClick={() => removeSubtaskRow(i)}
+                    aria-label="Remove subtask"
+                  >
+                    ✕
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <Button variant="outline-secondary" size="sm" className="mt-2" onClick={addSubtaskRow}>
+              + Add subtask
+            </Button>
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="outline-secondary" onClick={() => setShowAddModal(false)}>Cancel</Button>
-          <Button style={{ background: "#8E0002", border: "none" }} onClick={handleSave}>Save Task</Button>
+          <Button style={{ background: "var(--color-primary)", border: "none" }} onClick={handleSave}>Save Task</Button>
         </Modal.Footer>
       </Modal>
 

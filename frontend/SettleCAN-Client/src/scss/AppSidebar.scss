@@ -55,16 +55,23 @@ $sb-wc: 64px;   // collapsed
     &:hover { background: #f5eff2; color: $primary; }
   }
 
-  // ── User ───────────────────────────────────────────────────────────────────
+  // ── User (whole block is a link to /profile) ─────────────────────────────────
   .asb-user {
     display: flex;
     align-items: center;
     gap: 0.65rem;
     padding: 0.85rem 1rem;
     border-bottom: 1px solid #f5eff2;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover { background: #f5eff2; }
   }
 
   .asb-avatar {
+    text-decoration: none;
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -206,7 +213,7 @@ $sb-wc: 64px;   // collapsed
   padding: 0.5rem;
   transition: background 0.15s;
 
-  &:hover { background: #f9f5f6; }
+  &:hover { background: #F9F5F6; }
 }
 
 .mc-nav {
@@ -294,5 +301,87 @@ $sb-wc: 64px;   // collapsed
 
   .asb-nav__item--active::before {
     left: -0.25rem;
+  }
+}
+
+// ── Mobile hamburger toggle ────────────────────────────────────────────────────
+// Fixed, floating, and rendered as a sibling of <aside> (not inside it) so it
+// stays visible even while the drawer itself is translated off-screen.
+.asb-mobile-toggle {
+  display: none;
+  position: fixed;
+  // TopNavbar is hidden on mobile for authenticated pages (see
+  // AuthLayout.scss), so this sits at the true viewport top.
+  top: 0.6rem;
+  left: 0.75rem;
+  z-index: 210;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid #ede5e7;
+  border-radius: 0.6rem;
+  font-size: 1.1rem;
+  color: #4a3a40;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+
+  @media (max-width: 767px) { display: flex; }
+}
+
+.asb-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 10, 12, 0.4);
+  z-index: 190;
+
+  @media (max-width: 767px) { display: block; }
+}
+
+// ── Mobile breakpoint: off-canvas drawer instead of a permanent column ────────
+// Below this width the sidebar no longer takes up flex space beside the page
+// content (which is what squeezed everything into a sliver) — it's hidden by
+// default and slides in as an overlay via the hamburger button above.
+@media (max-width: 767px) {
+  .app-sidebar {
+    // TopNavbar is hidden on mobile for authenticated pages (see
+    // AuthLayout.scss), so the drawer runs the full viewport height.
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 260px;
+    max-width: 80vw;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    z-index: 200;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+
+    // The desktop collapsed (icon-only) rail doesn't apply here — a mobile
+    // drawer is either fully open (full-width, full labels) or fully
+    // hidden, never a narrow icon rail. The component already renders full
+    // label content while mobileOpen is true regardless of the desktop
+    // toggle (see AppSidebar.jsx's `showFull`); this un-does the desktop
+    // --collapsed width/spacing rules so the layout matches what's rendered.
+    &--collapsed {
+      width: 260px;
+
+      .asb-nav__item { justify-content: flex-start; padding: 0.6rem 0.65rem; }
+    }
+
+    &--mobile-open { transform: translateX(0); }
+
+    // No drawer header on mobile — the fixed hamburger button above (which
+    // now toggles open/closed) is the only control needed, and nav items
+    // become the first thing in the drawer instead of sitting below a
+    // toggle row and a profile block.
+    .asb-brand,
+    .asb-user {
+      display: none;
+    }
+
+    .asb-nav { padding-top: 0.85rem; }
   }
 }

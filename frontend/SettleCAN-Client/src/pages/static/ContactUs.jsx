@@ -93,7 +93,7 @@ export default function ContactUs() {
             <div key={item.label} className="fp-card" style={{ flexDirection: "row", alignItems: "center", gap: "1rem" }}>
               <span style={{ fontSize: "1.5rem" }}>{item.icon}</span>
               <div>
-                <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "#8E0002", marginBottom: "0.15rem" }}>{item.label}</div>
+                <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "var(--color-primary)", marginBottom: "0.15rem" }}>{item.label}</div>
                 <a href={item.href} style={{ color: "#1a0d10", fontSize: "0.9rem", textDecoration: "none", fontWeight: 600 }}>{item.value}</a>
               </div>
             </div>

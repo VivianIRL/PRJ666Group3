@@ -47,6 +47,28 @@ export async function registerUser(userData) {
     return data; // { user, token }
 }
 
+export async function requestPasswordReset(email) {
+    const res = await apiFetch(`${API_BASE_URL}/auth/forgot-password`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ email }),
+    });
+    const data = await safeJson(res);
+    if (!res.ok) throw new Error(data.message || "Could not send reset email");
+    return data;
+}
+
+export async function resetPassword({ accessToken, refreshToken }, password) {
+    const res = await apiFetch(`${API_BASE_URL}/auth/reset-password`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ accessToken, refreshToken, password }),
+    });
+    const data = await safeJson(res);
+    if (!res.ok) throw new Error(data.message || "Could not reset password");
+    return data;
+}
+
 export async function logoutUser(token) {
     const res  = await apiFetch(`${API_BASE_URL}/auth/logout`, {
         method:  "POST",
@@ -58,22 +80,24 @@ export async function logoutUser(token) {
 }
 
 // ── profile ───────────────────────────────────────────────────────────────────
-export async function getProfile(token) {
-    const res  = await fetch(`${API_BASE_URL}/profile`, {
-        headers: authHeader(token),
+export async function getProfile(token, userId) {
+    const endpoint = userId ? `/profile/${encodeURIComponent(userId)}` : "/profile";
+    const res  = await apiFetch(`${API_BASE_URL}${endpoint}`, {
+      headers: authHeader(token),
     });
-    const data = await res.json();
+    const data = await safeJson(res);
     if (!res.ok) throw new Error(data.message || "Could not fetch profile");
     return data;
 }
 
-export async function updateProfile(token, updates) {
-    const res  = await fetch(`${API_BASE_URL}/profile`, {
-        method:  "PATCH",
+export async function updateProfile(token, userId, updates) {
+    const endpoint = userId ? `/profile/${encodeURIComponent(userId)}` : "/profile";
+    const res  = await apiFetch(`${API_BASE_URL}${endpoint}`, {
+        method:  userId ? "PUT" : "PATCH",
         headers: { "Content-Type": "application/json", ...authHeader(token) },
         body:    JSON.stringify(updates),
     });
-    const data = await res.json();
+    const data = await safeJson(res);
     if (!res.ok) throw new Error(data.message || "Could not update profile");
     return data;
 }
@@ -108,4 +132,3 @@ export async function createCommunityPost(token, { question, tags }) {
     if (!res.ok) throw new Error(data.message || "Could not create post");
     return data;
 }
-

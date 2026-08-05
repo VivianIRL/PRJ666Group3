@@ -37,6 +37,19 @@ export const deleteTask           = (id)         => req("DELETE", `/tasks/${id}`
 export const fetchTaskTemplates   = ()           => req("GET",    "/tasks/templates");
 export const assignTemplate       = (tmplId, b)  => req("POST",   `/tasks/templates/${tmplId}/assign`, b);
 
+// ── Task Hierarchy v2 (subtasks, dates -> automatic reminders) ─────────────────
+// See docs/TASK_NOTIFICATION_SYSTEM_DESIGN.md. Setting a task/subtask's due
+// date is the entire "create a notification" action — the backend's daily
+// sweep reads due_date directly, there's no separate step.
+export const fetchTaskTree        = ()           => req("GET",    "/v2/tasks");
+export const createTaskNode       = (body)       => req("POST",   "/v2/tasks",                     body);
+export const updateTaskNode       = (id, body)   => req("PATCH",  `/v2/tasks/${id}`,               body);
+export const deleteTaskNode       = (id)         => req("DELETE", `/v2/tasks/${id}`);
+export const createSubtask        = (taskId, b)  => req("POST",   `/v2/tasks/${taskId}/children`,  b);
+export const generateOnboardingTasks = (userId)  => req("POST",   `/v2/users/${userId}/generate-tasks`);
+export const fetchTaskNotifications  = ()        => req("GET",    "/v2/notifications");
+export const markTaskNotifRead    = (id)         => req("PATCH",  `/v2/notifications/${id}/read`);
+
 // ── Notifications ─────────────────────────────────────────────────────────────
 export const fetchNotifications   = ()           => req("GET",    "/notifications");
 export const markNotifRead        = (id)         => req("PATCH",  `/notifications/${id}/read`);
@@ -47,6 +60,9 @@ export const sendNotifEmail       = (body)       => req("POST",   "/notification
 // ── Community ─────────────────────────────────────────────────────────────────
 export const fetchCommunityPosts  = ()           => req("GET",    "/community/posts");
 export const createCommunityPost  = (body)       => req("POST",   "/community/posts",              body);
+export const deleteCommunityPost  = (id)         => req("DELETE", `/community/posts/${id}`);
+export const createCommunityReply = (postId, b)  => req("POST",   `/community/posts/${postId}/replies`, b);
+export const deleteCommunityReply = (replyId)    => req("DELETE", `/community/replies/${replyId}`);
 export const fetchFAQ             = ()           => req("GET",    "/community/faq");
 
 // ── Content (CMS) ─────────────────────────────────────────────────────────────
@@ -55,6 +71,9 @@ export const fetchContentById     = (id)         => req("GET",    `/content/${id
 export const createContent        = (body)       => req("POST",   "/content",                      body);
 export const updateContent        = (id, body)   => req("PATCH",  `/content/${id}`,                body);
 export const deleteContent        = (id)         => req("DELETE", `/content/${id}`);
+
+// ── Policy updates (live IRCC newsroom feed) ────────────────────────────────────
+export const fetchPolicyUpdates   = ()           => req("GET",    "/policy-updates");
 
 // ── Profile ───────────────────────────────────────────────────────────────────
 export const fetchProfile         = ()           => req("GET",    "/profile");

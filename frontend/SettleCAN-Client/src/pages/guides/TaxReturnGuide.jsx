@@ -1,7 +1,11 @@
 // TaxReturnGuide.jsx — file a Canadian income tax return as a newcomer
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../../state/AuthContext";
+import { loadChecklist, saveChecklist } from "../../data/guideChecklist";
 import "../../scss/TaskGuide.scss";
+
+const GUIDE_ID = "tax-return";
 
 const FREE_SOFTWARE = [
   { name: "Wealthsimple Tax",  note: "Free for all, NETFILE certified, very user-friendly", url: "https://www.wealthsimple.com/en-ca/tax" },
@@ -67,7 +71,16 @@ const BENEFITS = [
 ];
 
 export default function TaxReturnGuide() {
-  const [checked, setChecked] = useState({});
+  const { user } = useContext(AuthContext);
+  const [checked, setChecked] = useState(() => loadChecklist(GUIDE_ID, user?.id));
+
+  function toggleDoc(i) {
+    setChecked((p) => {
+      const next = { ...p, [i]: !p[i] };
+      saveChecklist(GUIDE_ID, user?.id, next);
+      return next;
+    });
+  }
 
   return (
     <div className="tg-page">
@@ -118,8 +131,8 @@ export default function TaxReturnGuide() {
         <div className="tg-docs__list">
           {DOCS.map((doc, i) => (
             <div key={i} className="tg-docs__item">
-              <input type="checkbox" id={`doc-${i}`} checked={!!checked[i]} onChange={() => setChecked(p => ({ ...p, [i]: !p[i] }))} />
-              <label htmlFor={`doc-${i}`}>{doc.label}{doc.required ? <span style={{ color: "#8E0002", fontWeight: 700 }}> · Required</span> : <span> · If applicable</span>}</label>
+              <input type="checkbox" id={`doc-${i}`} checked={!!checked[i]} onChange={() => toggleDoc(i)} />
+              <label htmlFor={`doc-${i}`}>{doc.label}{doc.required ? <span style={{ color: "var(--color-primary)", fontWeight: 700 }}> · Required</span> : <span> · If applicable</span>}</label>
             </div>
           ))}
         </div>
@@ -133,7 +146,7 @@ export default function TaxReturnGuide() {
               <span style={{ fontWeight: 700, fontSize: "0.87rem", color: "#1a0d10" }}>{s.name}</span>
               <span style={{ fontSize: "0.77rem", color: "#6b5a61", marginLeft: "0.5rem" }}>{s.note}</span>
             </div>
-            <a href={s.url} target="_blank" rel="noreferrer" style={{ fontSize: "0.75rem", fontWeight: 700, color: "#8E0002", textDecoration: "none", flexShrink: 0 }}>Open →</a>
+            <a href={s.url} target="_blank" rel="noreferrer" style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-primary)", textDecoration: "none", flexShrink: 0 }}>Open →</a>
           </div>
         ))}
       </div>
@@ -141,10 +154,10 @@ export default function TaxReturnGuide() {
       <p className="tg-section-title">🎁 Benefits You Unlock by Filing</p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "1.5rem" }}>
         {BENEFITS.map(b => (
-          <div key={b.name} style={{ background: "#fff", borderRadius: "0.85rem", padding: "0.85rem 1rem", boxShadow: "0 2px 8px rgba(0,0,0,0.04)", borderLeft: "3px solid #8E0002" }}>
+          <div key={b.name} style={{ background: "#fff", borderRadius: "0.85rem", padding: "0.85rem 1rem", boxShadow: "0 2px 8px rgba(0,0,0,0.04)", borderLeft: "3px solid var(--color-primary)" }}>
             <div style={{ fontWeight: 700, fontSize: "0.88rem", color: "#1a0d10", marginBottom: "0.2rem" }}>{b.name}</div>
             <div style={{ fontSize: "0.8rem", color: "#5a4a50", marginBottom: "0.3rem", lineHeight: 1.5 }}>{b.desc}</div>
-            <div style={{ fontSize: "0.72rem", color: "#8E0002", fontWeight: 600 }}>{b.when}</div>
+            <div style={{ fontSize: "0.72rem", color: "var(--color-primary)", fontWeight: 600 }}>{b.when}</div>
           </div>
         ))}
       </div>

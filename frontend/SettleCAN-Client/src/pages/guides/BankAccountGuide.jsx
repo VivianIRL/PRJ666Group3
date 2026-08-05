@@ -1,7 +1,11 @@
 // BankAccountGuide.jsx — open a Canadian bank account as a newcomer
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../../state/AuthContext";
+import { loadChecklist, saveChecklist } from "../../data/guideChecklist";
 import "../../scss/TaskGuide.scss";
+
+const GUIDE_ID = "bank-account";
 
 const BANKS = [
   { name: "TD Bank",        program: "TD New to Canada Banking Package",  url: "https://www.td.com/ca/en/personal-banking/products/bank-accounts/new-to-canada/" },
@@ -59,7 +63,16 @@ const DOCS = [
 ];
 
 export default function BankAccountGuide() {
-  const [checked, setChecked] = useState({});
+  const { user } = useContext(AuthContext);
+  const [checked, setChecked] = useState(() => loadChecklist(GUIDE_ID, user?.id));
+
+  function toggleDoc(i) {
+    setChecked((p) => {
+      const next = { ...p, [i]: !p[i] };
+      saveChecklist(GUIDE_ID, user?.id, next);
+      return next;
+    });
+  }
 
   return (
     <div className="tg-page">
@@ -110,8 +123,8 @@ export default function BankAccountGuide() {
         <div className="tg-docs__list">
           {DOCS.map((doc, i) => (
             <div key={i} className="tg-docs__item">
-              <input type="checkbox" id={`doc-${i}`} checked={!!checked[i]} onChange={() => setChecked(p => ({ ...p, [i]: !p[i] }))} />
-              <label htmlFor={`doc-${i}`}>{doc.label}{doc.required ? <span style={{ color: "#8E0002", fontWeight: 700 }}> · Required</span> : <span> · If available</span>}</label>
+              <input type="checkbox" id={`doc-${i}`} checked={!!checked[i]} onChange={() => toggleDoc(i)} />
+              <label htmlFor={`doc-${i}`}>{doc.label}{doc.required ? <span style={{ color: "var(--color-primary)", fontWeight: 700 }}> · Required</span> : <span> · If available</span>}</label>
             </div>
           ))}
         </div>
@@ -125,7 +138,7 @@ export default function BankAccountGuide() {
               <span style={{ fontWeight: 700, fontSize: "0.88rem", color: "#1a0d10" }}>{b.name}</span>
               <span style={{ fontSize: "0.78rem", color: "#6b5a61", marginLeft: "0.5rem" }}>{b.program}</span>
             </div>
-            <a href={b.url} target="_blank" rel="noreferrer" style={{ fontSize: "0.75rem", fontWeight: 700, color: "#8E0002", textDecoration: "none", flexShrink: 0 }}>Visit →</a>
+            <a href={b.url} target="_blank" rel="noreferrer" style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-primary)", textDecoration: "none", flexShrink: 0 }}>Visit →</a>
           </div>
         ))}
       </div>

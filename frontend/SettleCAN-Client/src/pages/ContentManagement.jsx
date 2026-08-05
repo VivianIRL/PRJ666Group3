@@ -6,9 +6,10 @@ import '../scss/ContentManagement.scss';
 // Normalise a DB row → the shape the component expects
 function normalise(row) {
   return {
-    id:       row.content_id ?? row.id ?? Date.now(),
-    title:    row.title      ?? '',
-    category: row.category   ?? 'General',
+    id:          row.content_id ?? row.id ?? Date.now(),
+    title:       row.title      ?? '',
+    category:    row.category   ?? 'General',
+    bodyContent: row.body_content ?? '',
     updated:  row.last_updated
                 ? new Date(row.last_updated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                 : '',
@@ -33,7 +34,7 @@ function getStatusVariant(status) {
 
 export default function ContentManagement() {
   const [articles, setArticles]           = useState(INITIAL_ARTICLES);
-  const [loading, setLoading]             = useState(true);
+  const [, setLoading]                     = useState(true);
   const [search, setSearch]               = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
   const [showAddModal, setShowAddModal]   = useState(false);
@@ -41,7 +42,7 @@ export default function ContentManagement() {
   const [editingArticle, setEditingArticle]   = useState(null);
   const [deletingArticle, setDeletingArticle] = useState(null);
   const [toast, setToast]   = useState('');
-  const [form, setForm]     = useState({ title: '', category: '', status: '' });
+  const [form, setForm]     = useState({ title: '', category: '', status: '', bodyContent: '' });
   const [errors, setErrors] = useState({});
 
   const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -71,8 +72,8 @@ export default function ContentManagement() {
   };
 
   function showToast(msg) { setToast(msg); setTimeout(() => setToast(''), 2500); }
-  function openAdd() { setEditingArticle(null); setForm({ title: '', category: '', status: '' }); setErrors({}); setShowAddModal(true); }
-  function openEdit(article) { setEditingArticle(article); setForm({ title: article.title, category: article.category, status: article.status }); setErrors({}); setShowAddModal(true); }
+  function openAdd() { setEditingArticle(null); setForm({ title: '', category: '', status: '', bodyContent: '' }); setErrors({}); setShowAddModal(true); }
+  function openEdit(article) { setEditingArticle(article); setForm({ title: article.title, category: article.category, status: article.status, bodyContent: article.bodyContent ?? '' }); setErrors({}); setShowAddModal(true); }
   function openDelete(article) { setDeletingArticle(article); setShowDeleteModal(true); }
 
   function validateForm() {
@@ -90,18 +91,18 @@ export default function ContentManagement() {
     if (editingArticle) {
       // Optimistic update
       setArticles(prev => prev.map(a => a.id === editingArticle.id
-        ? { ...a, title: form.title, category: form.category, status: form.status, updated: today }
+        ? { ...a, title: form.title, category: form.category, status: form.status, bodyContent: form.bodyContent, updated: today }
         : a));
       setShowAddModal(false);
       showToast('Article updated successfully!');
-      await updateContent(editingArticle.id, { title: form.title, category: form.category, status: form.status }).catch(() => {});
+      await updateContent(editingArticle.id, { title: form.title, category: form.category, status: form.status, bodyContent: form.bodyContent }).catch(() => {});
     } else {
-      const optimistic = { id: Date.now(), title: form.title, category: form.category, status: form.status, updated: today };
+      const optimistic = { id: Date.now(), title: form.title, category: form.category, status: form.status, bodyContent: form.bodyContent, updated: today };
       setArticles(prev => [optimistic, ...prev]);
       setShowAddModal(false);
       showToast(`"${form.title}" added!`);
       try {
-        const saved = await createContent({ title: form.title, category: form.category, status: form.status });
+        const saved = await createContent({ title: form.title, category: form.category, status: form.status, bodyContent: form.bodyContent });
         setArticles(prev => prev.map(a => a.id === optimistic.id ? normalise(saved) : a));
       } catch { /* keep optimistic */ }
     }
@@ -269,8 +270,14 @@ export default function ContentManagement() {
           </Row>
 
           <Form.Group className="mb-3">
-            <Form.Label className="field-label">Notes <span className="optional">(optional)</span></Form.Label>
-            <Form.Control as="textarea" rows={3} placeholder="Brief description or notes…" />
+            <Form.Label className="field-label">Body Content <span className="optional">(optional — shown on the Articles page)</span></Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={8}
+              placeholder="The article's full text…"
+              value={form.bodyContent}
+              onChange={e => setForm(f => ({ ...f, bodyContent: e.target.value }))}
+            />
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>

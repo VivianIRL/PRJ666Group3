@@ -1,10 +1,9 @@
 @use "./variables" as *;
 
 %card {
-  background: #fff;
-  border-radius: 1rem;
-  border: 1px solid #f0e8ea;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  background: #F8FAFC;
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 2px rgba(20,10,12,0.05), 0 6px 20px rgba(20,10,12,0.07);
 }
 
 .td-page {
@@ -43,6 +42,17 @@
   position: sticky;
   top: 5rem;
   min-width: 0;
+  width: 100%;
+  overflow-x: hidden;
+
+  // Once the calendar drops below the task list (see .td-body's own
+  // breakpoint), sticky positioning no longer makes sense — it would just
+  // pin a tall calendar mid-scroll instead of letting the page flow
+  // naturally like every other stacked mobile section.
+  @media (max-width: 1024px) {
+    position: static;
+    top: auto;
+  }
 }
 
 .td-loading {
@@ -85,7 +95,7 @@
   font-weight: 700;
   padding: 0.15rem 0.6rem;
   border-radius: 999px;
-  border: 1px solid rgba(142,0,2,0.12);
+  border: 1px solid rgba($primary,0.12);
 }
 
 .td-add-btn {
@@ -181,6 +191,50 @@
   text-align: center;
   color: #9a8a90;
   font-size: 0.9rem;
+
+  &--zero {
+    padding: 3rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__icon {
+    font-size: 2.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  &__title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #2b1a1f;
+  }
+
+  &__body {
+    max-width: 32rem;
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+  }
+}
+
+// ── Add Task modal: subtask rows ─────────────────────────────────────────────
+.td-subtask-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.td-subtask-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.5rem;
+  align-items: center;
+
+  &__remove {
+    line-height: 1;
+    padding: 0.35rem 0.55rem;
+  }
 }
 
 // ── Task card ─────────────────────────────────────────────────────────────────
@@ -201,6 +255,11 @@
 
   &--overdue { border-left: 3px solid #dc3545; }
   &--soon    { border-left: 3px solid #e67e22; }
+
+  &--highlight {
+    animation: td-highlight-flash 2.5s ease-out 1;
+    box-shadow: 0 0 0 2px $primary, 0 4px 16px rgba(0,0,0,0.08);
+  }
 
   &__main {
     display: flex;
@@ -328,8 +387,8 @@
   &:hover { border-color: $primary; }
 
   &--progress {
-    background: #fff7e6;
-    border-color: #b45309;
+    background: $in-progress;
+    border-color: $in-progress;
 
     svg { width: 12px; height: 12px; }
   }
@@ -340,4 +399,240 @@
 
     svg { width: 11px; height: 11px; }
   }
+}
+
+// ── Date subsection (every task/subtask) ───────────────────────────────────────
+.td-card__date-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.td-card__date-set {
+  background: #f5f0f2;
+  border: 1px dashed #ddd3d6;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  color: #7a6a70;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+
+  &:hover { border-color: $primary; color: $primary; }
+}
+
+.td-card__date-clear,
+.td-card__date-cancel {
+  background: none;
+  border: none;
+  font-size: 0.78rem;
+  color: #9a8a90;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+
+  &:hover { color: $primary; }
+}
+
+// ── Subtasks (a task's own checklist) ──────────────────────────────────────────
+.td-card__subtasks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+.td-subtask {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.5rem;
+  transition: background 0.15s;
+
+  &:hover { background: #faf6f7; }
+
+  &--overdue { .td-subtask__due { color: #dc3545; } }
+  &--soon    { .td-subtask__due { color: #e67e22; } }
+
+  &--highlight {
+    animation: td-highlight-flash 2.5s ease-out 1;
+    box-shadow: 0 0 0 2px $primary inset;
+  }
+
+  &__title {
+    flex: 1;
+    font-size: 0.85rem;
+    color: #3a2a30;
+    min-width: 0;
+
+    &--done { text-decoration: line-through; color: #9a8a90; }
+  }
+
+  &__due {
+    background: none;
+    border: none;
+    font-size: 0.72rem;
+    color: #9a8a90;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.4rem;
+    &:hover { background: #f5f0f2; }
+  }
+
+  &__add-date {
+    background: none;
+    border: none;
+    font-size: 0.72rem;
+    color: #c0a8b0;
+    cursor: pointer;
+    white-space: nowrap;
+    &:hover { color: $primary; }
+  }
+
+  &__date-editor {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  &__date-cancel {
+    background: none;
+    border: none;
+    color: #9a8a90;
+    cursor: pointer;
+    font-size: 0.75rem;
+  }
+
+  &__delete {
+    background: none;
+    border: none;
+    color: #ddd3d6;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 0.25rem;
+    flex-shrink: 0;
+    &:hover { color: #dc3545; }
+  }
+}
+
+.td-card__add-subtask {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.5rem;
+
+  input {
+    flex: 1;
+    border: 1px solid #ddd3d6;
+    border-radius: 0.5rem;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.85rem;
+    min-width: 0;
+
+    &:focus { outline: none; border-color: $primary; }
+  }
+
+  &-save {
+    background: $primary;
+    color: #fff;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  &-cancel {
+    background: none;
+    border: none;
+    color: #9a8a90;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+}
+
+.td-card__add-subtask-btn {
+  align-self: flex-start;
+  background: none;
+  border: 1px dashed #ddd3d6;
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  color: #7a6a70;
+  cursor: pointer;
+  margin-top: 0.25rem;
+  transition: border-color 0.15s, color 0.15s;
+
+  &:hover { border-color: $primary; color: $primary; }
+}
+
+// ── Related resource banner (links out to a guide/info page) ──────────────────
+.td-card__resource-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.65rem;
+  margin-top: 0.6rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid rgba($primary, 0.18);
+  border-radius: 0.65rem;
+  background: rgba($primary, 0.05);
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: rgba($primary, 0.09);
+    border-color: rgba($primary, 0.3);
+
+    .td-card__resource-arrow { transform: translateX(3px); }
+  }
+}
+
+.td-card__resource-icon {
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.td-card__resource-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
+.td-card__resource-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $primary;
+}
+
+.td-card__resource-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #3a2a30;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.td-card__resource-arrow {
+  font-size: 0.9rem;
+  color: $primary;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+
+// ── Highlight flash (deep-linked from Dashboard's "Coming up") ────────────────
+@keyframes td-highlight-flash {
+  0%   { background-color: rgba($primary, 0.1); }
+  100% { background-color: transparent; }
 }

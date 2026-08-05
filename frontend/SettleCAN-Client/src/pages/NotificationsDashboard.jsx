@@ -7,118 +7,9 @@ import "../scss/NotificationsDashboard.scss";
 
 const BASE = import.meta.env.VITE_API_URL ?? "/api";
 
-const WEEK_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
-function BigCalendar({ events = [] }) {
-  const today = new Date();
-  const [year, setYear] = useState(today.getFullYear());
-  const [month, setMonth] = useState(today.getMonth());
-
-  function prev() {
-    month === 0
-      ? (setMonth(11), setYear((y) => y - 1))
-      : setMonth((m) => m - 1);
-  }
-  function next() {
-    month === 11
-      ? (setMonth(0), setYear((y) => y + 1))
-      : setMonth((m) => m + 1);
-  }
-
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const cells = [
-    ...Array(firstDay).fill(null),
-    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
-  ];
-  const isCurrentMonth =
-    year === today.getFullYear() && month === today.getMonth();
-
-  function eventsOnDay(day) {
-    return events.filter((e) => {
-      const d = new Date(e.date);
-      return (
-        d.getFullYear() === year &&
-        d.getMonth() === month &&
-        d.getDate() === day
-      );
-    });
-  }
-
-  return (
-    <div className="nd-big-cal">
-      <div className="nd-big-cal__header">
-        <div className="nd-big-cal__nav">
-          <button onClick={prev}>‹</button>
-          <span className="nd-big-cal__month">
-            {MONTH_NAMES[month]} {year}
-          </span>
-          <button onClick={next}>›</button>
-        </div>
-        <span className="nd-big-cal__legend">
-          Important Deadlines Highlighted
-        </span>
-      </div>
-      <div className="nd-big-cal__grid">
-        {WEEK_DAYS.map((d) => (
-          <div key={d} className="nd-big-cal__dh">
-            {d}
-          </div>
-        ))}
-        {cells.map((day, i) => {
-          if (!day)
-            return (
-              <div
-                key={`e-${i}`}
-                className="nd-big-cal__cell nd-big-cal__cell--empty"
-              />
-            );
-          const isToday = isCurrentMonth && day === today.getDate();
-          const dayEvents = eventsOnDay(day);
-          return (
-            <div
-              key={day}
-              className={[
-                "nd-big-cal__cell",
-                isToday ? "nd-big-cal__cell--today" : "",
-                dayEvents.length ? "nd-big-cal__cell--event" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
-              <span className="nd-big-cal__day-num">{day}</span>
-              {dayEvents.map((ev, idx) => (
-                <span
-                  key={idx}
-                  className="nd-big-cal__event-pill"
-                  title={ev.label}
-                >
-                  {ev.label.length > 14
-                    ? ev.label.slice(0, 13) + "…"
-                    : ev.label}
-                </span>
-              ))}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+// The calendar now lives at its own /calendar route (see AppSidebar.jsx +
+// Center.jsx) so there's exactly one calendar in the app, not one embedded
+// here and a separate one in the nav.
 
 export default function NotificationsDashboard() {
   const navigate = useNavigate();
@@ -126,10 +17,10 @@ export default function NotificationsDashboard() {
   const {
     notifications,
     quickLinks,
-    calendarEvents,
     apiNotifs,
     markRead,
     markAllRead,
+    completeTask,
   } = useContext(NotificationsContext);
 
   const [showSync, setShowSync] = useState(false);
@@ -181,6 +72,9 @@ export default function NotificationsDashboard() {
             Email Notifications
             {unread > 0 && <span className="nd2__badge">{unread}</span>}
           </button>
+          <button className="nd2__action" onClick={() => navigate("/tasks")}>
+            View Calendar
+          </button>
           <button className="nd2__action" onClick={() => setShowSync(true)}>
             Sync Calendar
           </button>
@@ -191,18 +85,9 @@ export default function NotificationsDashboard() {
             Settings
           </button>
         </div>
-        <div className="nd2__welcome">
-          Welcome{user?.name ? `, ${user.name}` : ""} &mdash;
-          <button
-            className="nd2__logout"
-            onClick={() => navigate("/dashboard")}
-          >
-            Dashboard
-          </button>
-        </div>
       </div>
 
-      {/* ── User reminder cards ── */}
+      {/* ── User reminder cards — stacked vertically ── */}
       {notifications.length === 0 ? (
         <div className="nd2__empty">
           <p>No reminders yet.</p>
@@ -223,15 +108,21 @@ export default function NotificationsDashboard() {
             <div key={n.id} className={`nd2__card nd2__card--${n.urgency}`}>
               <h3 className="nd2__card-title">{n.title}</h3>
               <p className="nd2__card-desc">{n.description}</p>
-              <Link to={n.guideUrl} className="nd2__card-btn">
-                {n.cta}
-              </Link>
+              {n.cta === "Take Action" && n.taskId ? (
+                <button className="nd2__card-btn" onClick={() => completeTask(n.taskId)}>
+                  {n.cta}
+                </button>
+              ) : (
+                <Link to={n.guideUrl} className="nd2__card-btn">
+                  {n.cta}
+                </Link>
+              )}
             </div>
           ))}
         </div>
       )}
 
-      {/* ── System / admin notifications ── */}
+      {/* ── System / admin notifications — stacked vertically ── */}
       {apiNotifs?.length > 0 && (
         <div className="nd2__section">
           <div className="nd2__section-header">
@@ -273,22 +164,19 @@ export default function NotificationsDashboard() {
         </div>
       )}
 
-      {/* ── Calendar + Quick Links ── */}
-      <div className="nd2__bottom">
-        <BigCalendar events={calendarEvents} />
-        <aside className="nd2__links">
-          <h4 className="nd2__links-title">Quick Links</h4>
-          <ul className="nd2__links-list">
-            {quickLinks.map((l, i) => (
-              <li key={i}>
-                <Link to={l.url} className="nd2__link-item">
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </aside>
-      </div>
+      {/* ── Quick Links ── */}
+      <aside className="nd2__links nd2__links--full">
+        <h4 className="nd2__links-title">Quick Links</h4>
+        <ul className="nd2__links-list">
+          {quickLinks.map((l, i) => (
+            <li key={i}>
+              <Link to={l.url} className="nd2__link-item">
+                {l.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </aside>
 
       {/* ── Sync modal ── */}
       {showSync && (

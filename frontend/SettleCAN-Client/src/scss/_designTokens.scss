@@ -1,0 +1,22 @@
+// ============================================================================
+// SettleCAN Design Tokens — single source of truth for the brand color
+// ============================================================================
+// Imported once, globally, in main.jsx — so these custom properties are
+// available everywhere: in every .scss file's CSS output AND in inline JS
+// styles (a Sass variable like $primary in _variables.scss can't be read
+// from JS — it's compiled away at build time — which is why ~20 pages
+// were hardcoding the hex directly in style={{...}} instead).
+//
+// Kept in sync with $primary in _variables.scss by value — that Sass
+// variable still drives most .scss files (the existing, working pattern);
+// this file is what closes the gap for inline styles and the handful of
+// .scss files that had drifted to slightly different reds
+// (Community.scss's #8B1A1A, #6e1414, #B3203B) instead of the real brand
+// color. Change --color-primary here to repaint the whole app at once.
+// ============================================================================
+
+:root {
+  --color-primary:       #8E0002;
+  --color-primary-hover: #6e1414;
+  --color-primary-rgb:   142, 0, 2; // for rgba(var(--color-primary-rgb), alpha)
+}

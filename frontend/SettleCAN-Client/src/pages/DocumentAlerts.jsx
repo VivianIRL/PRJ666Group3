@@ -2,106 +2,9 @@
 import { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../state/AuthContext";
 import { createNotification } from "../service/taskService";
+import { DEFAULT_DOCS, loadSavedDates, saveDates } from "../data/documentAlerts";
 import "../scss/FeaturePages.scss";
 import "../scss/DocumentAlerts.scss";
-
-// Persist document expiry dates in localStorage, keyed by user ID so each
-// user's dates are stored independently.
-const LS_KEY = (uid) => `settlecan_docs_${uid ?? "guest"}`;
-
-function loadSavedDates(uid) {
-  try {
-    return JSON.parse(localStorage.getItem(LS_KEY(uid))) ?? {};
-  } catch {
-    return {};
-  }
-}
-function saveDates(uid, dates) {
-  localStorage.setItem(LS_KEY(uid), JSON.stringify(dates));
-}
-
-const DEFAULT_DOCS = [
-  {
-    id: 1,
-    name: "Study Permit",
-    icon: "🎓",
-    expiryDate: "",
-    reminderDays: 90,
-    category: "Immigration",
-    required: true,
-    note: "Apply to renew at least 90 days before expiry. Implied status applies while renewal is pending.",
-  },
-  {
-    id: 2,
-    name: "Post-Grad Work Permit (PGWP)",
-    icon: "💼",
-    expiryDate: "",
-    reminderDays: 90,
-    category: "Immigration",
-    required: false,
-    note: "PGWP cannot be renewed. Begin Express Entry or PNP process well before expiry.",
-  },
-  {
-    id: 3,
-    name: "Work Permit",
-    icon: "💼",
-    expiryDate: "",
-    reminderDays: 90,
-    category: "Immigration",
-    required: false,
-    note: "Apply for renewal before expiry. Confirm employer details match your permit.",
-  },
-  {
-    id: 4,
-    name: "Passport",
-    icon: "📘",
-    expiryDate: "",
-    reminderDays: 180,
-    category: "Identity",
-    required: true,
-    note: "Many countries require 6 months validity beyond travel dates. Renew early to avoid delays.",
-  },
-  {
-    id: 5,
-    name: "PR Card",
-    icon: "🍁",
-    expiryDate: "",
-    reminderDays: 270,
-    category: "PR",
-    required: false,
-    note: "PR card is valid for 5 years. You must be physically in Canada to renew. Apply 9+ months before expiry.",
-  },
-  {
-    id: 6,
-    name: "Provincial Health Card",
-    icon: "🏥",
-    expiryDate: "",
-    reminderDays: 60,
-    category: "Health",
-    required: true,
-    note: "Renewal requirements vary by province. OHIP (Ontario) cards expire every 5 years.",
-  },
-  {
-    id: 7,
-    name: "Co-op Work Permit",
-    icon: "🔬",
-    expiryDate: "",
-    reminderDays: 60,
-    category: "Immigration",
-    required: false,
-    note: "Must correspond to the co-op/internship dates in your Letter of Acceptance.",
-  },
-  {
-    id: 8,
-    name: "Visitor Record",
-    icon: "✈️",
-    expiryDate: "",
-    reminderDays: 30,
-    category: "Immigration",
-    required: false,
-    note: "If your visitor record is expiring and you need to stay, apply for an extension immediately.",
-  },
-];
 
 function daysUntil(dateStr) {
   if (!dateStr) return null;
@@ -198,15 +101,6 @@ export default function DocumentAlerts() {
     setTimeout(() => setRemindMsg(null), 3000);
   }
 
-  function clearDate(id) {
-    const updated = docs.map((d) =>
-      d.id === id ? { ...d, expiryDate: "" } : d,
-    );
-    setDocs(updated);
-    const dates = Object.fromEntries(updated.map((d) => [d.id, d.expiryDate]));
-    saveDates(uid, dates);
-  }
-
   function startEdit(doc) {
     setEditId(doc.id);
     setDateInput(doc.expiryDate);
@@ -234,7 +128,7 @@ export default function DocumentAlerts() {
       {remindMsg && (
         <div style={{
           background: remindMsg.ok ? "#e6f9ef" : "#fdeaed",
-          color: remindMsg.ok ? "#15803d" : "#8E0002",
+          color: remindMsg.ok ? "#15803d" : "var(--color-primary)",
           borderRadius: "0.6rem", padding: "0.6rem 1rem",
           fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.75rem",
         }}>
@@ -427,20 +321,6 @@ export default function DocumentAlerts() {
                       disabled={remindedIds.has(doc.id)}
                     >
                       {remindedIds.has(doc.id) ? "✓ Reminded" : "🔔 Remind me"}
-                    </button>
-                  )}
-                  {doc.expiryDate && (
-                    <button
-                      className="fp-btn fp-btn--ghost"
-                      style={{
-                        padding: "0.28rem 0.7rem",
-                        fontSize: "0.75rem",
-                        color: "#c0392b",
-                        borderColor: "#c0392b",
-                      }}
-                      onClick={() => clearDate(doc.id)}
-                    >
-                      Clear
                     </button>
                   )}
                 </div>

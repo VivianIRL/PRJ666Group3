@@ -71,11 +71,11 @@ const CLB_TABLE = [
 
 const FREE_PROGRAMS = [
   { name: "LINC (Language Instruction for Newcomers to Canada)", desc: "Free federally funded English classes for eligible newcomers (PRs and protected persons). Part-time and full-time options. Childcare may be available.", url: "https://www.canada.ca/en/immigration-refugees-citizenship/services/settle-canada/language-skills/find-program.html", level: "All levels" },
-  { name: "CLIC (Cours de langue pour les immigrants au Canada)", desc: "French-language equivalent of LINC. Free for eligible newcomers. Offered across Canada, especially in Quebec and francophone communities.", url: "https://www.canada.ca/en/immigration-refugees-citizenship/services/settle-canada/language-skills/find-program.html", level: "All levels" },
-  { name: "Enhanced Language Training (ELT)", desc: "Advanced language programs focused on occupation-specific language skills to help newcomers enter professional careers faster.", url: "https://www.canada.ca/en/immigration-refugees-citizenship/services/settle-canada/language-skills/enhanced-language-training.html", level: "Advanced" },
+  { name: "CLIC (Cours de langue pour les immigrants au Canada)", desc: "French-language equivalent of LINC. Free for eligible newcomers. Offered across Canada, especially in Quebec and francophone communities.", url: "https://www.canada.ca/fr/immigration-refugies-citoyennete/services/setablir-canada/competences-langues/cours.html", level: "All levels" },
+  { name: "Enhanced Language Training (ELT)", desc: "Advanced language programs focused on occupation-specific language skills to help newcomers enter professional careers faster.", url: "https://www.tdsb.on.ca/communityservices/enhanced-language-training", level: "Advanced" },
   { name: "Public Libraries", desc: "Most public libraries offer free English and French conversation circles, ESL materials, and access to online learning platforms like Mango Languages or Rosetta Stone.", url: "https://www.tpl.ca/programs-and-learning/english-language-learning", level: "Beginner–Intermediate" },
   { name: "Settlement.org", desc: "Online English learning resources, language quizzes, and vocabulary guides specifically designed for newcomers to Ontario.", url: "https://settlement.org/ontario/education/english-as-a-second-language-esl/", level: "Beginner–Intermediate" },
-  { name: "IELTS / CELPIP Official Practice", desc: "Both IELTS and CELPIP offer free practice tests and sample questions on their official websites. Always use official materials for the most accurate preparation.", url: "https://www.celpip.ca/prepare-for-celpip/free-study-resources/", level: "Test prep" },
+  { name: "IELTS / CELPIP Official Practice", desc: "Both IELTS and CELPIP offer free practice tests and sample questions on their official websites. Always use official materials for the most accurate preparation.", url: "https://www.celpip.ca/prepare-for-celpip/free-resources/", level: "Test prep" },
 ];
 
 const IMMIGRATION_IMPACT = [
@@ -88,7 +88,6 @@ const IMMIGRATION_IMPACT = [
 
 export default function LanguageInfo() {
   const [activeTest, setActiveTest] = useState(0);
-  const [openFaq, setOpenFaq]       = useState(null);
   const [apiResources, setApiResources] = useState([]);
 
   // Fetch supplementary resources from the backend (resource_library table)
@@ -144,7 +143,7 @@ export default function LanguageInfo() {
             <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
               {[["Cost", test.cost], ["Valid for", test.validity]].map(([label, val]) => (
                 <div key={label} style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#8E0002" }}>{val}</div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "var(--color-primary)" }}>{val}</div>
                   <div style={{ fontSize: "0.65rem", color: "#9a8a90", fontWeight: 600, textTransform: "uppercase" }}>{label}</div>
                 </div>
               ))}
@@ -159,7 +158,7 @@ export default function LanguageInfo() {
               { label: "💡 Tip", content: test.tip },
             ].map(item => (
               <div key={item.label} style={{ background: "#fdf7f8", borderRadius: "0.6rem", padding: "0.6rem 0.75rem" }}>
-                <div style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", color: "#8E0002", marginBottom: "0.25rem" }}>{item.label}</div>
+                <div style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", color: "var(--color-primary)", marginBottom: "0.25rem" }}>{item.label}</div>
                 <div style={{ fontSize: "0.83rem", color: "#3a2a30", lineHeight: 1.5 }}>{item.content}</div>
               </div>
             ))}

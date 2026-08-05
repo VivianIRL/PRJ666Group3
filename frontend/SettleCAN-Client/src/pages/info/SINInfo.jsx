@@ -171,9 +171,9 @@ export default function SINInfo() {
         <div className="fp-card" style={{ flex: 1 }}>
           <h3 className="fp-card__title">🔗 Official Resources</h3>
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-            <li><a href="https://www.canada.ca/en/employment-social-development/services/sin.html" target="_blank" rel="noreferrer" style={{ fontSize: "0.83rem", color: "#8E0002", fontWeight: 600 }}>SIN Program Overview — canada.ca</a></li>
-            <li><a href="https://www.canada.ca/en/employment-social-development/services/sin/protect.html" target="_blank" rel="noreferrer" style={{ fontSize: "0.83rem", color: "#8E0002", fontWeight: 600 }}>How to protect your SIN</a></li>
-            <li><a href="https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/sin.html" target="_blank" rel="noreferrer" style={{ fontSize: "0.83rem", color: "#8E0002", fontWeight: 600 }}>SIN and the CRA</a></li>
+            <li><a href="https://www.canada.ca/en/employment-social-development/services/sin.html" target="_blank" rel="noreferrer" style={{ fontSize: "0.83rem", color: "var(--color-primary)", fontWeight: 600 }}>SIN Program Overview — canada.ca</a></li>
+            <li><a href="https://www.canada.ca/en/employment-social-development/services/sin/protect.html" target="_blank" rel="noreferrer" style={{ fontSize: "0.83rem", color: "var(--color-primary)", fontWeight: 600 }}>How to protect your SIN</a></li>
+            <li><a href="https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/sin.html" target="_blank" rel="noreferrer" style={{ fontSize: "0.83rem", color: "var(--color-primary)", fontWeight: 600 }}>SIN and the CRA</a></li>
           </ul>
         </div>
       </div>

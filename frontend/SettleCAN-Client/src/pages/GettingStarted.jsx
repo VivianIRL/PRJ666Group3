@@ -29,17 +29,17 @@ const PRIORITY_TASKS = {
     { label: "Research citizenship eligibility timeline", path: "/pr-pathway" },
   ],
   "Refugee / Protected Person": [
-    { label: "Confirm your Protected Person status with the IRB", path: "/checklist" },
+    { label: "Confirm your Protected Person status with the IRB", path: "/tasks" },
     { label: "Register for IFHP (Interim Federal Health Program)", path: "/info/health" },
     { label: "Apply for your SIN", path: "/guides/sin" },
     { label: "Apply for permanent residence — you're eligible immediately", path: "/pr-pathway" },
     { label: "Connect with a local settlement or RAP agency", path: "/community" },
   ],
   "Visitor / Tourist": [
-    { label: "Confirm your authorized stay duration (entry stamp or eTA)", path: "/checklist" },
-    { label: "Purchase visitor health insurance", path: "/checklist" },
-    { label: "Download a transit app for your city", path: "/checklist" },
-    { label: "Save emergency contacts — 911 and health line 811", path: "/checklist" },
+    { label: "Confirm your authorized stay duration (entry stamp or eTA)", path: "/tasks" },
+    { label: "Purchase visitor health insurance", path: "/tasks" },
+    { label: "Download a transit app for your city", path: "/tasks" },
+    { label: "Save emergency contacts — 911 and health line 811", path: "/tasks" },
     { label: "Check options if you plan to stay longer (permit pathways)", path: "/immigration-guide" },
   ],
   default: [
@@ -117,11 +117,11 @@ export default function GettingStarted() {
           SettleCAN organises everything in one place so nothing falls through the cracks.
         </p>
         <div className="gs-explainer__pills">
-          <span>📋 Personalised checklists</span>
-          <span>⏰ Permit & document reminders</span>
-          <span>📚 Step-by-step guides</span>
-          <span>🍁 PR & immigration pathways</span>
-          <span>💬 Community support</span>
+          <Link to="/document-alerts">⏰ Permit & document reminders</Link>
+          <Link to="/pr-pathway">🍁 PR & immigration pathways</Link>
+          <Link to="/community">💬 Community support</Link>
+          <Link to="/housing">🏠 Housing</Link>
+          <Link to="/articles">📰 Articles</Link>
         </div>
       </div>
 

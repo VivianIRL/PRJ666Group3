@@ -4,6 +4,9 @@ import { AuthContext } from "../state/AuthContext";
 import {
   fetchCommunityPosts,
   createCommunityPost,
+  deleteCommunityPost,
+  createCommunityReply,
+  deleteCommunityReply,
   fetchFAQ,
 } from "../service/taskService";
 import "../scss/Community.scss";
@@ -21,62 +24,34 @@ const TAG_COLORS = {
   Discussion: "tag-general",
 };
 
-const INITIAL_POSTS = [
+const COMPOSE_TAGS = ["Legal", "Financial", "Academic", "Housing", "Healthcare", "Jobs"];
+const FILTER_TAGS = [...COMPOSE_TAGS, "Question", "Tip"];
+
+// Shown only while the real fetch is in flight or if the backend is
+// unreachable — never as a silent permanent stand-in for real data (that
+// masked whether posts were actually persisting).
+const OFFLINE_POSTS = [
   {
-    id: 1,
+    id: "offline-1",
     title: "How long does it take to receive my study permit extension?",
     author: "Rasa",
     time: "2 hours ago",
     tags: ["Legal", "Question"],
     body: "I applied online three weeks ago and haven't received any update yet. Has anyone recently gone through this process?",
-    replies: [
-      {
-        id: 1,
-        author: "Ahmed M.",
-        initials: "AM",
-        time: "1 hour ago",
-        text: "Mine took about 6 weeks. Make sure you check your IRCC account for any missing document requests.",
-      },
-      {
-        id: 2,
-        author: "Sofia L.",
-        initials: "SL",
-        time: "45 min ago",
-        text: "Processing times vary a lot right now. I'd recommend calling the IRCC call centre if it's been more than 8 weeks.",
-      },
-    ],
+    replies: [],
     replyCount: 12,
     views: 34,
   },
   {
-    id: 2,
+    id: "offline-2",
     title: "Tip for opening a Canadian bank account as a newcomer",
     author: "Joon K.",
     time: "5 hours ago",
     tags: ["Financial", "Tip"],
     body: "RBC and TD both have newcomer banking packages with no monthly fees for the first year. Bring your passport, study permit, and proof of address.",
-    replies: [
-      {
-        id: 1,
-        author: "Priya R.",
-        initials: "PR",
-        time: "3 hours ago",
-        text: "Also Scotiabank has a great newcomer package. I opened mine within a week of arriving!",
-      },
-    ],
+    replies: [],
     replyCount: 8,
     views: 61,
-  },
-  {
-    id: 3,
-    title: "Where to find affordable student housing near York University?",
-    author: "Maria T.",
-    time: "Yesterday",
-    tags: ["Housing", "Question"],
-    body: "Looking for recommendations for off-campus housing that's safe and within budget. Any Facebook groups or websites you'd suggest?",
-    replies: [],
-    replyCount: 5,
-    views: 22,
   },
 ];
 
@@ -88,29 +63,63 @@ const TRENDING = [
   "Part-time jobs",
 ];
 
-// Normalise a DB row (community_qa) → the UI post shape
-function normalisePost(row) {
+const TAG_FILTER_KEY = "settlecan_community_tag_filters";
+function loadFilterTags() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TAG_FILTER_KEY));
+    return Array.isArray(saved) ? saved : [];
+  } catch {
+    return [];
+  }
+}
+
+function initialsOf(name) {
+  return (name || "?").trim().slice(0, 2).toUpperCase();
+}
+
+// Normalise a DB row (community_qa, with nested community_replies) -> the UI post shape
+function normalisePost(row, currentUserId) {
+  const isMine = !!currentUserId && row.user_id === currentUserId;
+  const replies = Array.isArray(row.community_replies)
+    ? [...row.community_replies]
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+        .map((r) => normaliseReply(r, currentUserId))
+    : [];
   return {
-    id: row.qa_id ?? row.id ?? Date.now(),
+    id: row.qa_id ?? row.id,
     title: row.question ?? row.title ?? "",
-    author: row.author ?? "Member",
+    author: isMine ? "You" : "Member",
+    isMine,
     time: row.created_at
-      ? new Date(row.created_at).toLocaleDateString("en-CA", {
-          month: "short",
-          day: "numeric",
-        })
+      ? new Date(row.created_at).toLocaleDateString("en-CA", { month: "short", day: "numeric" })
       : "Recently",
     tags: row.tags ?? [],
     body: row.question ?? row.body ?? "",
-    replies: [],
-    replyCount: 0,
+    replies,
+    replyCount: replies.length,
     views: 1,
+  };
+}
+
+function normaliseReply(row, currentUserId) {
+  const isMine = !!currentUserId && row.user_id === currentUserId;
+  const author = isMine ? "You" : "Member";
+  return {
+    id: row.reply_id,
+    author,
+    initials: initialsOf(author),
+    isMine,
+    time: row.created_at
+      ? new Date(row.created_at).toLocaleDateString("en-CA", { month: "short", day: "numeric" })
+      : "Recently",
+    text: row.reply_text,
   };
 }
 
 export default function Community() {
   const { user } = useContext(AuthContext);
-  const [posts, setPosts] = useState(INITIAL_POSTS);
+  const [posts, setPosts] = useState([]);
+  const [postsLoaded, setPostsLoaded] = useState(false);
   const [postText, setPostText] = useState("");
   const [postType, setPostType] = useState("Question");
   const [selectedTags, setSelectedTags] = useState([]);
@@ -119,22 +128,22 @@ export default function Community() {
   const [savedPosts, setSavedPosts] = useState({});
   const [replyInputs, setReplyInputs] = useState({});
   const [search, setSearch] = useState("");
+  const [filterTags, setFilterTags] = useState(loadFilterTags);
   const [toast, setToast] = useState("");
   const [faqs, setFaqs] = useState([]);
   const [openFaqId, setOpenFaqId] = useState(null);
 
-  // Load posts from API on mount; fall back to INITIAL_POSTS if unavailable
+  // Load posts from the API on mount; only fall back to OFFLINE_POSTS if the
+  // backend is genuinely unreachable — a real empty result stays empty, so
+  // "did my post actually save?" is never masked by a hardcoded stand-in.
   useEffect(() => {
     fetchCommunityPosts()
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setPosts(data.map(normalisePost));
-        }
+        setPosts(Array.isArray(data) ? data.map((row) => normalisePost(row, user?.id)) : []);
       })
-      .catch(() => {
-        /* keep mock posts */
-      });
-  }, []);
+      .catch(() => setPosts(OFFLINE_POSTS))
+      .finally(() => setPostsLoaded(true));
+  }, [user?.id]);
 
   // Load FAQ entries for the sidebar
   useEffect(() => {
@@ -147,6 +156,12 @@ export default function Community() {
       });
   }, []);
 
+  // Tag filters persist across visits/reloads, same as any other saved
+  // browsing preference.
+  useEffect(() => {
+    localStorage.setItem(TAG_FILTER_KEY, JSON.stringify(filterTags));
+  }, [filterTags]);
+
   function showToast(msg) {
     setToast(msg);
     setTimeout(() => setToast(""), 2500);
@@ -158,6 +173,12 @@ export default function Community() {
     );
   }
 
+  function toggleFilterTag(tag) {
+    setFilterTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+    );
+  }
+
   async function handlePost() {
     if (!postText.trim()) {
       setPostError("Please write something before posting.");
@@ -165,10 +186,12 @@ export default function Community() {
     }
     setPostError("");
 
+    const tempId = `temp-${Date.now()}`;
     const optimistic = {
-      id: Date.now(),
+      id: tempId,
       title: postText.length > 80 ? postText.slice(0, 80) + "…" : postText,
-      author: user?.name ?? "You",
+      author: "You",
+      isMine: true,
       time: "Just now",
       tags: [postType, ...selectedTags],
       body: postText,
@@ -177,20 +200,27 @@ export default function Community() {
       views: 1,
     };
 
-    // Optimistic: show immediately
     setPosts((prev) => [optimistic, ...prev]);
     setPostText("");
     setSelectedTags([]);
-    showToast("Post published!");
 
-    // Persist to backend in the background
     try {
-      await createCommunityPost({
-        question: optimistic.body,
-        tags: optimistic.tags,
-      });
+      const saved = await createCommunityPost({ question: optimistic.body, tags: optimistic.tags });
+      setPosts((prev) => prev.map((p) => (p.id === tempId ? normalisePost(saved, user?.id) : p)));
+      showToast("Post published!");
     } catch {
-      // Non-fatal — post stays visible locally
+      setPosts((prev) => prev.filter((p) => p.id !== tempId));
+      showToast("Couldn't publish — check your connection.");
+    }
+  }
+
+  async function handleDeletePost(post) {
+    setPosts((prev) => prev.filter((p) => p.id !== post.id));
+    showToast("Post deleted.");
+    try {
+      await deleteCommunityPost(post.id);
+    } catch {
+      showToast("Couldn't delete on the server — it may reappear on refresh.");
     }
   }
 
@@ -210,40 +240,65 @@ export default function Community() {
     setReplyInputs((prev) => ({ ...prev, [postId]: val }));
   }
 
-  function submitReply(postId) {
+  async function submitReply(postId) {
     const text = (replyInputs[postId] || "").trim();
     if (!text) return;
+
+    const tempId = `temp-${Date.now()}`;
+    const optimisticReply = { id: tempId, author: "You", initials: initialsOf("You"), isMine: true, time: "Just now", text };
+
     setPosts((prev) =>
-      prev.map((p) => {
-        if (p.id !== postId) return p;
-        return {
-          ...p,
-          replies: [
-            ...p.replies,
-            {
-              id: Date.now(),
-              author: "Rasa",
-              initials: "R",
-              time: "Just now",
-              text,
-            },
-          ],
-          replyCount: p.replyCount + 1,
-        };
-      }),
+      prev.map((p) =>
+        p.id === postId ? { ...p, replies: [...p.replies, optimisticReply], replyCount: p.replyCount + 1 } : p,
+      ),
     );
     setReplyInputs((prev) => ({ ...prev, [postId]: "" }));
-    showToast("Reply posted!");
+
+    try {
+      const saved = await createCommunityReply(postId, { text });
+      const real = normaliseReply(saved, user?.id);
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === postId ? { ...p, replies: p.replies.map((r) => (r.id === tempId ? real : r)) } : p,
+        ),
+      );
+      showToast("Reply posted!");
+    } catch {
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === postId
+            ? { ...p, replies: p.replies.filter((r) => r.id !== tempId), replyCount: p.replyCount - 1 }
+            : p,
+        ),
+      );
+      showToast("Couldn't post reply — check your connection.");
+    }
+  }
+
+  async function handleDeleteReply(postId, reply) {
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId
+          ? { ...p, replies: p.replies.filter((r) => r.id !== reply.id), replyCount: p.replyCount - 1 }
+          : p,
+      ),
+    );
+    try {
+      await deleteCommunityReply(reply.id);
+    } catch {
+      showToast("Couldn't delete on the server — it may reappear on refresh.");
+    }
   }
 
   const filteredPosts = posts.filter((p) => {
     const q = search.toLowerCase();
-    return (
+    const matchesSearch =
       !q ||
       p.title.toLowerCase().includes(q) ||
       p.tags.join(" ").toLowerCase().includes(q) ||
-      p.body.toLowerCase().includes(q)
-    );
+      p.body.toLowerCase().includes(q);
+    const matchesTags = filterTags.length === 0 || filterTags.some((t) => p.tags.includes(t));
+    return matchesSearch && matchesTags;
   });
 
   return (
@@ -284,14 +339,7 @@ export default function Community() {
                 </Form.Select>
               </div>
               <div className="tag-pills mt-2">
-                {[
-                  "Legal",
-                  "Financial",
-                  "Academic",
-                  "Housing",
-                  "Healthcare",
-                  "Jobs",
-                ].map((tag) => (
+                {COMPOSE_TAGS.map((tag) => (
                   <button
                     key={tag}
                     className={`tag-pill ${selectedTags.includes(tag) ? "selected" : ""}`}
@@ -309,92 +357,131 @@ export default function Community() {
               </div>
             </div>
 
-            {/* Posts */}
-            {filteredPosts.length === 0 && (
-              <div className="text-center text-muted py-5">
-                No posts match your search.
-              </div>
-            )}
-            {filteredPosts.map((post) => (
-              <div key={post.id} className="post-card mb-3">
-                <div
-                  className="post-title"
-                  onClick={() => toggleExpand(post.id)}
-                >
-                  {post.title}
-                </div>
-                <div className="post-meta">
-                  <strong>{post.author}</strong> · {post.time}
-                </div>
-                <div className="post-tags">
-                  {post.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className={`post-tag ${TAG_COLORS[tag] || "tag-general"}`}
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <div className="post-body">{post.body}</div>
-                <div className="post-footer">
-                  <span className="post-stats">
-                    {post.replyCount} replies · {post.views} views
-                  </span>
-                  <div className="post-actions">
-                    <button
-                      className="action-btn"
-                      onClick={() => toggleExpand(post.id)}
-                    >
-                      {expandedPosts[post.id] ? "Hide" : "View"}
-                    </button>
-                    <button
-                      className={`action-btn ${savedPosts[post.id] ? "saved" : ""}`}
-                      onClick={() => toggleSave(post.id)}
-                    >
-                      {savedPosts[post.id] ? "Saved ✓" : "Save"}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Replies */}
-                {expandedPosts[post.id] && (
-                  <div className="replies-section">
-                    {post.replies.map((r) => (
-                      <div key={r.id} className="reply-item">
-                        <div className="reply-avatar">{r.initials}</div>
-                        <div className="reply-bubble">
-                          <div className="reply-author">
-                            {r.author} · {r.time}
-                          </div>
-                          <div className="reply-text">{r.text}</div>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="reply-input-row">
-                      <Form.Control
-                        type="text"
-                        placeholder="Write a reply…"
-                        className="reply-input"
-                        value={replyInputs[post.id] || ""}
-                        onChange={(e) =>
-                          handleReplyChange(post.id, e.target.value)
-                        }
-                        onKeyDown={(e) =>
-                          e.key === "Enter" && submitReply(post.id)
-                        }
-                      />
-                      <Button
-                        className="btn-reply"
-                        onClick={() => submitReply(post.id)}
-                      >
-                        Reply
-                      </Button>
-                    </div>
-                  </div>
+            {/* Tag filter bar */}
+            <div className="create-post-card mb-3">
+              <div className="d-flex align-items-center justify-content-between" style={{ marginBottom: "10px" }}>
+                <h3 className="create-title" style={{ marginBottom: 0 }}>Filter by tag</h3>
+                {filterTags.length > 0 && (
+                  <button className="action-btn" onClick={() => setFilterTags([])}>Clear filters</button>
                 )}
               </div>
-            ))}
+              <div className="tag-pills">
+                {FILTER_TAGS.map((tag) => (
+                  <button
+                    key={tag}
+                    className={`tag-pill ${filterTags.includes(tag) ? "selected" : ""}`}
+                    onClick={() => toggleFilterTag(tag)}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Posts */}
+            {!postsLoaded ? (
+              <div className="text-center text-muted py-5">Loading posts…</div>
+            ) : filteredPosts.length === 0 ? (
+              <div className="text-center text-muted py-5">
+                {posts.length === 0 ? "No posts yet — be the first to ask or share something!" : "No posts match your search/filters."}
+              </div>
+            ) : (
+              filteredPosts.map((post) => (
+                <div key={post.id} className="post-card mb-3">
+                  <div
+                    className="post-title"
+                    onClick={() => toggleExpand(post.id)}
+                  >
+                    {post.title}
+                  </div>
+                  <div className="post-meta">
+                    <strong>{post.author}</strong> · {post.time}
+                  </div>
+                  <div className="post-tags">
+                    {post.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className={`post-tag ${TAG_COLORS[tag] || "tag-general"}`}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="post-body">{post.body}</div>
+                  <div className="post-footer">
+                    <span className="post-stats">
+                      {post.replyCount} replies · {post.views} views
+                    </span>
+                    <div className="post-actions">
+                      <button
+                        className="action-btn"
+                        onClick={() => toggleExpand(post.id)}
+                      >
+                        {expandedPosts[post.id] ? "Hide" : "View"}
+                      </button>
+                      <button
+                        className={`action-btn ${savedPosts[post.id] ? "saved" : ""}`}
+                        onClick={() => toggleSave(post.id)}
+                      >
+                        {savedPosts[post.id] ? "Saved ✓" : "Save"}
+                      </button>
+                      {post.isMine && (
+                        <button className="action-btn action-btn--danger" onClick={() => handleDeletePost(post)}>
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Replies */}
+                  {expandedPosts[post.id] && (
+                    <div className="replies-section">
+                      {post.replies.map((r) => (
+                        <div key={r.id} className="reply-item">
+                          <div className="reply-avatar">{r.initials}</div>
+                          <div className="reply-bubble">
+                            <div className="reply-author">
+                              {r.author} · {r.time}
+                            </div>
+                            <div className="reply-text">{r.text}</div>
+                          </div>
+                          {r.isMine && (
+                            <button
+                              className="reply-delete"
+                              onClick={() => handleDeleteReply(post.id, r)}
+                              aria-label="Delete reply"
+                              title="Delete reply"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <div className="reply-input-row">
+                        <Form.Control
+                          type="text"
+                          placeholder="Write a reply…"
+                          className="reply-input"
+                          value={replyInputs[post.id] || ""}
+                          onChange={(e) =>
+                            handleReplyChange(post.id, e.target.value)
+                          }
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && submitReply(post.id)
+                          }
+                        />
+                        <Button
+                          className="btn-reply"
+                          onClick={() => submitReply(post.id)}
+                        >
+                          Reply
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </Col>
 
           {/* Right column */}

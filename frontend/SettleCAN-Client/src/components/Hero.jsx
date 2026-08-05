@@ -17,12 +17,10 @@ export default function Hero() {
   }
 
   function handleLearnMore(e) {
+
+
     e.preventDefault();
-    if (isAuthenticated) {
-      navigate("/dashboard")
-    } else {
-      navigate("/about")
-    }
+    navigate("/about")
   }
 
   return (

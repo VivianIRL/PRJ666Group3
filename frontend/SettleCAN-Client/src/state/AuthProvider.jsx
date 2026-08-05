@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { AuthContext }   from "./AuthContext";
-import { loginUser, registerUser, logoutUser } from "../service/authService";
+import { loginUser, registerUser, logoutUser, updateProfile as updateProfileRequest } from "../service/authService";
 import { setAccessToken, getAccessToken, removeAccessToken } from "../service/tokenService";
 
 // ── Persist session across page refreshes ─────────────────────────────────────
@@ -15,17 +15,35 @@ function saveUser(u) {
   else   localStorage.removeItem(KEY_USER);
 }
 
+// "mAry-jO" -> "Mary-Jo" — capitalizes each word/hyphen-segment so names
+// render consistently regardless of how they were typed at signup.
+function capitalizeName(value) {
+  if (!value) return value;
+  return value
+    .trim()
+    .split(/(\s+|-)/)
+    .map((part) => (/^[\s-]+$/.test(part) ? part : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()))
+    .join("");
+}
+
 // Normalise the backend response shape into the UI shape the app uses
 function toUiUser(apiUser) {
+  const firstName = capitalizeName(apiUser.firstName ?? "");
+  const lastName  = capitalizeName(apiUser.lastName ?? "");
   return {
     id:                apiUser.id               ?? "",
     email:             apiUser.email            ?? "",
-    name:              apiUser.firstName        ?? "",
-    fullName:          `${apiUser.firstName ?? ""} ${apiUser.lastName ?? ""}`.trim(),
+    dob:               apiUser.dob              ?? "",
+    name:              firstName || apiUser.email?.split("@")[0] || "",
+    fullName:          `${firstName} ${lastName}`.trim() || apiUser.email || "",
     immigrationStatus: apiUser.immigrationStatus ?? "International Student",
     province:          apiUser.province         ?? "",
     arrivalDate:       apiUser.arrivalDate      ?? "",
+    permitExpiry:      apiUser.permitExpiry     ?? "",
+    languageTest:      apiUser.languageTest     ?? "",
     country:           apiUser.country          ?? "",
+    firstName,
+    lastName,
     avatar:            null,
   };
 }
@@ -119,6 +137,39 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const updateProfile = useCallback(async (profile) => {
+    setLoading(true);
+    setAuthError(null);
+
+    try {
+      // No userId here on purpose — passing one makes authService.js hit
+      // PUT /api/profile/:user_id, which writes to a separate `profiles`
+      // table that login/`/auth/me` never read from (they read Supabase
+      // Auth's user_metadata exclusively). That mismatch is why an update
+      // would appear to "work" for the rest of the session but silently
+      // vanish on sign-out/sign-in. PATCH /api/profile (no userId) writes
+      // to user_metadata directly, matching what login actually reads.
+      const response = await updateProfileRequest(getAccessToken(), undefined, {
+        first_name: profile.firstName,
+        last_name: profile.lastName,
+        immigration_status: profile.immigrationStatus,
+        province: profile.province,
+        country: profile.country,
+        arrival_date: profile.arrivalDate,
+        permit_expiry: profile.permitExpiry,
+        language_test: profile.languageTest,
+      });
+      const updatedProfile = response.profile ?? response;
+      applyUser(toUiUser({ ...user, ...updatedProfile }));
+      return true;
+    } catch (err) {
+      setAuthError(err.message || "Could not update profile");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
   // ── logout ────────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
     const token = getAccessToken();
@@ -139,6 +190,7 @@ export function AuthProvider({ children }) {
       clearAuthError,
       login,
       register,
+      updateProfile,
       logout,
     }}>
       {children}
